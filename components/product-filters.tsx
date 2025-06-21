@@ -1,200 +1,168 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { useCurrency } from "@/components/currency-provider"
+import { Input } from "@/components/ui/input"
+import { Slider } from "@/components/ui/slider"
+import { Search, Filter, ChevronDown } from "lucide-react"
 
-const categoryData = {
-  nigeria: [
-    "Rice & Grains",
-    "Spices & Seasonings",
-    "Palm Oil & Oils",
-    "Yam & Tubers",
-    "Beans & Legumes",
-    "Dried Fish",
-    "Plantain Products",
-    "Cassava Products",
-  ],
-  india: [
-    "Spices & Masalas",
-    "Basmati Rice",
-    "Lentils & Dals",
-    "Tea & Beverages",
-    "Pickles & Chutneys",
-    "Flours & Grains",
-    "Sweets & Snacks",
-    "Cooking Oils",
-  ],
-  ghana: [
-    "Plantain Products",
-    "Cassava & Gari",
-    "Palm Nut & Oils",
-    "Kenkey & Banku",
-    "Dried Fish",
-    "Spices & Peppers",
-    "Yam Products",
-    "Traditional Grains",
-  ],
-  jamaica: [
-    "Scotch Bonnet Peppers",
-    "Ackee & Callaloo",
-    "Jerk Seasonings",
-    "Plantain Products",
-    "Caribbean Spices",
-    "Tropical Fruits",
-    "Rice & Peas",
-    "Hot Sauces",
-  ],
-  uk: [
-    "International Mix",
-    "Organic Products",
-    "Halal Certified",
-    "Vegan Options",
-    "Gluten Free",
-    "Premium Range",
-    "Bulk Items",
-    "Seasonal Specials",
-  ],
+export function ProductFilters() {
+  const [priceRange, setPriceRange] = useState([0, 100])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [expandedSections, setExpandedSections] = useState({
+    price: true,
+    categories: true,
+    origin: false,
+  })
+  
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections({
+      ...expandedSections,
+      [section]: !expandedSections[section]
+    })
 }
 
-const brands = {
-  nigeria: ["Mama Gold", "Dangote", "Golden Penny", "Honeywell", "Indomie"],
-  india: ["Tata", "MDH", "Everest", "Aashirvaad", "India Gate"],
-  ghana: ["Nkulenu", "Gino", "Frytol", "Ayoola", "Tilda"],
-  jamaica: ["Grace", "Walkerswood", "Pickapeppa", "Busha Browne", "Matouk's"],
-  uk: ["Tesco Finest", "Sainsbury's", "ASDA", "Morrisons", "Waitrose"],
-}
-
-interface ProductFiltersProps {
-  selectedCategory: string
-  onCategoryChange: (category: string) => void
-  priceRange: number[]
-  onPriceRangeChange: (range: number[]) => void
-  sortBy: string
-  onSortChange: (sort: string) => void
-  country: string
-}
-
-export function ProductFilters({
-  selectedCategory,
-  onCategoryChange,
-  priceRange,
-  onPriceRangeChange,
-  sortBy,
-  onSortChange,
-  country,
-}: ProductFiltersProps) {
-  const { formatPrice } = useCurrency()
-  const categories = categoryData[country as keyof typeof categoryData] || []
-  const countryBrands = brands[country as keyof typeof brands] || []
+  const categoryOptions = [
+    { id: 'beverages', label: 'Beverages' },
+    { id: 'rice', label: 'Rice' },
+    { id: 'flour', label: 'Flour' },
+    { id: 'spices', label: 'Spices' },
+    { id: 'oil', label: 'Oil' },
+  ]
+  
+  const originOptions = [
+    { id: 'nigeria', label: 'Nigeria' },
+    { id: 'ghana', label: 'Ghana' },
+    { id: 'kenya', label: 'Kenya' },
+    { id: 'south-africa', label: 'South Africa' },
+  ]
 
   return (
-    <div className="space-y-6">
-      {/* Sort */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Sort By</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Select value={sortBy} onValueChange={onSortChange}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name">Name (A-Z)</SelectItem>
-              <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-              <SelectItem value="price">Price (Low to High)</SelectItem>
-              <SelectItem value="price-desc">Price (High to Low)</SelectItem>
-              <SelectItem value="popularity">Most Popular</SelectItem>
-              <SelectItem value="newest">Newest First</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
+    <div className="border rounded-lg p-6 bg-white shadow-sm sticky top-4">
+      <div className="flex items-center mb-6">
+        <Filter className="h-5 w-5 mr-2 text-green-600" />
+        <h2 className="text-xl font-medium">Filter Products</h2>
+      </div>
+      
+      {/* Search */}
+      <div className="mb-8">
+        <h3 className="text-base font-medium mb-3">Search</h3>
+        <div className="relative">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 border-gray-300 h-10"
+          />
+        </div>
+      </div>
+      
+      {/* Price Range */}
+      <div className="mb-8">
+        <div 
+          className="flex justify-between items-center mb-3 cursor-pointer"
+          onClick={() => toggleSection('price')}
+        >
+          <h3 className="text-base font-medium">Price Range</h3>
+          <ChevronDown 
+            className={`h-5 w-5 text-gray-500 transition-transform ${expandedSections.price ? 'rotate-180' : ''}`} 
+          />
+        </div>
+        
+        {expandedSections.price && (
+          <>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm text-gray-600">
+                £{priceRange[0]} - £{priceRange[1]}
+              </span>
+            </div>
+            <Slider
+              defaultValue={[0, 100]}
+              max={100}
+              step={1}
+              value={priceRange}
+              onValueChange={(value) => setPriceRange(value as number[])}
+              className="py-4"
+            />
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>£0</span>
+              <span>£100</span>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Categories */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Categories</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <div className="mb-8">
+        <div 
+          className="flex justify-between items-center mb-3 cursor-pointer"
+          onClick={() => toggleSection('categories')}
+        >
+          <h3 className="text-base font-medium">Categories</h3>
+          <ChevronDown 
+            className={`h-5 w-5 text-gray-500 transition-transform ${expandedSections.categories ? 'rotate-180' : ''}`} 
+          />
+        </div>
+        
+        {expandedSections.categories && (
           <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="all-categories"
-                checked={selectedCategory === "all"}
-                onCheckedChange={() => onCategoryChange("all")}
-              />
-              <Label htmlFor="all-categories" className="text-sm font-medium">
-                All Categories
-              </Label>
-            </div>
-            {categories.map((category) => (
-              <div key={category} className="flex items-center space-x-2">
-                <Checkbox
-                  id={category}
-                  checked={selectedCategory === category}
-                  onCheckedChange={() => onCategoryChange(category)}
+            {categoryOptions.map(category => (
+              <div key={category.id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`category-${category.id}`}
+                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
                 />
-                <Label htmlFor={category} className="text-sm">
-                  {category}
-                </Label>
+                <label htmlFor={`category-${category.id}`} className="ml-2 text-sm text-gray-700">
+                  {category.label}
+                </label>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
-      {/* Price Range */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Price Range</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="px-2">
-            <Slider
-              value={priceRange}
-              onValueChange={onPriceRangeChange}
-              max={1000}
-              min={0}
-              step={10}
-              className="w-full"
+      {/* Origin */}
+      <div className="mb-8">
+        <div 
+          className="flex justify-between items-center mb-3 cursor-pointer"
+          onClick={() => toggleSection('origin')}
+        >
+          <h3 className="text-base font-medium">Origin</h3>
+          <ChevronDown 
+            className={`h-5 w-5 text-gray-500 transition-transform ${expandedSections.origin ? 'rotate-180' : ''}`} 
             />
           </div>
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>{formatPrice(priceRange[0])}</span>
-            <span>{formatPrice(priceRange[1])}</span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Brands */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Popular Brands</CardTitle>
-        </CardHeader>
-        <CardContent>
+        
+        {expandedSections.origin && (
           <div className="space-y-2">
-            {countryBrands.slice(0, 5).map((brand) => (
-              <div key={brand} className="flex items-center space-x-2">
-                <Checkbox id={brand} />
-                <Label htmlFor={brand} className="text-sm">
-                  {brand}
-                </Label>
+            {originOptions.map(origin => (
+              <div key={origin.id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`origin-${origin.id}`}
+                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                />
+                <label htmlFor={`origin-${origin.id}`} className="ml-2 text-sm text-gray-700">
+                  {origin.label}
+                </label>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Clear Filters */}
-      <Button variant="outline" className="w-full">
-        Clear All Filters
+        )}
+      </div>
+      
+      <Button 
+        className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-base"
+        onClick={() => console.log("Applying filters", { priceRange, searchQuery })}
+      >
+        Apply Filters
       </Button>
+      
+      <div className="mt-6 text-center text-sm text-gray-500">
+        <button className="text-green-600 hover:underline">Reset all filters</button>
+      </div>
     </div>
   )
 }

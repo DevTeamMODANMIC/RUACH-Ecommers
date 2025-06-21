@@ -6,10 +6,13 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
+import { Check, Loader2, Mail, Gift, Bell, Tag, ArrowRight } from "lucide-react"
+import { motion } from "framer-motion"
 
 export default function Newsletter() {
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isSubscribed, setIsSubscribed] = useState(false)
   const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,14 +24,20 @@ export default function Newsletter() {
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       toast({
-        title: "Success!",
-        description: "You've been subscribed to our newsletter.",
+        title: "Successfully subscribed!",
+        description: "Welcome to our community. You'll receive our next newsletter soon!",
       })
       setEmail("")
+      setIsSubscribed(true)
+      
+      // Reset the success state after 5 seconds
+      setTimeout(() => {
+        setIsSubscribed(false)
+      }, 5000)
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        title: "Subscription failed",
+        description: "We couldn't process your subscription. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -37,31 +46,156 @@ export default function Newsletter() {
   }
 
   return (
-    <section className="py-16 bg-green-600 text-white">
-      <div className="container mx-auto px-4 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">Stay Updated with Our Latest Offers</h2>
-        <p className="text-xl mb-8 text-green-100 max-w-2xl mx-auto">
-          Subscribe to our newsletter and be the first to know about new products, special discounts, and exclusive
-          deals.
-        </p>
+    <section className="py-20 bg-gradient-to-br from-green-600 via-green-700 to-green-800 text-white relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-0 left-0 w-full h-full opacity-10">
+        <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-white animate-pulse-slow"></div>
+        <div className="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-white animate-pulse-slow" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute top-1/2 left-1/4 w-20 h-20 rounded-full bg-white animate-pulse-slow" style={{ animationDelay: "1.5s" }}></div>
+      </div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center bg-white/10 rounded-full px-3 py-1 text-sm border border-white/20 backdrop-blur-sm mb-4">
+              <Mail className="h-4 w-4 mr-2" />
+              <span>Join 5,000+ subscribers</span>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 leading-tight max-w-3xl mx-auto">
+              Stay Updated with BorderlessBuy
+            </h2>
+            <div className="w-24 h-1 bg-white/40 rounded mx-auto mb-4"></div>
+            <p className="text-lg text-green-50 max-w-2xl mx-auto">
+              Get notified about new products, special offers and authentic African recipes delivered straight to your inbox.
+            </p>
+          </div>
 
-        <form onSubmit={handleSubmit} className="max-w-md mx-auto">
-          <div className="flex gap-2">
+          <div className="flex flex-col md:flex-row items-stretch gap-8 md:gap-12">
+            {/* Left content */}
+            <div className="md:w-5/12 text-center md:text-left">
+              <div className="h-full flex flex-col justify-center">
+                <h3 className="text-2xl font-bold mb-6">Why Subscribe?</h3>
+                
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  viewport={{ once: true }}
+                  className="space-y-5"
+                >
+                  <div className="flex items-center gap-4 bg-white/10 p-4 rounded-lg backdrop-blur-sm">
+                    <div className="bg-white/20 p-3 rounded-full">
+                      <Gift className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">Exclusive Offers</h4>
+                      <p className="text-sm text-green-50">Special discounts only for subscribers</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 bg-white/10 p-4 rounded-lg backdrop-blur-sm">
+                    <div className="bg-white/20 p-3 rounded-full">
+                      <Bell className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">New Arrivals</h4>
+                      <p className="text-sm text-green-50">Be first to know about new products</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 bg-white/10 p-4 rounded-lg backdrop-blur-sm">
+                    <div className="bg-white/20 p-3 rounded-full">
+                      <Tag className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">Seasonal Promotions</h4>
+                      <p className="text-sm text-green-50">Holiday specials and limited-time offers</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+            
+            {/* Right form */}
+            <div className="md:w-7/12 w-full">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                viewport={{ once: true }}
+                className="bg-white p-8 rounded-2xl shadow-lg"
+              >
+                <div className="text-center mb-6">
+                  <div className="bg-green-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Mail className="h-7 w-7 text-green-600" />
+                  </div>
+                  <h3 className="text-gray-800 text-2xl font-bold">Get BorderlessBuy Updates</h3>
+                  <p className="text-gray-600 mt-2">Sign up for our newsletter and never miss out</p>
+                </div>
+                
+                {isSubscribed ? (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-green-50 p-6 rounded-xl text-center"
+                  >
+                    <div className="bg-green-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Check className="h-8 w-8 text-green-600" />
+                    </div>
+                    <h4 className="text-green-800 text-xl font-bold">Thank you for subscribing!</h4>
+                    <p className="text-green-700 mt-2">Check your inbox for a confirmation email and get ready for exclusive updates.</p>
+                  </motion.div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    <div className="space-y-2">
+                      <label htmlFor="email" className="text-sm text-gray-700 font-medium block text-left">
+                        Email Address <span className="text-red-500">*</span>
+                      </label>
             <Input
+                        id="email"
               type="email"
-              placeholder="Enter your email address"
+                        placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-white text-gray-900"
+                        className="bg-gray-50 border-gray-200 text-gray-900 h-12 rounded-lg focus:ring-green-500 focus:border-green-500"
             />
-            <Button type="submit" disabled={isLoading} className="bg-white text-green-600 hover:bg-gray-100">
-              {isLoading ? "Subscribing..." : "Subscribe"}
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      disabled={isLoading} 
+                      className="bg-green-600 hover:bg-green-700 text-white w-full h-12 text-base rounded-lg shadow-md hover:shadow-lg transition-all duration-200 mt-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          Subscribe Now
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </>
+                      )}
             </Button>
+                    
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500 mt-3 inline-flex items-center">
+                        <Check className="h-3 w-3 mr-1 text-green-600" />
+                        We respect your privacy. Unsubscribe anytime.
+                      </p>
+                    </div>
+                  </form>
+                )}
+              </motion.div>
+            </div>
           </div>
-        </form>
 
-        <p className="text-sm text-green-100 mt-4">We respect your privacy. Unsubscribe at any time.</p>
+          <div className="mt-12 text-center text-sm text-white/70">
+            <p>Join thousands of satisfied customers who enjoy our premium African products</p>
+          </div>
+        </div>
       </div>
     </section>
   )
