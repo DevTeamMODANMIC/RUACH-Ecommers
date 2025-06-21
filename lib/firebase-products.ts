@@ -11,6 +11,7 @@ import {
   orderBy,
   limit,
   startAfter,
+  onSnapshot,
   type DocumentSnapshot,
 } from "firebase/firestore"
 import { db } from "./firebase"
@@ -23,6 +24,7 @@ export interface Product {
   originalPrice?: number
   category: string
   subcategory?: string
+  subtitle?: string
   images: string[]
   inStock: boolean
   stockQuantity: number
@@ -48,6 +50,15 @@ export interface Product {
   }
   createdAt: Date
   updatedAt: Date
+  // UI display properties
+  rating?: number
+  reviewCount?: number
+  bestseller?: boolean
+  new?: boolean
+  popular?: boolean
+  isNew?: boolean
+  isBulk?: boolean
+  discount?: number
 }
 
 export interface ProductFilters {
@@ -102,6 +113,51 @@ export const getProducts = async (filters?: ProductFilters, pageSize = 20, lastD
   }
 }
 
+// Real-time products listener
+export const listenToProducts = (
+  callback: (products: Product[]) => void,
+  filters?: ProductFilters,
+  pageSize = 100
+) => {
+  try {
+    let q = query(collection(db, "products"))
+
+    // Apply filters
+    if (filters?.category) {
+      q = query(q, where("category", "==", filters.category))
+    }
+    if (filters?.country) {
+      q = query(q, where("availableCountries", "array-contains", filters.country))
+    }
+    if (filters?.inStock !== undefined) {
+      q = query(q, where("inStock", "==", filters.inStock))
+    }
+    if (filters?.tags && filters.tags.length > 0) {
+      q = query(q, where("tags", "array-contains-any", filters.tags))
+    }
+
+    // Add ordering and pagination
+    q = query(q, orderBy("createdAt", "desc"), limit(pageSize))
+
+    // Set up the listener
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const products: Product[] = []
+      querySnapshot.forEach((doc) => {
+        products.push({ id: doc.id, ...doc.data() } as Product)
+      })
+      callback(products)
+    }, (error) => {
+      console.error("Error listening to products:", error)
+    })
+
+    // Return the unsubscribe function
+    return unsubscribe
+  } catch (error: any) {
+    console.error("Error setting up products listener:", error)
+    throw new Error(error.message)
+  }
+}
+
 export const getProduct = async (id: string): Promise<Product | null> => {
   try {
     const productDoc = await getDoc(doc(db, "products", id))
@@ -112,6 +168,25 @@ export const getProduct = async (id: string): Promise<Product | null> => {
   } catch (error: any) {
     console.error("Error getting product:", error)
     return null
+  }
+}
+
+// Real-time single product listener
+export const listenToProduct = (id: string, callback: (product: Product | null) => void) => {
+  try {
+    return onSnapshot(doc(db, "products", id), (doc) => {
+      if (doc.exists()) {
+        callback({ id: doc.id, ...doc.data() } as Product)
+      } else {
+        callback(null)
+      }
+    }, (error) => {
+      console.error("Error listening to product:", error)
+      callback(null)
+    })
+  } catch (error: any) {
+    console.error("Error setting up product listener:", error)
+    throw new Error(error.message)
   }
 }
 

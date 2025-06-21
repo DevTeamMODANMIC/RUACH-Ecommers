@@ -1,294 +1,380 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
 import Link from "next/link"
-import { Search, ShoppingCart, User, Heart, Menu, X, Sun, Moon } from "lucide-react"
+import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useTheme } from "next-themes"
-import { useAuth } from "@/components/auth-provider"
-import { CountrySelectorDropdown } from "@/components/country-selector-dropdown"
+import { 
+  ShoppingCart, 
+  Heart, 
+  Menu, 
+  X, 
+  Search, 
+  User, 
+  ChevronDown,
+  Phone,
+  Mail,
+  MapPin,
+  Facebook,
+  Twitter,
+  Instagram,
+  Package,
+  Coffee,
+  Apple,
+  Tag,
+  Award,
+  Percent,
+  Home,
+  Info,
+  ShoppingBag,
+  MessageCircle,
+  BookOpen
+} from "lucide-react"
 
-const categories = [
-  "Drinks",
-  "Flour",
-  "Rice",
-  "Pap/Custard",
-  "Spices",
-  "Beverages",
-  "Dried Spices",
-  "Oil",
-  "Provisions",
-  "Fresh Produce",
-  "Fresh Vegetables",
-  "Snack/Bread/Cereal",
-  "Vegetable Oil",
-  "Meat/Beef",
+const mainNavItems = [
+  { title: "Home", href: "/", icon: Home },
+  { 
+    title: "Shop", 
+    href: "/shop",
+    icon: ShoppingBag,
+    dropdown: [
+      { title: "Beverages", href: "/shop?category=beverages", icon: Coffee },
+      { title: "Food Items", href: "/shop?category=food", icon: Apple },
+      { title: "New Arrivals", href: "/shop?sort=newest", icon: Package },
+      { title: "Best Sellers", href: "/shop?sort=popular", icon: Award },
+      { title: "Special Offers", href: "/shop?discount=true", icon: Percent }
+    ]
+  },
+  { title: "About us", href: "/about", icon: Info },
+  { title: "Bulk Order", href: "/bulk-order", icon: Package },
+  { title: "Contact us", href: "/contact", icon: MessageCircle },
+  { title: "Blog", href: "/blog", icon: BookOpen }
 ]
 
 export default function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const pathname = usePathname()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all-categories")
-  const { theme, setTheme } = useTheme()
-  const { user, logout } = useAuth()
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
+  const [wishlistCount, setWishlistCount] = useState(0)
+  
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 80)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Implement search functionality
-    console.log("Searching for:", searchQuery, "in category:", selectedCategory)
+  // Toggle dropdown menu
+  const toggleDropdown = (title: string) => {
+    if (activeDropdown === title) {
+      setActiveDropdown(null)
+    } else {
+      setActiveDropdown(title)
+    }
   }
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setActiveDropdown(null)
+    }
+    document.addEventListener("click", handleClickOutside)
+    return () => document.removeEventListener("click", handleClickOutside)
+  }, [])
+  
   return (
-    <header className="bg-background border-b">
+    <header className={`sticky top-0 z-40 w-full transition-all duration-300 ${isScrolled ? 'shadow-lg' : ''}`}>
       {/* Top Bar */}
-      <div className="bg-muted/50 py-2">
-        <div className="container mx-auto px-4 flex justify-between items-center text-sm">
-          <div className="flex items-center space-x-4">
-            <span>📧 info@ayotayo.co.uk</span>
+      <div className="bg-gradient-to-r from-green-700 to-green-600 text-white py-2 hidden md:block">
+        <div className="container flex justify-between items-center">
+          <div className="flex items-center space-x-6 text-sm">
+            <div className="flex items-center">
+              <Phone className="h-3.5 w-3.5 mr-1" />
+              <span>+44 123 456 7890</span>
+            </div>
+            <div className="flex items-center">
+              <Mail className="h-3.5 w-3.5 mr-1" />
+              <a href="mailto:info@borderlessbuy.co.uk" className="hover:underline">
+                info@borderlessbuy.co.uk
+              </a>
+            </div>
+            <div className="flex items-center">
+              <MapPin className="h-3.5 w-3.5 mr-1" />
+              <span>London, UK</span>
+            </div>
           </div>
-          <nav className="hidden md:flex space-x-6">
-            <Link href="/" className="hover:text-green-600 transition-colors">
-              Home
+          <div className="flex items-center space-x-4">
+            <div className="flex space-x-3">
+              <a href="#" className="hover:text-green-200 transition-colors"><Facebook className="h-4 w-4" /></a>
+              <a href="#" className="hover:text-green-200 transition-colors"><Twitter className="h-4 w-4" /></a>
+              <a href="#" className="hover:text-green-200 transition-colors"><Instagram className="h-4 w-4" /></a>
+            </div>
+            <span className="border-r border-green-500 h-4"></span>
+            <Link href="/login" className="text-sm hover:text-green-200 flex items-center transition-colors">
+              <User className="h-3.5 w-3.5 mr-1" />
+              Login / Register
             </Link>
-            <Link href="/about" className="hover:text-green-600 transition-colors">
-              About us
-            </Link>
-            <Link href="/shop" className="hover:text-green-600 transition-colors">
-              Shop
-            </Link>
-            <Link href="/bulk-order" className="hover:text-green-600 transition-colors">
-              Bulk Order
-            </Link>
-            <Link href="/contact" className="hover:text-green-600 transition-colors">
-              Contact us
-            </Link>
-            <Link href="/blog" className="hover:text-green-600 transition-colors">
-              Blog
-            </Link>
-          </nav>
+          </div>
         </div>
       </div>
-
+      
       {/* Main Header */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xl">A</span>
+      <div className={`bg-white transition-all duration-300 ${isScrolled ? 'py-2' : 'py-4'}`}>
+        <div className="container">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <Link href="/" className="flex items-center group">
+              <div className="bg-gradient-to-br from-green-600 to-green-700 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-xl mr-2 shadow-md group-hover:shadow-lg transition-all">
+                B
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xl font-bold text-gray-800">BorderlessBuy</span>
+                <span className="text-xs text-green-600 -mt-1 hidden sm:block">International Groceries</span>
+              </div>
+            </Link>
+            
+            {/* Search Bar - Desktop */}
+            <div className="hidden md:flex flex-1 max-w-md mx-6">
+              <div className="relative w-full">
+                <Input
+                  type="search"
+                  placeholder="Search for products..."
+                  className="pr-10 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-full"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <Button 
+                  size="icon" 
+                  className="absolute right-0 top-0 h-full bg-green-600 hover:bg-green-700 rounded-l-none rounded-r-full"
+                >
+                  <Search className="h-4 w-4" />
+                  <span className="sr-only">Search</span>
+                </Button>
+              </div>
             </div>
-            <span className="text-xl font-bold text-green-600">Ayotayo</span>
-          </Link>
-
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-2xl mx-8">
-            <div className="flex w-full">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-48 rounded-r-none border-r-0">
-                  <SelectValue placeholder="SELECT CATEGORY" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all-categories">All Categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category.toLowerCase()}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            
+            {/* Right Icons */}
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Link href="/wishlist" className="relative hover:text-green-600 p-2 transition-colors">
+                <Heart className="h-5 w-5 sm:h-6 sm:w-6" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+              
+              <Link href="/cart" className="relative hover:text-green-600 p-2 transition-colors">
+                <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+              
+              {/* Mobile Menu Toggle */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="md:hidden"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMobileMenuOpen(!mobileMenuOpen);
+                }}
+              >
+                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
+            </div>
+          </div>
+          
+          {/* Search Bar - Mobile */}
+          <div className="mt-4 md:hidden">
+            <div className="relative">
               <Input
-                type="text"
-                placeholder="Search for products"
+                type="search"
+                placeholder="Search for products..."
+                className="pr-10 border-gray-300 rounded-full"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="rounded-none border-x-0"
               />
-              <Button type="submit" className="rounded-l-none bg-green-600 hover:bg-green-700">
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
-          </form>
-
-          {/* Right Side Icons */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Country Selector - hide on smallest screens */}
-            <div className="hidden sm:block">
-              <CountrySelectorDropdown variant="header" showLabel={false} />
-            </div>
-
-            {/* Theme Toggle - hide on smallest screens */}
-            <div className="hidden sm:block">
-              <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              </Button>
-            </div>
-
-            {/* User Account */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <User className="h-4 w-4" />
-                  {user && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                {user ? (
-                  <>
-                    <div className="p-2 border-b">
-                      <p className="font-medium">{user.displayName || 'Logged In User'}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                    </div>
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile">Profile</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/orders">Orders</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/wishlist">Wishlist</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
-                  </>
-                ) : (
-                  <>
-                    <div className="p-2 border-b">
-                      <p className="font-medium">Not logged in</p>
-                      <p className="text-xs text-muted-foreground">Login to access your account</p>
-                    </div>
-                    <DropdownMenuItem asChild>
-                      <Link href="/login">Login</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/register">Register</Link>
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Wishlist - hide on smallest screens */}
-            <div className="hidden sm:block">
-              <Button variant="ghost" size="icon" asChild>
-                <Link href="/wishlist">
-                  <Heart className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-
-            {/* Shopping Cart */}
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/cart" className="relative">
-                <ShoppingCart className="h-4 w-4" />
-                <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
-                  {user ? '3' : '0'}
-                </Badge>
-              </Link>
-            </Button>
-            {/* Price - hide on smallest screens */}
-            <span className="hidden sm:inline-block text-sm font-medium">{user ? '£34.99' : '£0.00'}</span>
-
-            {/* Mobile Menu Toggle */}
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile Search */}
-        <form onSubmit={handleSearch} className="md:hidden mt-4">
-          <div className="flex">
-            <Input
-              type="text"
-              placeholder="Search for products"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="rounded-r-none"
-            />
-            <Button type="submit" className="rounded-l-none bg-green-600 hover:bg-green-700">
-              <Search className="h-4 w-4" />
-            </Button>
-          </div>
-        </form>
-      </div>
-
-      {/* Category Navigation */}
-      <div className="bg-green-600 text-white">
-        <div className="container mx-auto px-4">
-          <nav className="hidden lg:flex space-x-6 py-3 overflow-x-auto">
-            {categories.map((category) => (
-              <Link
-                key={category}
-                href={`/category/${category.toLowerCase().replace(/[^a-z0-9]/g, "-")}`}
-                className="whitespace-nowrap hover:text-green-200 transition-colors text-sm"
+              <Button 
+                size="icon" 
+                className="absolute right-0 top-0 h-full bg-green-600 hover:bg-green-700 rounded-l-none rounded-r-full"
               >
-                {category}
-              </Link>
-            ))}
-          </nav>
+                <Search className="h-4 w-4" />
+                <span className="sr-only">Search</span>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-background border-t">
-          <nav className="container mx-auto px-4 py-4 space-y-4">
-            <Link href="/" className="block hover:text-green-600 transition-colors">
-              Home
-            </Link>
-            <Link href="/about" className="block hover:text-green-600 transition-colors">
-              About us
-            </Link>
-            <Link href="/shop" className="block hover:text-green-600 transition-colors">
-              Shop
-            </Link>
-            <Link href="/bulk-order" className="block hover:text-green-600 transition-colors">
-              Bulk Order
-            </Link>
-            <Link href="/contact" className="block hover:text-green-600 transition-colors">
-              Contact us
-            </Link>
-            <Link href="/blog" className="block hover:text-green-600 transition-colors">
-              Blog
-            </Link>
-            <Link href="/wishlist" className="block hover:text-green-600 transition-colors sm:hidden">
-              Wishlist
-            </Link>
-            <div className="pt-4 border-t">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold">Theme</h3>
-                <Button variant="outline" size="sm" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-                  {theme === "dark" ? (
-                    <><Sun className="h-4 w-4 mr-2" /> Light Mode</>
-                  ) : (
-                    <><Moon className="h-4 w-4 mr-2" /> Dark Mode</>
-                  )}
-                </Button>
-              </div>
-            </div>
-            <div className="pt-4 border-t">
-              <h3 className="font-semibold mb-2">Categories</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {categories.map((category) => (
+      
+      {/* Navigation */}
+      <nav className="bg-white border-t border-b hidden md:block">
+        <div className="container">
+          <ul className="flex justify-center items-center">
+            {mainNavItems.map((item, index) => (
+              <li key={item.title} className="relative group">
+                <div
+                  onClick={(e) => {
+                    if (item.dropdown) {
+                      e.stopPropagation();
+                      toggleDropdown(item.title);
+                    }
+                  }}
+                  className={`flex items-center cursor-pointer px-4 ${index !== mainNavItems.length - 1 ? 'border-r border-gray-200' : ''}`}
+                >
                   <Link
-                    key={category}
-                    href={`/category/${category.toLowerCase().replace(/[^a-z0-9]/g, "-")}`}
-                    className="text-sm hover:text-green-600 transition-colors"
+                    href={item.href}
+                    className={`flex h-12 items-center font-medium transition-colors gap-1.5 ${
+                      pathname === item.href
+                        ? "text-green-600 border-b-2 border-green-600"
+                        : "text-gray-700 hover:text-green-600"
+                    }`}
                   >
-                    {category}
+                    {item.icon && <item.icon className="h-4 w-4" />}
+                    {item.title}
                   </Link>
-                ))}
-              </div>
-            </div>
-          </nav>
+                  {item.dropdown && (
+                    <ChevronDown 
+                      className={`ml-1 h-4 w-4 transition-transform duration-200 ${
+                        activeDropdown === item.title ? 'rotate-180' : ''
+                      }`}
+                    />
+                  )}
+                </div>
+                
+                {/* Dropdown Menu */}
+                {item.dropdown && (
+                  <div
+                    className={`absolute top-full left-0 bg-white shadow-xl rounded-b-lg w-56 z-30 transition-all duration-300 border-t-2 border-green-500 ${
+                      activeDropdown === item.title
+                        ? "opacity-100 translate-y-0 visible"
+                        : "opacity-0 -translate-y-2 invisible"
+                    }`}
+                  >
+                    <ul className="py-2">
+                      {item.dropdown.map((subItem) => {
+                        const IconComponent = subItem.icon;
+                        return (
+                          <li key={subItem.title}>
+                            <Link 
+                              href={subItem.href}
+                              className="flex items-center px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors"
+                              onClick={() => setActiveDropdown(null)}
+                            >
+                              {IconComponent && <IconComponent className="h-4 w-4 mr-3 text-green-600" />}
+                              {subItem.title}
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </nav>
+      
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t bg-white absolute w-full shadow-xl transform transition-transform duration-300 max-h-[80vh] overflow-y-auto">
+          <div className="container py-4">
+            <ul className="space-y-4 divide-y divide-gray-100">
+              {mainNavItems.map((item) => (
+                <li key={item.title} className="py-2">
+                  {!item.dropdown ? (
+                    <Link
+                      href={item.href}
+                      className={`flex items-center py-2 space-x-2 ${
+                        pathname === item.href
+                          ? "text-green-600 font-medium"
+                          : "text-gray-700"
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {item.icon && <item.icon className="h-4 w-4" />}
+                      <span>{item.title}</span>
+                    </Link>
+                  ) : (
+                    <div>
+                      <div 
+                        className="flex justify-between items-center py-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleDropdown(item.title);
+                        }}
+                      >
+                        <div className={`flex items-center space-x-2 ${
+                          pathname === item.href
+                            ? "text-green-600 font-medium"
+                            : "text-gray-700"
+                        }`}>
+                          {item.icon && <item.icon className="h-4 w-4" />}
+                          <span>{item.title}</span>
+                        </div>
+                        <ChevronDown 
+                          className={`ml-1 h-4 w-4 transition-transform duration-200 ${
+                            activeDropdown === item.title ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </div>
+                      
+                      {/* Mobile Dropdown */}
+                      {activeDropdown === item.title && item.dropdown && (
+                        <ul className="pl-4 mt-2 border-l-2 border-green-100 space-y-2">
+                          {item.dropdown.map((subItem) => {
+                            const IconComponent = subItem.icon;
+                            return (
+                              <li key={subItem.title}>
+                                <Link
+                                  href={subItem.href}
+                                  className="flex items-center py-2 text-gray-600 hover:text-green-600"
+                                  onClick={() => {
+                                    setActiveDropdown(null);
+                                    setMobileMenuOpen(false);
+                                  }}
+                                >
+                                  {IconComponent && <IconComponent className="h-4 w-4 mr-2 text-green-600" />}
+                                  {subItem.title}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </li>
+              ))}
+              
+              {/* Mobile-specific elements */}
+              <li className="pt-4 flex flex-col space-y-3">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Phone className="h-3.5 w-3.5 mr-2" />
+                  <span>+44 123 456 7890</span>
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Mail className="h-3.5 w-3.5 mr-2" />
+                  <a href="mailto:info@borderlessbuy.co.uk">info@borderlessbuy.co.uk</a>
+                </div>
+                <div className="flex space-x-4 pt-2">
+                  <a href="#" className="text-gray-600 hover:text-green-600"><Facebook className="h-5 w-5" /></a>
+                  <a href="#" className="text-gray-600 hover:text-green-600"><Twitter className="h-5 w-5" /></a>
+                  <a href="#" className="text-gray-600 hover:text-green-600"><Instagram className="h-5 w-5" /></a>
+                </div>
+              </li>
+            </ul>
+          </div>
         </div>
       )}
     </header>
