@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Inter, Poppins } from "next/font/google"
 import "./globals.css"
 import "../styles/globals.css"
 import "./tailwind.css"
@@ -16,19 +16,32 @@ import { Button } from "@/components/ui/button"
 import { User } from "lucide-react"
 import Link from "next/link"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ 
+  subsets: ["latin"],
+  variable: "--font-inter", 
+})
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-poppins",
+})
+
+// Site name should be consistent across all environments
+const SITE_NAME = "BorderlessBuy";
 
 export const metadata: Metadata = {
-  title: "Ayotayo - Premium African & International Foods",
+  title: `${SITE_NAME} - Premium African & International Foods`,
   description:
     "Discover authentic African and international foods, spices, and beverages. Fresh produce, quality ingredients, and traditional flavors delivered to your door.",
   keywords: "African food, international cuisine, spices, beverages, fresh produce, online grocery",
-  authors: [{ name: "Ayotayo" }],
+  authors: [{ name: SITE_NAME }],
+  metadataBase: new URL("https://borderlessbuy.co.uk"),
   openGraph: {
-    title: "Ayotayo - Premium African & International Foods",
+    title: `${SITE_NAME} - Premium African & International Foods`,
     description: "Discover authentic African and international foods, spices, and beverages.",
-    url: "https://ayotayo.co.uk",
-    siteName: "Ayotayo",
+    url: "https://borderlessbuy.co.uk",
+    siteName: SITE_NAME,
     images: [
       {
         url: "/og-image.jpg",
@@ -41,11 +54,11 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ayotayo - Premium African & International Foods",
+    title: `${SITE_NAME} - Premium African & International Foods`,
     description: "Discover authentic African and international foods, spices, and beverages.",
     images: ["/og-image.jpg"],
   },
-    generator: 'v0.dev'
+  generator: SITE_NAME
 }
 
 export default function RootLayout({
@@ -54,7 +67,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${poppins.variable}`}>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider>
@@ -67,15 +85,14 @@ export default function RootLayout({
                     <Footer />
                   </div>
                   <Toaster />
-                  <div className="fixed bottom-4 right-4 z-50">
+                  <div className="fixed bottom-4 right-4 z-50 hidden md:block">
                     <Button 
                       asChild 
-                      className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10"
+                      className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm px-3 sm:px-4 h-9 sm:h-10 rounded-full shadow-lg"
                     >
                       <Link href="/login">
                         <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                        <span className="hidden xs:inline">Test Login</span>
-                        <span className="xs:hidden">Login</span>
+                        <span>Admin Login</span>
                       </Link>
                     </Button>
                   </div>
