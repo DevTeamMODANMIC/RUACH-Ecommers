@@ -17,7 +17,8 @@ export default function BeverageShowcase() {
       name: "Coca-Cola",
       subtitle: "50cl Bottle",
       price: 1.20,
-      image: "/a/coke-50cl-250x250.jpg",
+      image: "/product_images/coke-50cl-250x250.jpg",
+      fallbackImage: "/product_images/beverages/coke-50cl-250x250.jpg",
       slug: "/products/coca-cola-50cl",
       rating: 4.9,
       reviews: 124,
@@ -28,7 +29,8 @@ export default function BeverageShowcase() {
       name: "Fanta Orange",
       subtitle: "50cl Bottle",
       price: 1.20,
-      image: "/a/Fanta-PET-Bottles-50cl.jpg",
+      image: "/product_images/Fanta-PET-Bottles-50cl.jpg",
+      fallbackImage: "/product_images/beverages/Fanta-PET-Bottles-50cl.jpg",
       slug: "/products/fanta-50cl",
       rating: 4.7,
       reviews: 86
@@ -38,7 +40,8 @@ export default function BeverageShowcase() {
       name: "Sprite",
       subtitle: "50cl Bottle",
       price: 1.20,
-      image: "/a/Sprite-50cl-1-250x250.jpg",
+      image: "/product_images/Sprite-50cl-1-250x250.jpg",
+      fallbackImage: "/product_images/beverages/Sprite-50cl-1-250x250.jpg",
       slug: "/products/sprite-50cl",
       rating: 4.8,
       reviews: 92
@@ -48,7 +51,8 @@ export default function BeverageShowcase() {
       name: "Amstel Malta",
       subtitle: "Non-Alcoholic Malt Drink",
       price: 1.50,
-      image: "/a/Amstel-malta-150x150.jpg",
+      image: "/product_images/Amstel-malta-150x150.jpg",
+      fallbackImage: "/product_images/beverages/Amstel-malta-150x150.jpg",
       slug: "/products/amstel-malta",
       rating: 4.6,
       reviews: 58
@@ -58,7 +62,8 @@ export default function BeverageShowcase() {
       name: "Malta Guinness",
       subtitle: "Pack of 24 Cans",
       price: 28.99,
-      image: "/a/malta guinness can (pack of 24).png",
+      image: "/product_images/malta_guinness_can_(pack_of_24).png",
+      fallbackImage: "/product_images/beverages/malta_guinness_can_(pack_of_24).png",
       slug: "/products/malta-guinness-pack",
       rating: 4.9,
       reviews: 73,
@@ -69,7 +74,8 @@ export default function BeverageShowcase() {
       name: "Schweppes Chapman",
       subtitle: "Pack of 24",
       price: 26.99,
-      image: "/a/swhwappes chapman pack of 24.png",
+      image: "/product_images/swhwappes_chapman_pack_of_24.png",
+      fallbackImage: "/product_images/beverages/swhwappes_chapman_pack_of_24.png",
       slug: "/products/schweppes-chapman",
       rating: 4.8,
       reviews: 42,
@@ -81,7 +87,8 @@ export default function BeverageShowcase() {
       name: "LaCasera",
       subtitle: "Sparkling Apple Drink",
       price: 1.35,
-      image: "/a/Lacasara-150x150.jpg",
+      image: "/product_images/Lacasara-150x150.jpg",
+      fallbackImage: "/product_images/beverages/Lacasara-150x150.jpg", 
       slug: "/products/lacasera",
       rating: 4.7,
       reviews: 36,
@@ -92,12 +99,29 @@ export default function BeverageShowcase() {
       name: "Maltina",
       subtitle: "Premium Malt Drink (Can)",
       price: 1.40,
-      image: "/a/Maltina-can-150x150.jpg",
+      image: "/product_images/Maltina-can-150x150.jpg",
+      fallbackImage: "/product_images/beverages/Maltina-can-150x150.jpg",
       slug: "/products/maltina-can",
       rating: 4.8,
       reviews: 64
     }
   ]
+
+  // Function to handle image error and try fallback images
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, beverage: any) => {
+    console.error(`Failed to load image: ${(e.target as HTMLImageElement).src}`);
+    const imgElement = e.currentTarget;
+    
+    if (beverage.fallbackImage && imgElement.src !== beverage.fallbackImage) {
+      imgElement.src = beverage.fallbackImage;
+    } else if (beverage.fallbackImage && imgElement.src === beverage.fallbackImage) {
+      imgElement.src = "/placeholder.jpg";
+    } else {
+      imgElement.src = "/placeholder.jpg";
+    }
+    
+    imgElement.onerror = null; // Prevent infinite loops
+  };
 
   return (
     <section className="py-16 bg-gradient-to-b from-white to-green-50">
@@ -130,7 +154,7 @@ export default function BeverageShowcase() {
         {showDebug && (
           <div className="bg-gray-100 p-4 rounded mb-6">
             <h3 className="font-bold mb-2">Image Paths:</h3>
-            <pre className="text-xs overflow-auto">{JSON.stringify(beverages.map(b => b.image), null, 2)}</pre>
+            <pre className="text-xs overflow-auto">{JSON.stringify(beverages.map(b => ({ name: b.name, image: b.image, fallback: b.fallbackImage })), null, 2)}</pre>
           </div>
         )}
         
@@ -161,12 +185,8 @@ export default function BeverageShowcase() {
                     fill
                     className="object-contain p-2 transform group-hover:scale-110 transition-transform duration-300"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                    onError={(e) => {
-                      console.error(`Failed to load image: ${beverage.image}`);
-                      const imgElement = e.currentTarget as HTMLImageElement;
-                      imgElement.src = "/placeholder.jpg";
-                      imgElement.onerror = null;
-                    }}
+                    onError={(e) => handleImageError(e, beverage)}
+                    priority
                   />
                 </div>
                 
