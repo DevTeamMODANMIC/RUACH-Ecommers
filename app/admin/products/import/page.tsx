@@ -9,9 +9,11 @@ import { ArrowLeft, FileUp, FileText, Check, AlertTriangle } from "lucide-react"
 import { auth } from "@/lib/firebase"
 import { onAuthStateChanged } from "firebase/auth"
 import { importScrapedProducts, ensureProductImages } from "@/lib/utils"
+import { useCurrency } from "@/hooks/use-currency"
 
 export default function ImportProducts() {
   const router = useRouter()
+  const { formatPrice } = useCurrency()
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [importing, setImporting] = useState(false)

@@ -96,28 +96,11 @@ export default function Hero() {
 
   return (
     <section 
-      className="relative h-[60vh] sm:h-[70vh] md:h-[85vh] overflow-hidden bg-gray-900 border-b border-gray-200/10"
+      className="relative h-[60vh] sm:h-[70vh] md:h-[85vh] overflow-hidden bg-white border-b border-gray-200 mb-12"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Authentication Buttons */}
-      <div className="absolute top-4 right-4 z-10 flex gap-2">
-        <Button asChild className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10 shadow-md">
-          <Link href="/login">
-            <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-            <span className="hidden xs:inline">Login</span>
-            <span className="xs:hidden">Log</span>
-          </Link>
-        </Button>
-        <Button asChild variant="outline" className="bg-white/20 text-white border-white/30 hover:bg-white/30 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10 shadow-md backdrop-blur-sm">
-          <Link href="/register">
-            <span className="hidden xs:inline">Register</span>
-            <span className="xs:hidden">Reg</span>
-          </Link>
-        </Button>
-      </div>
-
       {/* Slides */}
       {slides.map((slide, index) => (
         <div
@@ -128,7 +111,7 @@ export default function Hero() {
         >
           {/* Loading effect */}
           {isLoading[index] && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
               <div className="w-10 h-10 border-4 border-gray-300 border-t-green-600 rounded-full animate-spin"></div>
             </div>
           )}
@@ -140,6 +123,8 @@ export default function Hero() {
             sizes="100vw"
             quality={90}
             priority={index === 0}
+            placeholder="blur"
+            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAEtAI2QTlcpAAAAABJRU5ErkJggg=="
             className="object-cover transition-transform duration-10000 ease-out"
             onLoad={() => handleImageLoad(index)}
             style={{ 
@@ -147,7 +132,7 @@ export default function Hero() {
               transitionDuration: '15000ms'
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/60" />
           
           <div className="absolute inset-0 flex flex-col items-center justify-center md:items-start">
             <div 
@@ -173,21 +158,23 @@ export default function Hero() {
                 <Button 
                   size="lg" 
                   asChild
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 sm:px-8 py-6 text-sm sm:text-base font-medium shadow-lg hover:shadow-xl transition-all rounded-full group"
+                  className="bg-green-600 hover:bg-green-700 text-white px-8 sm:px-10 py-7 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all rounded-full group relative overflow-hidden"
                 >
                   <Link href={slide.ctaLink}>
-                    <ShoppingBag className="mr-2 h-4 w-4 group-hover:animate-bounce" />
+                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-500/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></span>
+                    <ShoppingBag className="mr-2 h-5 w-5 group-hover:animate-bounce" />
                     {slide.cta}
-                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>
                 <Button 
                   size="lg" 
                   variant="outline"
                   onClick={scrollToNewsletter}
-                  className="bg-white/20 text-white border-white/30 hover:bg-white/30 px-6 sm:px-8 py-6 text-sm sm:text-base font-medium shadow-lg hover:shadow-xl transition-all backdrop-blur-sm rounded-full"
+                  className="bg-white/20 text-white border-white/30 hover:bg-white/40 hover:border-white/50 px-8 sm:px-10 py-7 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all backdrop-blur-sm rounded-full group relative overflow-hidden"
                 >
-                  <Mail className="mr-2 h-4 w-4" />
+                  <span className="absolute inset-0 w-full h-full bg-white/10 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></span>
+                  <Mail className="mr-2 h-5 w-5 group-hover:animate-pulse" />
                   Subscribe to Updates
                 </Button>
               </div>
@@ -217,7 +204,7 @@ export default function Hero() {
       </Button>
 
       {/* Slide Indicators */}
-      <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex space-x-2 sm:space-x-3 z-10">
+      <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex space-x-2 sm:space-x-3 z-[50]">
         {slides.map((_, index) => (
           <button
             key={index}
@@ -230,13 +217,6 @@ export default function Hero() {
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}
-      </div>
-      
-      {/* Scroll down indicator */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden md:block animate-bounce">
-        <div className="w-8 h-12 rounded-full border-2 border-white/30 flex items-center justify-center">
-          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-        </div>
       </div>
     </section>
   )

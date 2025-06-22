@@ -15,55 +15,35 @@ function fileExists(filePath) {
   }
 }
 
-// Function to get all products from utils.ts
-function extractProductsFromFile(filePath) {
+// Function to get all products from products.json
+function getProducts() {
   try {
-    const fileContent = fs.readFileSync(filePath, 'utf8');
+    // First check if products.json exists
+    const productsPath = path.join(__dirname, 'products.json');
     
-    // Extract the predefinedProducts array
-    const productsMatch = fileContent.match(/const predefinedProducts = \[([\s\S]*?)\];/);
-    
-    if (!productsMatch) {
-      console.error('Could not find predefinedProducts array in the file');
+    if (fileExists(productsPath)) {
+      const fileContent = fs.readFileSync(productsPath, 'utf8');
+      try {
+        return JSON.parse(fileContent);
+      } catch (error) {
+        console.error('Error parsing products.json:', error);
+        return [];
+      }
+    } else {
+      console.log('products.json not found. Creating sample file...');
+      // This could be expanded to create a sample products.json
       return [];
     }
-    
-    // Evaluate the array (this is a bit hacky but works for our purpose)
-    // Replace single quotes with double quotes for JSON parsing
-    const productsArrayString = productsMatch[1]
-      .replace(/'/g, '"')
-      .replace(/(\w+):/g, '"$1":'); // Convert property names to strings
-    
-    try {
-      // Try to parse as JSON (this might fail due to comments or other JS features)
-      return JSON.parse(`[${productsArrayString}]`);
-    } catch (parseError) {
-      console.error('Error parsing products array:', parseError);
-      
-      // Fallback: extract just the image paths using regex
-      const imagePathsRegex = /images: \[(.*?)\]/g;
-      const matches = [...fileContent.matchAll(imagePathsRegex)];
-      
-      const imagePaths = [];
-      matches.forEach(match => {
-        const pathsString = match[1];
-        const paths = pathsString.match(/"([^"]+)"/g) || [];
-        paths.forEach(p => imagePaths.push(p.replace(/"/g, '')));
-      });
-      
-      return imagePaths.map(path => ({ images: [path] }));
-    }
   } catch (err) {
-    console.error(`Error reading file ${filePath}:`, err);
+    console.error(`Error reading products file:`, err);
     return [];
   }
 }
 
 // Main function
 function checkImagePaths() {
-  // Get products from utils.ts
-  const utilsPath = path.join(__dirname, 'lib', 'utils.ts');
-  const products = extractProductsFromFile(utilsPath);
+  // Get products
+  const products = getProducts();
   
   console.log(`Found ${products.length} products to check`);
   
@@ -76,21 +56,43 @@ function checkImagePaths() {
   
   products.forEach((product, index) => {
     if (!product.images) {
-      console.log(`Product #${index + 1} has no images array`);
+      console.log(`Product #${index + 1} (${product.name || 'Unknown'}) has no images array`);
       return;
     }
     
     product.images.forEach(imagePath => {
+      // Skip empty strings
+      if (!imagePath) {
+        return;
+      }
+      
       // Remove leading slash for path resolution
       const relativePath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
-      const fullPath = path.join(__dirname, 'public', relativePath);
       
-      const exists = fileExists(fullPath);
+      // Check in different locations
+      const locations = [
+        path.join(__dirname, 'public', relativePath),
+        path.join(__dirname, relativePath),
+        path.join(__dirname, 'public', 'product_images', path.basename(relativePath)),
+        path.join(__dirname, 'public', 'a', path.basename(relativePath))
+      ];
+      
+      let exists = false;
+      let validPath = '';
+      
+      for (const location of locations) {
+        if (fileExists(location)) {
+          exists = true;
+          validPath = location;
+          break;
+        }
+      }
       
       results.paths.push({
         path: imagePath,
         exists,
-        fullPath
+        validPath: exists ? validPath : null,
+        product: `${product.name} (${product.id})`
       });
       
       if (exists) {
@@ -112,8 +114,18 @@ function checkImagePaths() {
     results.paths
       .filter(p => !p.exists)
       .forEach(p => {
-        console.log(`- ${p.path} (expected at: ${p.fullPath})`);
+        console.log(`- ${p.path} (product: ${p.product})`);
       });
+  }
+  
+  // Suggest fixes
+  if (results.invalid > 0) {
+    console.log('\nSuggested fixes:');
+    console.log('1. Ensure images are in one of these directories:');
+    console.log('   - public/product_images/');
+    console.log('   - public/a/');
+    console.log('2. Update product image paths in products.json to point to valid locations');
+    console.log('3. Run this script again to verify fixes');
   }
 }
 

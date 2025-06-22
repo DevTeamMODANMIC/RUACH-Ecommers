@@ -48,30 +48,31 @@ export default function ImageTest() {
   ]
   
   return (
-    <div className="py-8 bg-white">
+    <div className="py-8 bg-[#1e2530]">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Image Loading Test</h2>
+          <h2 className="text-2xl font-bold text-white">Image Loading Test</h2>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => setShowDebug(!showDebug)}
+            className="border-gray-700 text-gray-300 hover:bg-gray-800"
           >
             {showDebug ? "Hide Debug" : "Show Debug"}
           </Button>
         </div>
         
         {showDebug && (
-          <div className="bg-gray-100 p-4 rounded mb-6">
-            <h3 className="font-bold mb-2">Image Paths:</h3>
-            <pre className="text-xs overflow-auto">{JSON.stringify(testImages, null, 2)}</pre>
+          <div className="bg-gray-800 p-4 rounded mb-6">
+            <h3 className="font-bold mb-2 text-white">Image Paths:</h3>
+            <pre className="text-xs overflow-auto text-gray-300">{JSON.stringify(testImages, null, 2)}</pre>
           </div>
         )}
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {testImages.map((img, index) => (
-            <Card key={index} className="overflow-hidden">
-              <div className="relative h-60 bg-gray-100">
+            <Card key={index} className="overflow-hidden bg-[#1a212b] border-gray-700">
+              <div className="relative h-60 bg-[#1a212b]">
                 <Image
                   src={img.path}
                   alt={img.name}
@@ -87,11 +88,11 @@ export default function ImageTest() {
                 />
               </div>
               <CardContent className="pt-4">
-                <h3 className="font-medium">{img.name}</h3>
-                <p className="text-sm text-gray-500 break-all mt-1">{img.path}</p>
+                <h3 className="font-medium text-white">{img.name}</h3>
+                <p className="text-sm text-gray-400 break-all mt-1">{img.path}</p>
               </CardContent>
               <CardFooter>
-                <div className="text-xs bg-gray-100 p-2 rounded w-full">
+                <div className="text-xs bg-gray-800 p-2 rounded w-full text-gray-300">
                   <code>{`<Image src="${img.path}" alt="${img.name}" fill className="object-contain" />`}</code>
                 </div>
               </CardFooter>

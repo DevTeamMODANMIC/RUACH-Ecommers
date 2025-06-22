@@ -30,10 +30,12 @@ import { listenToProducts, deleteProduct, type Product } from "@/lib/firebase-pr
 import { auth } from "@/lib/firebase"
 import { onAuthStateChanged } from "firebase/auth"
 import { useToast } from "@/hooks/use-toast"
+import { useCurrency } from "@/hooks/use-currency"
 
 export default function AdminProducts() {
   const router = useRouter()
   const { toast } = useToast()
+  const { formatPrice } = useCurrency()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -163,7 +165,7 @@ export default function AdminProducts() {
                       </TableCell>
                       <TableCell className="font-medium">{product.name}</TableCell>
                       <TableCell>{product.category}</TableCell>
-                      <TableCell>£{product.price.toFixed(2)}</TableCell>
+                      <TableCell>{formatPrice(product.price)}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs ${
                           product.inStock && product.stockQuantity > 10

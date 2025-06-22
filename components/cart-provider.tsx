@@ -1,34 +1,29 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext } from "react"
+import { createContext, useContext, useEffect } from "react"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { useToast } from "@/hooks/use-toast"
+import { Product } from "@/types"
 
 interface CartItem {
-  id: number
+  productId: string
   name: string
   price: number
-  originalPrice?: number
   image: string
   quantity: number
-  country: string
-  category: string
-  brand: string
-  inStock: boolean
-  maxQuantity: number
 }
 
 interface CartContextType {
   items: CartItem[]
-  addToCart: (product: any, quantity?: number) => void
-  removeFromCart: (productId: number) => void
-  updateQuantity: (productId: number, quantity: number) => void
+  addToCart: (item: CartItem) => void
+  removeFromCart: (productId: string) => void
+  updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
   getTotalItems: () => number
   getTotalPrice: () => number
-  isInCart: (productId: number) => boolean
-  getCartItem: (productId: number) => CartItem | undefined
+  isInCart: (productId: string) => boolean
+  getCartItem: (productId: string) => CartItem | undefined
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -37,72 +32,56 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useLocalStorage<CartItem[]>("cart-items", [])
   const { toast } = useToast()
 
-  const addToCart = (product: any, quantity = 1) => {
+  // Sync cart across tabs
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'cart-items' && e.newValue) {
+        try {
+          const newItems = JSON.parse(e.newValue);
+          setItems(newItems);
+        } catch (error) {
+          console.error('Failed to parse cart items from storage', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [setItems]);
+
+  const addToCart = (item: CartItem) => {
     setItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id)
+      const existingItem = prevItems.find((i) => i.productId === item.productId)
 
       if (existingItem) {
-        const newQuantity = Math.min(existingItem.quantity + quantity, product.stockCount || 99)
-        if (newQuantity > existingItem.quantity) {
-          toast({
-            title: "Cart updated",
-            description: `${product.name} quantity updated to ${newQuantity}`,
-          })
-        } else {
-          toast({
-            title: "Stock limit reached",
-            description: `Cannot add more ${product.name} to cart`,
-            variant: "destructive",
-          })
-        }
-        return prevItems.map((item) => (item.id === product.id ? { ...item, quantity: newQuantity } : item))
+        return prevItems.map((i) => 
+          i.productId === item.productId 
+            ? { ...i, quantity: i.quantity + item.quantity } 
+            : i
+        )
       } else {
-        const cartItem: CartItem = {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          originalPrice: product.originalPrice,
-          image: product.image,
-          quantity,
-          country: product.country,
-          category: product.category,
-          brand: product.brand,
-          inStock: product.inStock,
-          maxQuantity: product.stockCount || 99,
-        }
-        toast({
-          title: "Added to cart",
-          description: `${product.name} has been added to your cart`,
-        })
-        return [...prevItems, cartItem]
+        return [...prevItems, item]
       }
     })
   }
 
-  const removeFromCart = (productId: number) => {
-    setItems((prevItems) => {
-      const item = prevItems.find((item) => item.id === productId)
-      if (item) {
-        toast({
-          title: "Removed from cart",
-          description: `${item.name} has been removed from your cart`,
-        })
-      }
-      return prevItems.filter((item) => item.id !== productId)
-    })
+  const removeFromCart = (productId: string) => {
+    setItems((prevItems) => prevItems.filter((item) => item.productId !== productId))
   }
 
-  const updateQuantity = (productId: number, quantity: number) => {
+  const updateQuantity = (productId: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(productId)
       return
     }
 
-    setItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === productId ? { ...item, quantity: Math.min(quantity, item.maxQuantity) } : item,
-      ),
-    )
+    setItems((prevItems) => {
+      return prevItems.map((item) =>
+        item.productId === productId ? { ...item, quantity } : item,
+      )
+    })
   }
 
   const clearCart = () => {
@@ -121,12 +100,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return items.reduce((total, item) => total + item.price * item.quantity, 0)
   }
 
-  const isInCart = (productId: number) => {
-    return items.some((item) => item.id === productId)
+  const isInCart = (productId: string) => {
+    return items.some((item) => item.productId === productId)
   }
 
-  const getCartItem = (productId: number) => {
-    return items.find((item) => item.id === productId)
+  const getCartItem = (productId: string) => {
+    return items.find((item) => item.productId === productId)
   }
 
   return (

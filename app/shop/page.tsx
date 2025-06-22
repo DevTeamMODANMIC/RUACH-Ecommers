@@ -1,208 +1,206 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import ProductGrid from "@/components/product-grid"
-import { ProductFilters } from "@/components/product-filters"
-import { getProducts, type Product } from "@/lib/firebase-products"
+import { Product } from "@/types"
+import { Loader2, Filter } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { products } from "@/lib/product-data"
 
+// Define available categories
 const categories = [
-  { name: "Drinks", href: "/shop?category=drinks" },
-  { name: "Flour", href: "/shop?category=flour" },
-  { name: "Rice", href: "/shop?category=rice" },
-  { name: "Pap/Custard", href: "/shop?category=pap-custard" },
-  { name: "Spices", href: "/shop?category=spices" },
-  { name: "Beverages", href: "/shop?category=beverages" },
-  { name: "Dried Spices", href: "/shop?category=dried-spices" },
-  { name: "Oil", href: "/shop?category=oil" },
-  { name: "Provisions", href: "/shop?category=provisions" },
-  { name: "Fresh Produce", href: "/shop?category=fresh-produce" },
-  { name: "Fresh Vegetables", href: "/shop?category=fresh-vegetables" },
-  { name: "Snack/Bread/Cereal", href: "/shop?category=snack-bread-cereal" },
-  { name: "Vegetable Oil", href: "/shop?category=vegetable-oil" },
-  { name: "Meat/Beef", href: "/shop?category=meat-beef" }
-]
+  { id: "all", name: "All Products" },
+  { id: "beverages", name: "Beverages" },
+  { id: "food", name: "Food" },
+  { id: "flour", name: "Flour" },
+  { id: "rice", name: "Rice" },
+  { id: "vegetables", name: "Vegetables" },
+  { id: "spices", name: "Spices" },
+  { id: "meat", name: "Meat" }
+];
 
-// Hardcoded products with images from /a directory
-const hardcodedProducts = [
-  {
-    id: "cola-50cl",
-    name: "Coca-Cola 50cl",
-    description: "Refreshing Coca-Cola soft drink in a 50cl bottle. Perfect for quenching your thirst.",
-    price: 1.20,
-    images: ["/a/coke-50cl-250x250.jpg", "/a/coke 50cl (PAck).png"],
-    category: "Beverages",
-    inStock: true,
-    stockQuantity: 120,
-    origin: "Nigeria"
-  },
-  {
-    id: "fanta-50cl",
-    name: "Fanta Orange 50cl",
-    description: "Vibrant orange-flavored Fanta soft drink in a 50cl bottle. Sweet, fizzy, and refreshing.",
-    price: 1.20,
-    images: ["/a/Fanta-PET-Bottles-50cl.jpg", "/a/Fanta-50cl-pack-150x150.png"],
-    category: "Beverages",
-    inStock: true,
-    stockQuantity: 95,
-    origin: "Nigeria"
-  },
-  {
-    id: "amstel-malta",
-    name: "Amstel Malta",
-    description: "Non-alcoholic malt drink rich in vitamins and nutrients. A premium African malt beverage.",
-    price: 1.50,
-    images: ["/a/Amstel-malta-150x150.jpg"],
-    category: "Beverages",
-    inStock: true,
-    stockQuantity: 75,
-    origin: "Nigeria"
-  },
-  {
-    id: "malta-guinness-pack",
-    name: "Malta Guinness (Pack of 24)",
-    description: "Case of 24 Malta Guinness non-alcoholic malt drinks. Rich, nourishing malt flavor with vitamins and minerals.",
-    price: 28.99,
-    images: ["/a/malta guinness can (pack of 24).png", "/a/malt guiness bottle(Pack of 24).png"],
-    category: "Beverages",
-    inStock: true,
-    stockQuantity: 18,
-    origin: "Nigeria"
-  },
-  {
-    id: "lacasara-drink",
-    name: "Lacasara Drink",
-    description: "Traditional Nigerian Lacasara soft drink. Sweet and refreshing citrus flavor.",
-    price: 1.35,
-    images: ["/a/Lacasara-150x150.jpg", "/a/Lacasara pack.png"],
-    category: "Beverages",
-    inStock: true,
-    stockQuantity: 62,
-    origin: "Nigeria"
-  },
-  {
-    id: "teem-soda-pack",
-    name: "Teem Soda (Pack)",
-    description: "Pack of refreshing Teem lemon-lime soda. A popular Nigerian soft drink with a crisp, citrus taste.",
-    price: 15.99,
-    images: ["/a/teem (Pack).png"],
-    category: "Beverages",
-    inStock: true,
-    stockQuantity: 25,
-    origin: "Nigeria"
-  },
-  {
-    id: "team-drink",
-    name: "Team Drink",
-    description: "Team soft drink with a unique fruity flavor. Refreshing and sweet.",
-    price: 1.25,
-    images: ["/a/Team-drink-250x250.jpg"],
-    category: "Beverages",
-    inStock: true,
-    stockQuantity: 48,
-    origin: "Nigeria"
-  },
-  {
-    id: "vamino-soy-milk",
-    name: "Vamino Soy Milk",
-    description: "Nutritious Vamino soy milk. Plant-based, dairy-free alternative rich in protein.",
-    price: 2.99,
-    images: ["/a/Vamino-soy-milk-1-250x250.jpg"],
-    category: "Beverages",
-    inStock: true,
-    stockQuantity: 35,
-    origin: "Nigeria"
-  }
+// Define price ranges
+const priceRanges = [
+  { id: "all", name: "All Prices" },
+  { id: "under10", name: "Under £10", min: 0, max: 10 },
+  { id: "10to20", name: "£10 - £20", min: 10, max: 20 },
+  { id: "20to30", name: "£20 - £30", min: 20, max: 30 },
+  { id: "over30", name: "Over £30", min: 30, max: Infinity }
 ];
 
 export default function ShopPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showDebug, setShowDebug] = useState(false)
   const searchParams = useSearchParams()
-  const category = searchParams.get('category')?.toLowerCase()
+  const router = useRouter()
   
+  // Get category from URL or default to "all"
+  const categoryParam = searchParams.get("category") || "all"
+  
+  const [selectedCategory, setSelectedCategory] = useState(categoryParam)
+  const [selectedPriceRange, setSelectedPriceRange] = useState("all")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(products)
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+  
+  // Filter products based on selected filters
   useEffect(() => {
-    // Simulate loading
-    setLoading(true)
+    setIsLoading(true)
     
-    // Filter hardcoded products based on category
-    setTimeout(() => {
-      let filteredProducts = [...hardcodedProducts]
-      
-      if (category) {
-        filteredProducts = hardcodedProducts.filter(
-          p => p.category.toLowerCase() === category
-        )
+    // Apply filters
+    let result = [...products]
+    
+    // Filter by category
+    if (selectedCategory !== "all") {
+      result = result.filter(product => product.category === selectedCategory)
+    }
+    
+    // Filter by price range
+    if (selectedPriceRange !== "all") {
+      const range = priceRanges.find(range => range.id === selectedPriceRange)
+      if (range && range.min !== undefined && range.max !== undefined) {
+        result = result.filter(product => {
+          // Apply discount if available
+          const finalPrice = product.discount && product.discount > 0
+            ? product.price * (1 - product.discount / 100)
+            : product.price
+          return finalPrice >= range.min && finalPrice < range.max
+        })
       }
-      
-      setProducts(filteredProducts as Product[])
-      setLoading(false)
-      console.log("Shop products loaded:", filteredProducts.length)
-    }, 500) // Short delay to simulate loading
+    }
     
-  }, [category])
-
+    // Filter by search term
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      result = result.filter(product => 
+        product.name.toLowerCase().includes(term) || 
+        product.description.toLowerCase().includes(term) ||
+        product.category.toLowerCase().includes(term)
+      )
+    }
+    
+    setFilteredProducts(result)
+    setIsLoading(false)
+  }, [selectedCategory, selectedPriceRange, searchTerm])
+  
+  // Update URL when category changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams)
+    
+    if (selectedCategory === "all") {
+      params.delete("category")
+    } else {
+      params.set("category", selectedCategory)
+    }
+    
+    router.replace(`/shop?${params.toString()}`)
+  }, [selectedCategory, router, searchParams])
+  
+  // Handle category change
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategory(categoryId)
+  }
+  
+  // Handle price range change
+  const handlePriceRangeChange = (rangeId: string) => {
+    setSelectedPriceRange(rangeId)
+  }
+  
+  // Handle search
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+  }
+  
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Category Navigation Bar */}
-      <div className="bg-green-600 text-white overflow-x-auto">
-        <div className="container mx-auto flex space-x-6 py-3 whitespace-nowrap px-4">
-          {categories.map((category) => (
-            <Link 
-              key={category.name}
-              href={category.href}
-              className="hover:text-green-200 transition-colors font-medium text-sm"
-            >
-              {category.name}
-            </Link>
-          ))}
+    <div className="min-h-screen py-8 pt-32">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col md:flex-row justify-between items-start mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Shop</h1>
+            <p className="text-gray-600 mt-1">Browse our wide selection of products</p>
+          </div>
+          
+          <div className="w-full md:w-auto mt-4 md:mt-0">
+            <form onSubmit={handleSearch} className="flex w-full md:w-80">
+              <Input
+                type="search"
+                placeholder="Search products..."
+                className="rounded-r-none"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Button type="submit" className="rounded-l-none bg-green-600 hover:bg-green-700">
+                Search
+              </Button>
+            </form>
+          </div>
         </div>
-      </div>
-
-      {/* Shop Title Banner */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto py-8 flex justify-between items-center px-4">
-                <div>
-            <h1 className="text-3xl font-bold">Shop</h1>
-            <p className="text-gray-500 mt-2">Browse our collection of authentic African products</p>
+        
+        <div className="lg:grid lg:grid-cols-4 lg:gap-8">
+          {/* Mobile filter toggle */}
+          <div className="lg:hidden mb-4">
+            <Button 
+              variant="outline" 
+              className="w-full flex items-center justify-center"
+              onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              {isMobileFilterOpen ? "Hide Filters" : "Show Filters"}
+            </Button>
           </div>
-
-          {process.env.NODE_ENV === 'development' && (
-            <div>
-              <button
-                onClick={() => setShowDebug(!showDebug)}
-                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm"
-              >
-                {showDebug ? 'Hide Debug' : 'Show Debug'}
-              </button>
-                </div>
-          )}
-              </div>
+          
+          {/* Sidebar filters */}
+          <div className={`lg:block ${isMobileFilterOpen ? 'block' : 'hidden'}`}>
+            <div className="bg-white rounded-lg border border-gray-200 p-5 sticky top-24">
+              <h2 className="font-bold text-gray-900 mb-4">Categories</h2>
+              <ul className="space-y-2 mb-6">
+                {categories.map((category) => (
+                  <li key={category.id}>
+                    <button
+                      onClick={() => handleCategoryChange(category.id)}
+                      className={`w-full text-left py-1 px-2 rounded ${
+                        selectedCategory === category.id
+                          ? "bg-green-50 text-green-700 font-medium"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {category.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              
+              <h2 className="font-bold text-gray-900 mb-4">Price Range</h2>
+              <ul className="space-y-2">
+                {priceRanges.map((range) => (
+                  <li key={range.id}>
+                    <button
+                      onClick={() => handlePriceRangeChange(range.id)}
+                      className={`w-full text-left py-1 px-2 rounded ${
+                        selectedPriceRange === range.id
+                          ? "bg-green-50 text-green-700 font-medium"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {range.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
-
-      {/* Debug Info */}
-      {showDebug && (
-        <div className="container mx-auto mt-4 px-4">
-          <div className="bg-gray-100 p-4 rounded overflow-auto max-h-60">
-            <h3 className="font-bold mb-2">Current Filter:</h3>
-            <p>Category: {category || 'None'}</p>
-            
-            <h3 className="font-bold mt-4 mb-2">Product Images:</h3>
-            <pre className="text-xs">{JSON.stringify(products.map(p => ({ name: p.name, images: p.images })), null, 2)}</pre>
           </div>
-              </div>
-            )}
-
-      {/* Main Content */}
-      <div className="container mx-auto py-8 px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-1">
-            <ProductFilters />
-              </div>
+          
+          {/* Product grid */}
           <div className="lg:col-span-3">
-            <ProductGrid products={products} loading={loading} />
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+              </div>
+            ) : (
+              <ProductGrid products={filteredProducts} />
+            )}
           </div>
         </div>
       </div>

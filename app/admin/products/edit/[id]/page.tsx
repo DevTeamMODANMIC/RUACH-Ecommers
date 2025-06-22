@@ -21,6 +21,7 @@ import { getProduct, updateProduct, type Product } from "@/lib/firebase-products
 import { auth } from "@/lib/firebase"
 import { onAuthStateChanged } from "firebase/auth"
 import { useToast } from "@/hooks/use-toast"
+import { useCurrency } from "@/hooks/use-currency"
 
 const categories = [
   "Vegetables & Fruits",
@@ -50,6 +51,7 @@ export default function EditProduct({ params }: EditProductProps) {
   const { id } = params
   const router = useRouter()
   const { toast } = useToast()
+  const { formatPrice } = useCurrency()
   
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)

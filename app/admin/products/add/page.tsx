@@ -21,6 +21,7 @@ import { addProduct } from "@/lib/firebase-products"
 import { auth } from "@/lib/firebase"
 import { onAuthStateChanged } from "firebase/auth"
 import { useToast } from "@/hooks/use-toast"
+import { useCurrency } from "@/hooks/use-currency"
 
 const categories = [
   "Vegetables & Fruits",
@@ -43,6 +44,7 @@ const countries = [
 export default function AddProduct() {
   const router = useRouter()
   const { toast } = useToast()
+  const { formatPrice } = useCurrency()
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)

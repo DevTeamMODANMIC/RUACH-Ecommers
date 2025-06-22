@@ -1,80 +1,32 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Truck, Shield } from "lucide-react"
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from "lucide-react"
 import { useCart } from "@/components/cart-provider"
-import { useCurrency } from "@/components/currency-provider"
-import { CartRecommendations } from "@/components/cart-recommendations"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+import { formatCurrency } from "@/lib/utils"
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, getTotalPrice, getTotalItems } = useCart()
-  const { formatPrice } = useCurrency()
-  const [promoCode, setPromoCode] = useState("")
-  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number } | null>(null)
 
   const subtotal = getTotalPrice()
   const shipping = subtotal >= 50 ? 0 : 4.99
-  const discount = appliedPromo ? (subtotal * appliedPromo.discount) / 100 : 0
-  const total = subtotal + shipping - discount
-
-  const applyPromoCode = () => {
-    // Mock promo codes
-    const promoCodes = {
-      SAVE10: { discount: 10, description: "10% off your order" },
-      WELCOME: { discount: 15, description: "15% off for new customers" },
-      BULK20: { discount: 20, description: "20% off bulk orders" },
-    }
-
-    const promo = promoCodes[promoCode.toUpperCase() as keyof typeof promoCodes]
-    if (promo) {
-      setAppliedPromo({ code: promoCode.toUpperCase(), discount: promo.discount })
-    }
-  }
-
-  const removePromoCode = () => {
-    setAppliedPromo(null)
-    setPromoCode("")
-  }
+  const total = subtotal + shipping
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen py-8">
+      <div className="min-h-screen py-8 pt-32">
         <div className="container mx-auto px-4">
-          <Breadcrumb className="mb-6">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/">Home</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Shopping Cart</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-
           <div className="text-center py-16">
-            <ShoppingBag className="h-24 w-24 mx-auto text-muted-foreground mb-6" />
+            <ShoppingBag className="h-24 w-24 mx-auto text-gray-400 mb-6" />
             <h1 className="text-3xl font-bold mb-4">Your cart is empty</h1>
-            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">
               Looks like you haven't added any items to your cart yet. Start shopping to fill it up!
             </p>
-            <Button asChild size="lg">
-              <Link href="/products">
+            <Button asChild className="bg-green-600 hover:bg-green-700 text-white">
+              <Link href="/shop">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Continue Shopping
               </Link>
@@ -86,23 +38,11 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-8 pt-32">
       <div className="container mx-auto px-4">
-        <Breadcrumb className="mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/">Home</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Shopping Cart</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Shopping Cart</h1>
-          <div className="text-muted-foreground">
+          <h1 className="text-2xl font-bold">Shopping Cart</h1>
+          <div className="text-gray-600">
             {getTotalItems()} item{getTotalItems() !== 1 ? "s" : ""} in your cart
           </div>
         </div>
@@ -111,188 +51,116 @@ export default function CartPage() {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
-              <Card key={item.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="relative w-20 h-20 rounded-lg overflow-hidden border">
-                      <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-cover" />
+              <div key={item.productId} className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-start gap-4">
+                  <div className="relative w-20 h-20 rounded-lg overflow-hidden border">
+                    <img 
+                      src={item.image || "/product_images/unknown-product.jpg"} 
+                      alt={item.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/product_images/unknown-product.jpg";
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-medium text-gray-800">
+                          <Link href={`/products/${item.productId}`} className="hover:text-green-600">
+                            {item.name}
+                          </Link>
+                        </h3>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeFromCart(item.productId)}
+                        className="text-gray-500 hover:text-red-500"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold text-lg">
-                            <Link href={`/products/${item.id}`} className="hover:text-green-600">
-                              {item.name}
-                            </Link>
-                          </h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-xs">
-                              {item.brand}
-                            </Badge>
-                            <span className="text-sm text-muted-foreground">{item.category}</span>
-                          </div>
-                          {!item.inStock && (
-                            <Badge variant="destructive" className="mt-2">
-                              Out of Stock
-                            </Badge>
-                          )}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeFromCart(item.id)}
-                          className="text-muted-foreground hover:text-destructive"
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          className="h-8 w-8 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-100"
+                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                          disabled={item.quantity <= 1}
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="w-12 text-center font-medium">{item.quantity}</span>
+                        <button
+                          className="h-8 w-8 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-100"
+                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
                       </div>
 
-                      <div className="flex items-center justify-between mt-4">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            disabled={item.quantity <= 1}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="w-12 text-center font-medium">{item.quantity}</span>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            disabled={item.quantity >= item.maxQuantity}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
-
-                        <div className="text-right">
-                          <div className="font-semibold text-lg">{formatPrice(item.price * item.quantity)}</div>
-                          {item.originalPrice && item.originalPrice > item.price && (
-                            <div className="text-sm text-muted-foreground line-through">
-                              {formatPrice(item.originalPrice * item.quantity)}
-                            </div>
-                          )}
-                          <div className="text-xs text-muted-foreground">{formatPrice(item.price)} each</div>
-                        </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-lg">{formatCurrency(item.price * item.quantity)}</div>
+                        <div className="text-xs text-gray-500">{formatCurrency(item.price)} each</div>
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
 
             <div className="flex justify-between items-center pt-4">
               <Button variant="outline" asChild>
-                <Link href="/products">
+                <Link href="/shop">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Continue Shopping
                 </Link>
-              </Button>
-              <Button variant="outline" onClick={() => window.location.reload()}>
-                Update Cart
               </Button>
             </div>
           </div>
 
           {/* Order Summary */}
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h2 className="text-lg font-bold mb-4">Order Summary</h2>
+              
+              <div className="space-y-4">
                 <div className="flex justify-between">
                   <span>Subtotal ({getTotalItems()} items)</span>
-                  <span>{formatPrice(subtotal)}</span>
+                  <span>{formatCurrency(subtotal)}</span>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="flex items-center gap-1">
-                    <Truck className="h-4 w-4" />
-                    Shipping
-                  </span>
+                  <span>Shipping</span>
                   <span>
-                    {shipping === 0 ? <span className="text-green-600 font-medium">Free</span> : formatPrice(shipping)}
+                    {shipping === 0 ? <span className="text-green-600 font-medium">Free</span> : formatCurrency(shipping)}
                   </span>
                 </div>
-
-                {appliedPromo && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Discount ({appliedPromo.code})</span>
-                    <span>-{formatPrice(discount)}</span>
-                  </div>
-                )}
 
                 <Separator />
 
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span>{formatPrice(total)}</span>
+                  <span>{formatCurrency(total)}</span>
                 </div>
 
                 {shipping > 0 && (
-                  <div className="text-sm text-muted-foreground">
-                    Add {formatPrice(50 - subtotal)} more for free shipping
+                  <div className="text-sm text-gray-500">
+                    Add {formatCurrency(50 - subtotal)} more for free shipping
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Promo Code */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Promo Code</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {appliedPromo ? (
-                  <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950 rounded-lg">
-                    <div>
-                      <div className="font-medium text-green-700 dark:text-green-300">{appliedPromo.code} Applied</div>
-                      <div className="text-sm text-green-600 dark:text-green-400">
-                        {appliedPromo.discount}% discount
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={removePromoCode}>
-                      Remove
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Enter promo code"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                    />
-                    <Button onClick={applyPromoCode} disabled={!promoCode.trim()}>
-                      Apply
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Checkout Button */}
-            <Button asChild size="lg" className="w-full">
-              <Link href="/checkout">Proceed to Checkout</Link>
-            </Button>
-
-            {/* Security Info */}
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Shield className="h-4 w-4" />
-              <span>Secure checkout guaranteed</span>
+                
+                <Button className="w-full bg-green-600 hover:bg-green-700 text-white mt-4">
+                  <Link href="/checkout" className="w-full flex items-center justify-center">
+                    Proceed to Checkout
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Recommendations */}
-        <div className="mt-16">
-          <CartRecommendations cartItems={items} />
         </div>
       </div>
     </div>

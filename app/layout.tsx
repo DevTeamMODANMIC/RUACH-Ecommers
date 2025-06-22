@@ -2,7 +2,6 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter, Poppins } from "next/font/google"
 import "./globals.css"
-import "../styles/globals.css"
 import "./tailwind.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import Header from "@/components/header"
@@ -34,19 +33,20 @@ export const metadata: Metadata = {
   title: `${SITE_NAME} - Premium African & International Foods`,
   description:
     "Discover authentic African and international foods, spices, and beverages. Fresh produce, quality ingredients, and traditional flavors delivered to your door.",
-  keywords: "African food, international cuisine, spices, beverages, fresh produce, online grocery",
+  keywords: "African food, international cuisine, spices, beverages, fresh produce, online grocery, Heritage of Skegness",
   authors: [{ name: SITE_NAME }],
   metadataBase: new URL("https://borderlessbuy.co.uk"),
   openGraph: {
-    title: `${SITE_NAME} - Premium African & International Foods`,
+    title: `${SITE_NAME} - Heritage of Skegness`,
     description: "Discover authentic African and international foods, spices, and beverages.",
     url: "https://borderlessbuy.co.uk",
     siteName: SITE_NAME,
     images: [
       {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
+        url: "/images/logo/borderlessbuy-logo.png",
+        width: 800,
+        height: 800,
+        alt: "BorderlessBuy - Heritage of Skegness"
       },
     ],
     locale: "en_GB",
@@ -54,9 +54,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} - Premium African & International Foods`,
+    title: `${SITE_NAME} - Heritage of Skegness`,
     description: "Discover authentic African and international foods, spices, and beverages.",
-    images: ["/og-image.jpg"],
+    images: ["/images/logo/borderlessbuy-logo.png"],
   },
   generator: SITE_NAME
 }
@@ -69,21 +69,22 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${poppins.variable}`}>
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/images/logo/borderlessbuy-logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/images/logo/borderlessbuy-logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
       </head>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <AuthProvider>
-            <CountryProvider>
-              <CurrencyProvider>
-                <CartProvider>
-                  <div className="min-h-screen flex flex-col">
-                    <Header />
-                    <main className="flex-1">{children}</main>
-                    <Footer />
-                  </div>
+      <body className={`${inter.className} min-h-screen bg-white text-gray-800`}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <CountryProvider>
+            <CurrencyProvider>
+              <CartProvider>
+                <AuthProvider>
+                  <Header />
+                  <main className="min-h-screen">
+                    {children}
+                  </main>
+                  <Footer />
                   <Toaster />
                   <div className="fixed bottom-4 right-4 z-50 hidden md:block">
                     <Button 
@@ -96,10 +97,10 @@ export default function RootLayout({
                       </Link>
                     </Button>
                   </div>
-                </CartProvider>
-              </CurrencyProvider>
-            </CountryProvider>
-          </AuthProvider>
+                </AuthProvider>
+              </CartProvider>
+            </CurrencyProvider>
+          </CountryProvider>
         </ThemeProvider>
       </body>
     </html>

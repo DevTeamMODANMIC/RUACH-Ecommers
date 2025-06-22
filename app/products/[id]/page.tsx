@@ -1,17 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
-import Image from "next/image"
+import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { Heart, ShoppingCart, Star, MapPin, Truck, Shield, RotateCcw } from "lucide-react"
-import { useCurrency } from "@/components/currency-provider"
-import { BulkOrderButton } from "@/components/bulk-order-button"
-import { ProductRecommendations } from "@/components/product-recommendations"
+import { Heart, ShoppingCart, ChevronLeft, Plus, Minus } from "lucide-react"
 import { useRecommendations } from "@/hooks/use-recommendations"
 import {
   Breadcrumb,
@@ -21,71 +16,40 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { ProductReviews } from "@/components/product-reviews"
-
-// Mock product detail data
-const productDetails = {
-  1: {
-    id: 1,
-    name: "Premium Jollof Rice Mix",
-    description: "Authentic Nigerian jollof rice seasoning blend with traditional spices",
-    longDescription:
-      "Our Premium Jollof Rice Mix is carefully crafted using traditional Nigerian spices and seasonings. This authentic blend includes tomatoes, onions, garlic, ginger, bay leaves, thyme, curry powder, and our secret blend of West African spices. Perfect for creating restaurant-quality jollof rice at home.",
-    price: 8.99,
-    originalPrice: 12.99,
-    images: [
-      "/placeholder.svg?height=500&width=500",
-      "/placeholder.svg?height=500&width=500",
-      "/placeholder.svg?height=500&width=500",
-    ],
-    category: "Rice & Grains",
-    brand: "Mama Gold",
-    rating: 4.8,
-    reviews: 124,
-    inStock: true,
-    stockCount: 45,
-    origin: "Lagos, Nigeria",
-    country: "nigeria",
-    localName: "Jollof Rice Spice",
-    discount: 31,
-    isOrganic: false,
-    isHalal: true,
-    tags: ["Traditional", "Spicy", "Family Pack"],
-    weight: "500g",
-    ingredients: [
-      "Tomato powder",
-      "Onion powder",
-      "Garlic powder",
-      "Ginger",
-      "Bay leaves",
-      "Thyme",
-      "Curry powder",
-      "Salt",
-      "Natural spices",
-    ],
-    nutritionalInfo: {
-      calories: "15 per serving",
-      fat: "0.5g",
-      carbs: "3g",
-      protein: "0.8g",
-      sodium: "450mg",
-    },
-    shelfLife: "24 months",
-    storage: "Store in a cool, dry place",
-    availableCountries: ["nigeria", "uk", "ghana"],
-  },
-}
+import { useCart } from "@/components/cart-provider"
+import { Product } from "@/types"
+import { products } from "@/lib/product-data"
+import { useCurrency } from "@/hooks/use-currency"
 
 export default function ProductDetailPage() {
   const params = useParams()
-  const productId = Number.parseInt(params.id as string)
+  const router = useRouter()
+  const productId = typeof params.id === 'string' ? decodeURIComponent(params.id) : ''
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [isWishlisted, setIsWishlisted] = useState(false)
   const { formatPrice } = useCurrency()
   const { trackProductView } = useRecommendations()
-
-  const product = productDetails[productId as keyof typeof productDetails]
+  const { addToCart } = useCart()
+  
+  // First try to find the product by direct ID match
+  let product = products.find(p => p.id === productId)
+  
+  // If not found, try to match by transforming the URL slug into potential product IDs
+  if (!product) {
+    // Convert slug like "sprite-50cl" to potential IDs like "beverage-3"
+    const slugParts = productId.split('-')
+    const productName = slugParts[0].toLowerCase()
+    
+    // Try to find a product with a name containing the first part of the slug
+    product = products.find(p => 
+      p.name.toLowerCase().includes(productName) || 
+      p.id.toLowerCase().includes(productName)
+    )
+  }
+  
+  console.log("Product ID:", productId)
+  console.log("Found product:", product)
 
   useEffect(() => {
     if (product) {
@@ -94,22 +58,45 @@ export default function ProductDetailPage() {
     }
   }, [product, trackProductView])
 
+  // Handle adding to cart
+  const handleAddToCart = () => {
+    if (product) {
+      addToCart({
+        productId: product.id,
+        name: product.name,
+        price: product.discount && product.discount > 0 
+          ? product.price * (1 - product.discount / 100) 
+          : product.price,
+        image: product.images[0],
+        quantity
+      })
+      alert("Product added to cart!")
+    }
+  }
+
   if (!product) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center pt-32">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-          <p className="text-muted-foreground mb-4">The product you're looking for doesn't exist.</p>
-          <Button asChild>
-            <a href="/products">Back to Products</a>
+          <p className="text-gray-600 mb-4">The product you're looking for doesn't exist.</p>
+          <p className="text-gray-600 mb-4">Requested ID: {productId}</p>
+          <p className="text-gray-600 mb-4">Available IDs: {products.map(p => p.id).join(", ")}</p>
+          <Button asChild variant="outline">
+            <Link href="/shop">Back to Shop</Link>
           </Button>
         </div>
       </div>
     )
   }
 
+  // Calculate discounted price if applicable
+  const discountedPrice = product.discount && product.discount > 0 
+    ? product.price * (1 - product.discount / 100) 
+    : null
+
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-8 pt-32">
       <div className="container mx-auto px-4">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-6">
@@ -119,7 +106,7 @@ export default function ProductDetailPage() {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href="/products">Products</BreadcrumbLink>
+              <BreadcrumbLink href="/shop">Shop</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -128,326 +115,198 @@ export default function ProductDetailPage() {
           </BreadcrumbList>
         </Breadcrumb>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        {/* Back button */}
+        <Button 
+          variant="ghost" 
+          className="mb-6 flex items-center text-gray-600 hover:text-gray-900"
+          onClick={() => router.back()}
+        >
+          <ChevronLeft className="h-4 w-4 mr-2" />
+          Back to Shop
+        </Button>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Product Images */}
-          <div className="space-y-4">
-            <div className="relative aspect-square overflow-hidden rounded-lg border">
-              <Image
-                src={product.images[selectedImage] || "/placeholder.svg"}
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <div className="relative aspect-square overflow-hidden rounded-md mb-4">
+              <img
+                src={product.images[0] || "/product_images/unknown-product.jpg"}
                 alt={product.name}
-                fill
-                className="object-cover"
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/product_images/unknown-product.jpg";
+                }}
               />
-              {product.discount > 0 && (
-                <Badge variant="destructive" className="absolute top-4 left-4">
-                  -{product.discount}%
-                </Badge>
+              {product.discount && product.discount > 0 && (
+                <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
+                  {product.discount}% OFF
+                </div>
               )}
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`relative aspect-square overflow-hidden rounded border-2 transition-colors ${
-                    selectedImage === index ? "border-green-600" : "border-gray-200"
-                  }`}
-                >
-                  <Image
-                    src={image || "/placeholder.svg"}
-                    alt={`${product.name} ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
-                </button>
-              ))}
-            </div>
+            
+            {/* Additional images would go here */}
+            {product.images.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {product.images.slice(0, 4).map((image, index) => (
+                  <div key={index} className="aspect-square border border-gray-200 rounded-md overflow-hidden">
+                    <img 
+                      src={image} 
+                      alt={`${product.name} ${index + 1}`}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/product_images/unknown-product.jpg";
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
           <div className="space-y-6">
-            {/* Header */}
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline">{product.brand}</Badge>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  {product.origin}
-                </div>
-              </div>
-              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-              {product.localName !== product.name && (
-                <p className="text-lg text-muted-foreground italic mb-4">{product.localName}</p>
-              )}
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{product.name}</h1>
+              <p className="text-gray-600">{product.description}</p>
             </div>
 
-            {/* Rating */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-5 w-5 ${
-                      i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-sm text-muted-foreground">
-                {product.rating} ({product.reviews} reviews)
-              </span>
+            {/* Origin */}
+            <div className="flex items-center">
+              <Badge variant="outline" className="capitalize">
+                Origin: {product.origin}
+              </Badge>
             </div>
 
             {/* Price */}
-            <div className="flex items-center gap-4">
-              <span className="text-3xl font-bold text-green-600">{formatPrice(product.price)}</span>
-              {product.originalPrice > product.price && (
-                <span className="text-xl text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
+            <div className="flex items-center space-x-2">
+              {discountedPrice ? (
+                <>
+                  <span className="text-2xl font-bold text-green-600">
+                    {formatPrice(discountedPrice)}
+                  </span>
+                  <span className="text-lg text-gray-500 line-through">
+                    {formatPrice(product.price)}
+                  </span>
+                </>
+              ) : (
+                <span className="text-2xl font-bold text-gray-900">
+                  {formatPrice(product.price)}
+                </span>
               )}
             </div>
 
-            {/* Description */}
-            <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+            <Separator />
 
-            {/* Tags & Badges */}
-            <div className="flex flex-wrap gap-2">
-              {product.isOrganic && <Badge className="bg-green-100 text-green-800">Organic</Badge>}
-              {product.isHalal && <Badge className="bg-blue-100 text-blue-800">Halal</Badge>}
-              {product.tags.map((tag) => (
-                <Badge key={tag} variant="outline">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-
-            {/* Stock Status */}
-            <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${product.inStock ? "bg-green-500" : "bg-red-500"}`} />
-              <span className={product.inStock ? "text-green-600" : "text-red-600"}>
-                {product.inStock ? `In Stock (${product.stockCount} available)` : "Out of Stock"}
-              </span>
-            </div>
-
-            {/* Quantity & Actions */}
+            {/* Quantity selector */}
             <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <label className="font-medium">Quantity:</label>
-                <div className="flex items-center border rounded">
-                  <Button
-                    variant="ghost"
-                    size="sm"
+              <div className="flex items-center">
+                <span className="font-medium mr-4">Quantity:</span>
+                <div className="flex items-center border border-gray-300 rounded-md">
+                  <button 
+                    className="px-3 py-1 border-r border-gray-300 hover:bg-gray-100"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
                   >
-                    -
-                  </Button>
-                  <span className="px-4 py-2 min-w-[60px] text-center">{quantity}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setQuantity(Math.min(product.stockCount, quantity + 1))}
-                    disabled={quantity >= product.stockCount}
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="px-4 py-1 min-w-[40px] text-center">{quantity}</span>
+                  <button 
+                    className="px-3 py-1 border-l border-gray-300 hover:bg-gray-100"
+                    onClick={() => setQuantity(quantity + 1)}
                   >
-                    +
-                  </Button>
+                    <Plus className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button size="lg" disabled={!product.inStock}>
+              {/* Add to cart button */}
+              <div className="flex space-x-4">
+                <Button 
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  onClick={handleAddToCart}
+                  disabled={!product.inStock}
+                >
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Add to Cart
                 </Button>
-                <BulkOrderButton
-                  productId={product.id}
-                  productName={product.name}
-                  basePrice={product.price}
-                  country={product.country}
-                />
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => setIsWishlisted(!isWishlisted)}
+                >
+                  <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
+                </Button>
               </div>
-
-              <Button variant="outline" size="lg" className="w-full" onClick={() => setIsWishlisted(!isWishlisted)}>
-                <Heart className={`h-5 w-5 mr-2 ${isWishlisted ? "fill-red-500 text-red-500" : ""}`} />
-                {isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-              </Button>
             </div>
 
-            {/* Shipping Info */}
-            <Card>
-              <CardContent className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Truck className="h-4 w-4 text-green-600" />
-                    <span>Free shipping over £50</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-green-600" />
-                    <span>Quality guaranteed</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <RotateCcw className="h-4 w-4 text-green-600" />
-                    <span>30-day returns</span>
-                  </div>
+            <Separator />
+
+            {/* Product details */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Product Details</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-gray-600">Category:</span>
+                  <span className="font-medium capitalize">{product.category}</span>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex flex-col">
+                  <span className="text-gray-600">Origin:</span>
+                  <span className="font-medium capitalize">{product.origin}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-600">Availability:</span>
+                  <span className={`font-medium ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
+                    {product.inStock ? 'In Stock' : 'Out of Stock'}
+                  </span>
+                </div>
+                {product.weight && (
+                  <div className="flex flex-col">
+                    <span className="text-gray-600">Weight:</span>
+                    <span className="font-medium">{product.weight}g</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Related products would go here */}
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold mb-6">You might also like</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {/* We would show related products here */}
+            {products
+              .filter(p => p.category === product.category && p.id !== product.id)
+              .slice(0, 4)
+              .map(relatedProduct => (
+                <div key={relatedProduct.id} className="bg-white border border-gray-200 rounded overflow-hidden">
+                  <Link href={`/products/${encodeURIComponent(relatedProduct.id)}`}>
+                    <div className="relative h-48">
+                      <img 
+                        src={relatedProduct.images?.[0] || '/product_images/unknown-product.jpg'}
+                        alt={relatedProduct.name}
+                        className="w-full h-full object-contain p-2"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/product_images/unknown-product.jpg";
+                        }}
+                      />
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-medium text-gray-800 mb-1 line-clamp-2">{relatedProduct.name}</h3>
+                      <p className="font-bold text-gray-900 mt-2">
+                        {formatPrice(relatedProduct.price)}
+                      </p>
+                    </div>
+                  </Link>
+                </div>
+              ))}
           </div>
         </div>
 
-        {/* Frequently Bought Together */}
-        <div className="mt-12">
-          <ProductRecommendations
-            productId={product.id}
-            country={product.country}
-            type="frequently-bought-together"
-            title="Frequently Bought Together"
-            limit={4}
-          />
-        </div>
-
-        {/* Product Details Tabs */}
-        <div className="mt-12">
-          <Tabs defaultValue="description" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="description">Description</TabsTrigger>
-              <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
-              <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
-              <TabsTrigger value="reviews">Reviews</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="description" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Description</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="leading-relaxed">{product.longDescription}</p>
-                  <Separator />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-semibold mb-2">Product Details</h4>
-                      <ul className="space-y-1 text-sm text-muted-foreground">
-                        <li>
-                          <strong>Weight:</strong> {product.weight}
-                        </li>
-                        <li>
-                          <strong>Origin:</strong> {product.origin}
-                        </li>
-                        <li>
-                          <strong>Shelf Life:</strong> {product.shelfLife}
-                        </li>
-                        <li>
-                          <strong>Storage:</strong> {product.storage}
-                        </li>
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-2">Certifications</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {product.isHalal && <Badge className="bg-blue-100 text-blue-800">Halal Certified</Badge>}
-                        {product.isOrganic && <Badge className="bg-green-100 text-green-800">Organic</Badge>}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="ingredients" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Ingredients</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {product.ingredients.map((ingredient, index) => (
-                      <li key={index} className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-600 rounded-full" />
-                        {ingredient}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="nutrition" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Nutritional Information</CardTitle>
-                  <p className="text-sm text-muted-foreground">Per serving (1 tablespoon)</p>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    {Object.entries(product.nutritionalInfo).map(([key, value]) => (
-                      <div key={key} className="text-center p-4 border rounded">
-                        <div className="font-semibold text-lg">{value}</div>
-                        <div className="text-sm text-muted-foreground capitalize">{key}</div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="reviews" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Customer Reviews</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>Reviews feature coming soon!</p>
-                    <p className="text-sm mt-2">Be the first to review this product.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Product Reviews */}
-        <div className="mt-12">
-          <ProductReviews
-            productId={product.id}
-            productName={product.name}
-            availableCountries={product.availableCountries || ["nigeria"]}
-          />
-        </div>
-
-        {/* Related Products */}
-        <div className="mt-12">
-          <ProductRecommendations
-            productId={product.id}
-            country={product.country}
-            category={product.category}
-            type="related"
-            title="Related Products"
-            limit={4}
-          />
-        </div>
-
-        {/* You Might Also Like */}
-        <div className="mt-12">
-          <ProductRecommendations
-            productId={product.id}
-            country={product.country}
-            type="you-might-like"
-            title="You Might Also Like"
-            limit={4}
-          />
-        </div>
-
-        {/* Recently Viewed */}
-        <div className="mt-12">
-          <ProductRecommendations
-            productId={product.id}
-            country={product.country}
-            type="recently-viewed"
-            title="Recently Viewed"
-            limit={4}
-          />
-        </div>
+        {/* Additional product information would go here */}
       </div>
     </div>
   )

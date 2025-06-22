@@ -46,26 +46,26 @@ export default function Newsletter() {
   }
 
   return (
-    <section className="py-20 bg-gradient-to-br from-green-600 via-green-700 to-green-800 text-white relative overflow-hidden">
+    <section id="newsletter-section" className="py-20 mb-20 bg-white text-gray-800 relative overflow-hidden border-t border-gray-200">
       {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-full h-full opacity-10">
-        <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-white animate-pulse-slow"></div>
-        <div className="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-white animate-pulse-slow" style={{ animationDelay: "1s" }}></div>
-        <div className="absolute top-1/2 left-1/4 w-20 h-20 rounded-full bg-white animate-pulse-slow" style={{ animationDelay: "1.5s" }}></div>
+        <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-green-200 animate-pulse-slow"></div>
+        <div className="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-green-200 animate-pulse-slow" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute top-1/2 left-1/4 w-20 h-20 rounded-full bg-green-200 animate-pulse-slow" style={{ animationDelay: "1.5s" }}></div>
       </div>
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center bg-white/10 rounded-full px-3 py-1 text-sm border border-white/20 backdrop-blur-sm mb-4">
+            <div className="inline-flex items-center bg-green-50 rounded-full px-3 py-1 text-sm border border-green-200 backdrop-blur-sm mb-4 text-green-700">
               <Mail className="h-4 w-4 mr-2" />
               <span>Join 5,000+ subscribers</span>
             </div>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 leading-tight max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 leading-tight max-w-3xl mx-auto text-gray-800">
               Stay Updated with BorderlessBuy
             </h2>
-            <div className="w-24 h-1 bg-white/40 rounded mx-auto mb-4"></div>
-            <p className="text-lg text-green-50 max-w-2xl mx-auto">
+            <div className="w-24 h-1 bg-green-500 rounded mx-auto mb-4"></div>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Get notified about new products, special offers and authentic African recipes delivered straight to your inbox.
             </p>
           </div>
@@ -74,7 +74,7 @@ export default function Newsletter() {
             {/* Left content */}
             <div className="md:w-5/12 text-center md:text-left">
               <div className="h-full flex flex-col justify-center">
-                <h3 className="text-2xl font-bold mb-6">Why Subscribe?</h3>
+                <h3 className="text-2xl font-bold mb-6 text-gray-800">Why Subscribe?</h3>
                 
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
@@ -83,33 +83,33 @@ export default function Newsletter() {
                   viewport={{ once: true }}
                   className="space-y-5"
                 >
-                  <div className="flex items-center gap-4 bg-white/10 p-4 rounded-lg backdrop-blur-sm">
-                    <div className="bg-white/20 p-3 rounded-full">
-                      <Gift className="h-6 w-6" />
+                  <div className="flex items-center gap-4 bg-green-50 p-4 rounded-lg shadow-sm">
+                    <div className="bg-green-100 p-3 rounded-full">
+                      <Gift className="h-6 w-6 text-green-600" />
                     </div>
                     <div>
-                      <h4 className="font-semibold">Exclusive Offers</h4>
-                      <p className="text-sm text-green-50">Special discounts only for subscribers</p>
+                      <h4 className="font-semibold text-gray-800">Exclusive Offers</h4>
+                      <p className="text-sm text-gray-600">Special discounts only for subscribers</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-4 bg-white/10 p-4 rounded-lg backdrop-blur-sm">
-                    <div className="bg-white/20 p-3 rounded-full">
-                      <Bell className="h-6 w-6" />
+                  <div className="flex items-center gap-4 bg-green-50 p-4 rounded-lg shadow-sm">
+                    <div className="bg-green-100 p-3 rounded-full">
+                      <Bell className="h-6 w-6 text-green-600" />
                     </div>
                     <div>
-                      <h4 className="font-semibold">New Arrivals</h4>
-                      <p className="text-sm text-green-50">Be first to know about new products</p>
+                      <h4 className="font-semibold text-gray-800">New Arrivals</h4>
+                      <p className="text-sm text-gray-600">Be first to know about new products</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-4 bg-white/10 p-4 rounded-lg backdrop-blur-sm">
-                    <div className="bg-white/20 p-3 rounded-full">
-                      <Tag className="h-6 w-6" />
+                  <div className="flex items-center gap-4 bg-green-50 p-4 rounded-lg shadow-sm">
+                    <div className="bg-green-100 p-3 rounded-full">
+                      <Tag className="h-6 w-6 text-green-600" />
                     </div>
                     <div>
-                      <h4 className="font-semibold">Seasonal Promotions</h4>
-                      <p className="text-sm text-green-50">Holiday specials and limited-time offers</p>
+                      <h4 className="font-semibold text-gray-800">Seasonal Promotions</h4>
+                      <p className="text-sm text-gray-600">Holiday specials and limited-time offers</p>
                     </div>
                   </div>
                 </motion.div>
@@ -123,7 +123,7 @@ export default function Newsletter() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
                 viewport={{ once: true }}
-                className="bg-white p-8 rounded-2xl shadow-lg"
+                className="bg-white p-8 rounded-2xl shadow-md border border-gray-200"
               >
                 <div className="text-center mb-6">
                   <div className="bg-green-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -142,8 +142,8 @@ export default function Newsletter() {
                     <div className="bg-green-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Check className="h-8 w-8 text-green-600" />
                     </div>
-                    <h4 className="text-green-800 text-xl font-bold">Thank you for subscribing!</h4>
-                    <p className="text-green-700 mt-2">Check your inbox for a confirmation email and get ready for exclusive updates.</p>
+                    <h4 className="text-green-700 text-xl font-bold">Thank you for subscribing!</h4>
+                    <p className="text-green-600 mt-2">Check your inbox for a confirmation email and get ready for exclusive updates.</p>
                   </motion.div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-5">
@@ -158,7 +158,7 @@ export default function Newsletter() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-                        className="bg-gray-50 border-gray-200 text-gray-900 h-12 rounded-lg focus:ring-green-500 focus:border-green-500"
+                        className="bg-white border-gray-300 text-gray-800 h-12 rounded-lg focus:ring-green-500 focus:border-green-500"
             />
                     </div>
                     
@@ -182,7 +182,7 @@ export default function Newsletter() {
                     
                     <div className="text-center">
                       <p className="text-xs text-gray-500 mt-3 inline-flex items-center">
-                        <Check className="h-3 w-3 mr-1 text-green-600" />
+                        <Check className="h-3 w-3 mr-1 text-green-500" />
                         We respect your privacy. Unsubscribe anytime.
                       </p>
                     </div>
@@ -192,7 +192,7 @@ export default function Newsletter() {
             </div>
           </div>
 
-          <div className="mt-12 text-center text-sm text-white/70">
+          <div className="mt-12 text-center text-sm text-gray-600">
             <p>Join thousands of satisfied customers who enjoy our premium African products</p>
           </div>
         </div>

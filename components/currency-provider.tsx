@@ -10,6 +10,7 @@ interface CurrencyContextType {
   setCurrency: (currency: string, symbol: string, rate: number) => void
   convertPrice: (gbpPrice: number) => number
   formatPrice: (gbpPrice: number) => string
+  formatCurrency: (amount: number) => string
 }
 
 export const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined)
@@ -52,6 +53,16 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Format a price directly in the current currency (no conversion)
+  const formatCurrency = (amount: number): string => {
+    // Format based on currency
+    if (currency === "NGN" || currency === "INR" || currency === "JMD") {
+      return `${symbol}${Math.round(amount).toLocaleString()}`
+    } else {
+      return `${symbol}${amount.toFixed(2)}`
+    }
+  }
+
   // Load saved currency on mount
   useEffect(() => {
     const saved = localStorage.getItem("selectedCurrency")
@@ -85,6 +96,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         setCurrency,
         convertPrice,
         formatPrice,
+        formatCurrency,
       }}
     >
       {children}

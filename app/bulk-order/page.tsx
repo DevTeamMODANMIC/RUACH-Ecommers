@@ -84,15 +84,15 @@ export default function BulkOrderPage() {
                     offers significant savings and personalized service.
                   </p>
                   <div className="flex flex-wrap gap-4">
-                    <Button size="lg" className="bg-white text-green-800 hover:bg-green-100">
+                    <Button size="lg" className="bg-green-600 text-white hover:bg-green-700">
                       Get Started
                     </Button>
-                    <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/20">
+                    <Button size="lg" variant="outline" className="border-gray-400 text-white hover:bg-gray-800/50">
                       View Pricing
                     </Button>
                   </div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 space-y-4">
+                <div className="bg-gray-800/30 backdrop-blur-sm rounded-lg p-6 space-y-4">
                   <h3 className="text-xl font-semibold">Bulk Order Savings</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">

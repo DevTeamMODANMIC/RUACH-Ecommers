@@ -1,31 +1,61 @@
-import { Suspense } from "react"
+import { Suspense, lazy } from "react"
 import Hero from "@/components/hero"
-import FeaturedProducts from "@/components/featured-products"
-import BeverageShowcase from "@/components/beverage-showcase"
-import ProductSlider from "@/components/product-slider"
-import BlogPreview from "@/components/blog-preview"
 import Newsletter from "@/components/newsletter"
 import { BulkOrderCTA } from "@/components/bulk-order-cta"
-import { PersonalizedRecommendations } from "@/components/personalized-recommendations"
+
+// Lazy load components that are below the fold
+const FeaturedProducts = lazy(() => import("@/components/featured-products"))
+const ProductShowcase = lazy(() => import("@/components/product-showcase"))
+const ProductSlider = lazy(() => import("@/components/product-slider"))
+const BlogPreview = lazy(() => import("@/components/blog-preview"))
+const PersonalizedRecommendations = lazy(() => import("@/components/personalized-recommendations").then(mod => ({ default: mod.PersonalizedRecommendations })))
 
 export default function HomePage() {
   return (
-    <main>
-      <Hero />
-      <Suspense fallback={<div>Loading...</div>}>
-        <FeaturedProducts />
-      </Suspense>
-      <Suspense fallback={<div>Loading...</div>}>
-        <ProductSlider />
-      </Suspense>
-      <Suspense fallback={<div>Loading...</div>}>
-        <BeverageShowcase />
-      </Suspense>
-      <PersonalizedRecommendations />
-      <BlogPreview />
-      <BulkOrderCTA />
-      <div id="newsletter-section">
-      <Newsletter />
+    <main className="flex flex-col bg-white text-gray-800">
+      <div className="relative">
+        <Hero />
+      </div>
+      <div className="container mx-auto px-4">
+        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading featured products...</div>}>
+          <FeaturedProducts />
+        </Suspense>
+        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading product slider...</div>}>
+          <ProductSlider />
+        </Suspense>
+        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading beverages showcase...</div>}>
+          <ProductShowcase 
+            category="Beverages" 
+            title="Popular Beverages" 
+            subtitle="Authentic drinks from around the world" 
+          />
+        </Suspense>
+        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading food showcase...</div>}>
+          <ProductShowcase 
+            category="Food" 
+            title="Traditional Foods" 
+            subtitle="Authentic African culinary delights" 
+          />
+        </Suspense>
+        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading spices showcase...</div>}>
+          <ProductShowcase 
+            category="Spices" 
+            title="Premium Spices" 
+            subtitle="Enhance your dishes with authentic flavors" 
+          />
+        </Suspense>
+        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading recommendations...</div>}>
+          <PersonalizedRecommendations />
+        </Suspense>
+        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading blog posts...</div>}>
+          <BlogPreview />
+        </Suspense>
+        <div className="mb-20">
+        <BulkOrderCTA />
+        </div>
+        <div id="newsletter-section">
+          <Newsletter />
+        </div>
       </div>
     </main>
   )

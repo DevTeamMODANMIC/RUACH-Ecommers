@@ -7,7 +7,7 @@ import { Package2, TrendingDown, Building2, Truck } from "lucide-react"
 
 export function BulkOrderCTA() {
   return (
-    <Card className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
+    <Card className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 mb-16">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package2 className="h-5 w-5 text-green-600" />
