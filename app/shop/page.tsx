@@ -78,6 +78,17 @@ const categoryMapping: Record<string, string> = {
   "food": "food"
 };
 
+// Add reverse mapping for product categories to URL parameters
+const productCategoryMapping: Record<string, string> = {
+  "beverages": "beverages",
+  "flour": "flour",
+  "rice": "rice",
+  "food": "food",
+  "spices": "spices",
+  "vegetables": "vegetables",
+  "meat": "meat"
+};
+
 // Sort options for products
 const sortOptions = [
   { id: "popularity", name: "Popular" },
@@ -116,7 +127,9 @@ export default function ShopPage() {
     { id: "nigeria", name: "Nigeria" },
     { id: "ghana", name: "Ghana" },
     { id: "kenya", name: "Kenya" },
-    { id: "south-africa", name: "South Africa" }
+    { id: "south-africa", name: "South Africa" },
+    { id: "international", name: "International" },
+    { id: "uk", name: "UK" }
   ];
   
   // Calculate active filters count
@@ -138,87 +151,207 @@ export default function ShopPage() {
         // Prepare Firebase filters
         const firebaseFilters: ProductFilters = {}
         
-        // Map the URL category to the actual product category
-        if (selectedCategory !== "all") {
-          const mappedCategory = categoryMapping[selectedCategory] || selectedCategory
-          firebaseFilters.category = mappedCategory
-        }
+        // We'll apply category filter client-side to avoid the composite index requirement
+        let categoryFilter = selectedCategory !== "all" ? 
+          categoryMapping[selectedCategory] || selectedCategory : null
         
-        // Map origin filter
+        // Only apply origin filter to Firebase query
         if (selectedOrigin !== "all") {
+          console.log("Filtering by origin:", selectedOrigin)
+          console.log("Setting Firebase filter country to:", selectedOrigin)
           firebaseFilters.country = selectedOrigin
         }
-        
-        // Get products from Firebase
-        const result = await getProducts(firebaseFilters, 100)
-        let firebaseProducts = result.products
-        
-        // If no products found in Firebase, fall back to static data
-        if (firebaseProducts.length === 0) {
-          console.log("No products found in Firebase, using static data")
-          firebaseProducts = [...products]
-        }
-        
-        // Apply price range filter client-side
-        if (selectedPriceRange !== "all") {
-          const range = priceRanges.find(range => range.id === selectedPriceRange)
-          if (range && range.min !== undefined && range.max !== undefined) {
-            firebaseProducts = firebaseProducts.filter(product => {
-              // Apply discount if available
-              const finalPrice = product.discount && product.discount > 0
-                ? product.price * (1 - product.discount / 100)
-                : product.price
-              return finalPrice >= range.min && finalPrice < range.max
+
+        try {
+          console.log("Fetching products with filters:", firebaseFilters)
+          const { products: firebaseProducts } = await getProducts(firebaseFilters)
+          console.log(`Found ${firebaseProducts.length} products from Firebase`)
+
+          // Apply category filter client-side
+          let filteredFirebaseProducts = [...firebaseProducts]
+          if (categoryFilter) {
+            console.log("Applying category filter client-side:", categoryFilter)
+            filteredFirebaseProducts = filteredFirebaseProducts.filter((product) => {
+              const productCategory = String(product.category || "").toLowerCase().trim()
+              const categoryFilterLower = categoryFilter.toLowerCase().trim()
+              
+              // More flexible matching for categories
+              const matches = 
+                productCategory === categoryFilterLower || 
+                productCategory.includes(categoryFilterLower) ||
+                categoryFilterLower.includes(productCategory)
+              
+              return matches
             })
+            console.log(`After category filter: ${filteredFirebaseProducts.length} products`)
           }
+
+          // Apply price range filter client-side
+          if (selectedPriceRange !== "all") {
+            const range = priceRanges.find(range => range.id === selectedPriceRange)
+            if (range && range.min !== undefined && range.max !== undefined) {
+              filteredFirebaseProducts = filteredFirebaseProducts.filter(product => {
+                // Apply discount if available
+                const finalPrice = product.discount && product.discount > 0
+                  ? product.price * (1 - product.discount / 100)
+                  : product.price
+                return finalPrice >= range.min && finalPrice < range.max
+              })
+            }
+          }
+
+          // Apply search filter client-side
+          if (searchTerm) {
+            const term = searchTerm.toLowerCase()
+            filteredFirebaseProducts = filteredFirebaseProducts.filter(product => 
+              product.name.toLowerCase().includes(term) || 
+              (product.description && product.description.toLowerCase().includes(term))
+            )
+          }
+
+          // Debug: Log sample products
+          console.log("Available products:", filteredFirebaseProducts.slice(0, 5).map(p => ({
+            name: p.name,
+            category: p.category,
+            origin: p.origin
+          })))
+
+          setResultsCount(filteredFirebaseProducts.length)
+          // Cast because Firebase Product type differs slightly from app Product type
+          setFilteredProducts(filteredFirebaseProducts as unknown as Product[])
+        } catch (error: any) {
+          console.error("Error loading products:", error)
+          
+          // Check if this is a missing index error
+          if (error.message && error.message.includes("requires an index")) {
+            console.log("Missing index error detected. Using client-side filtering with local data.")
+            // Fall back to static data and apply all filters client-side
+            let localProducts = [...products]
+            
+            // Apply category filter
+            if (selectedCategory !== "all") {
+              const mappedCategory = categoryMapping[selectedCategory] || selectedCategory
+              localProducts = localProducts.filter((product) => {
+                const productCategory = String(product.category || "").toLowerCase();
+                return productCategory === mappedCategory.toLowerCase() || 
+                       productCategory === selectedCategory.toLowerCase();
+              })
+            }
+            
+            // Apply origin filter
+            if (selectedOrigin !== "all") {
+              localProducts = localProducts.filter((product) => {
+                // Handle missing origin values
+                if (!product.origin) return false
+                
+                const productOrigin = String(product.origin || "").toLowerCase().trim();
+                const selectedOriginLower = selectedOrigin.toLowerCase().trim();
+                
+                // Use the same flexible matching logic as before
+                if (productOrigin === selectedOriginLower) return true;
+                
+                // Special case for international products
+                if (selectedOriginLower === "international" && 
+                   (productOrigin === "international" || 
+                    productOrigin === "uk" || 
+                    productOrigin === "united kingdom" ||
+                    productOrigin.includes("international") ||
+                    !["nigeria", "ghana", "kenya", "south-africa"].includes(productOrigin))) {
+                  return true;
+                }
+                
+                // Special case for UK products
+                if (selectedOriginLower === "uk" &&
+                   (productOrigin === "uk" ||
+                    productOrigin === "united kingdom" ||
+                    productOrigin.includes("uk") ||
+                    productOrigin.includes("united kingdom"))) {
+                  return true;
+                }
+                
+                // More flexible matching for other origins
+                if (productOrigin.includes(selectedOriginLower) || 
+                    selectedOriginLower.includes(productOrigin) ||
+                    productOrigin.startsWith(selectedOriginLower + " ") || 
+                    productOrigin.endsWith(" " + selectedOriginLower) || 
+                    productOrigin.includes(" " + selectedOriginLower + " ")) {
+                  return true;
+                }
+                
+                return false;
+              })
+            }
+            
+            // Apply price range filter
+            if (selectedPriceRange !== "all") {
+              const range = priceRanges.find((range) => range.id === selectedPriceRange)
+              if (range && range.min !== undefined && range.max !== undefined) {
+                localProducts = localProducts.filter((product) => {
+                  const finalPrice = product.discount && product.discount > 0
+                    ? product.price * (1 - product.discount / 100)
+                    : product.price
+                  return finalPrice >= range.min && finalPrice < range.max
+                })
+              }
+            }
+            
+            // Apply search filter
+            if (searchTerm) {
+              const term = searchTerm.toLowerCase()
+              localProducts = localProducts.filter((product) =>
+                product.name.toLowerCase().includes(term) ||
+                (product.description && product.description.toLowerCase().includes(term)) ||
+                (product.category && product.category.toLowerCase().includes(term))
+              )
+            }
+            
+            // Apply sorting
+            if (selectedSort === "price-asc") {
+              localProducts.sort((a, b) => {
+                const aPrice = a.discount ? a.price * (1 - a.discount / 100) : a.price
+                const bPrice = b.discount ? b.price * (1 - b.discount / 100) : b.price
+                return aPrice - bPrice
+              })
+            } else if (selectedSort === "price-desc") {
+              localProducts.sort((a, b) => {
+                const aPrice = a.discount ? a.price * (1 - a.discount / 100) : a.price
+                const bPrice = b.discount ? b.price * (1 - b.discount / 100) : b.price
+                return bPrice - aPrice
+              })
+            } else if (selectedSort === "newest") {
+              localProducts.sort((a, b) => {
+                // Safe type checking for Date objects
+                const aDate = typeof a.createdAt === 'string' ? new Date(a.createdAt).getTime() : 0
+                const bDate = typeof b.createdAt === 'string' ? new Date(b.createdAt).getTime() : 0
+                return bDate - aDate
+              })
+            } else {
+              // Sort by popularity (default) or rating
+              localProducts.sort((a, b) => {
+                // Safe access to reviews or rating
+                const aReviews = a.reviews || []
+                const bReviews = b.reviews || []
+                // Calculate average rating if reviews exist
+                const aRating = a.rating || 0
+                const bRating = b.rating || 0
+                return bRating - aRating
+              })
+            }
+            
+            setResultsCount(localProducts.length)
+            setFilteredProducts(localProducts)
+          } else {
+            // For other errors, just use the static data without filtering
+            setFilteredProducts(products)
+            setResultsCount(products.length)
+          }
+        } finally {
+          setIsLoading(false)
         }
-        
-        // Apply search filter client-side
-        if (searchTerm) {
-          const term = searchTerm.toLowerCase()
-          firebaseProducts = firebaseProducts.filter(product => 
-            product.name.toLowerCase().includes(term) || 
-            (product.description && product.description.toLowerCase().includes(term)) ||
-            (product.category && product.category.toLowerCase().includes(term))
-          )
-        }
-        
-        // Apply sorting
-        if (selectedSort === "price-asc") {
-          firebaseProducts.sort((a, b) => {
-            const aPrice = a.discount ? a.price * (1 - a.discount / 100) : a.price
-            const bPrice = b.discount ? b.price * (1 - b.discount / 100) : b.price
-            return aPrice - bPrice
-          })
-        } else if (selectedSort === "price-desc") {
-          firebaseProducts.sort((a, b) => {
-            const aPrice = a.discount ? a.price * (1 - a.discount / 100) : a.price
-            const bPrice = b.discount ? b.price * (1 - b.discount / 100) : b.price
-            return bPrice - aPrice
-          })
-        } else if (selectedSort === "newest") {
-          firebaseProducts.sort((a, b) => {
-            const aDate = a.createdAt instanceof Date ? a.createdAt.getTime() : 0
-            const bDate = b.createdAt instanceof Date ? b.createdAt.getTime() : 0
-            return bDate - aDate
-          })
-        } else {
-          // Sort by popularity (default) or rating
-          firebaseProducts.sort((a, b) => {
-            const aRating = a.reviews?.average || a.rating || 0
-            const bRating = b.reviews?.average || b.rating || 0
-            return bRating - aRating
-          })
-        }
-        
-        setResultsCount(firebaseProducts.length)
-        setFilteredProducts(firebaseProducts)
       } catch (error) {
-        console.error("Error loading products:", error)
-        // Fall back to static data on error
+        console.error("Outer error handler:", error)
         setFilteredProducts(products)
         setResultsCount(products.length)
-      } finally {
         setIsLoading(false)
       }
     }
@@ -319,7 +452,7 @@ export default function ShopPage() {
   
   // Filter component - reusable for both desktop and mobile
   const FiltersComponent = ({ isMobile = false, onApply = () => {} }) => (
-    <div className={`${isMobile ? 'p-0' : 'bg-white rounded-lg border border-gray-200 p-4 shadow-sm sticky top-32'}`}>
+    <div className={`${isMobile ? 'p-0' : 'bg-white rounded-lg border border-gray-200 p-4 shadow-sm sticky top-28'}`}>
       {!isMobile && (
         <div className="flex items-center mb-4 pb-2 border-b border-gray-200">
           <Filter className="h-4 w-4 mr-2 text-green-600" />
@@ -360,11 +493,12 @@ export default function ShopPage() {
               {categories.map((category) => (
               <div key={category.id} className="flex items-center">
                 <input
-                  type="checkbox"
+                  type="radio"
                   id={`category-${category.id}`}
                   checked={selectedCategory === category.id}
                   onChange={() => handleCategoryChange(category.id)}
-                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 focus:ring-1 bg-white"
+                  className="h-4 w-4 border-gray-300 text-green-600 focus:ring-green-500 focus:ring-1 bg-white"
+                  name="category"
                 />
                 <label 
                   htmlFor={`category-${category.id}`} 
@@ -395,11 +529,12 @@ export default function ShopPage() {
               {priceRanges.map((range) => (
               <div key={range.id} className="flex items-center">
                 <input
-                  type="checkbox"
+                  type="radio"
                   id={`price-${range.id}`}
                   checked={selectedPriceRange === range.id}
                   onChange={() => handlePriceRangeChange(range.id)}
-                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 focus:ring-1 bg-white"
+                  className="h-4 w-4 border-gray-300 text-green-600 focus:ring-green-500 focus:ring-1 bg-white"
+                  name="priceRange"
                 />
                 <label 
                   htmlFor={`price-${range.id}`} 
@@ -430,11 +565,12 @@ export default function ShopPage() {
             {origins.map((origin) => (
               <div key={origin.id} className="flex items-center">
                 <input
-                  type="checkbox"
+                  type="radio"
                   id={`origin-${origin.id}`}
                   checked={selectedOrigin === origin.id}
                   onChange={() => handleOriginChange(origin.id)}
-                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 focus:ring-1 bg-white"
+                  className="h-4 w-4 border-gray-300 text-green-600 focus:ring-green-500 focus:ring-1 bg-white"
+                  name="origin"
                 />
                 <label 
                   htmlFor={`origin-${origin.id}`} 
@@ -466,11 +602,12 @@ export default function ShopPage() {
               {sortOptions.map((option) => (
                 <div key={option.id} className="flex items-center">
                   <input
-                    type="checkbox"
+                    type="radio"
                     id={`sort-${option.id}`}
                     checked={selectedSort === option.id}
                     onChange={() => handleSortChange(option.id)}
-                    className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 focus:ring-1 bg-white"
+                    className="h-4 w-4 border-gray-300 text-green-600 focus:ring-green-500 focus:ring-1 bg-white"
+                    name="sort"
                   />
                   <label 
                     htmlFor={`sort-${option.id}`} 
@@ -547,7 +684,7 @@ export default function ShopPage() {
   )
   
   return (
-    <div className="min-h-screen py-8 pt-40 bg-gray-50">
+    <div className="min-h-screen py-8 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-8">
           <div>

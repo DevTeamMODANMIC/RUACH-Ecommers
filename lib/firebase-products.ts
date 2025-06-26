@@ -75,7 +75,11 @@ export interface ProductFilters {
 export const getProducts = async (filters?: ProductFilters, pageSize = 20, lastDoc?: DocumentSnapshot) => {
   try {
     let q = query(collection(db, "products"))
+    let needsClientSideSort = false;
 
+    // Check if we're filtering by category, which would require a composite index with createdAt
+    const hasCategory = filters?.category !== undefined;
+    
     // Apply filters
     if (filters?.category) {
       q = query(q, where("category", "==", filters.category))
@@ -91,10 +95,65 @@ export const getProducts = async (filters?: ProductFilters, pageSize = 20, lastD
     }
 
     // Add ordering and pagination
-    q = query(q, orderBy("createdAt", "desc"), limit(pageSize))
+    // If we have a category filter, we might need to sort client-side to avoid missing index errors
+    if (hasCategory) {
+      try {
+        // Try with the composite index
+        q = query(q, orderBy("createdAt", "desc"), limit(pageSize * 3)) // Fetch more to allow for client-side filtering
+        
+        if (lastDoc) {
+          q = query(q, startAfter(lastDoc))
+        }
+        
+        const querySnapshot = await getDocs(q)
+        const products: Product[] = []
 
-    if (lastDoc) {
-      q = query(q, startAfter(lastDoc))
+        querySnapshot.forEach((doc) => {
+          products.push({ id: doc.id, ...doc.data() } as Product)
+        })
+        
+        // If we get here, the index exists
+        return {
+          products,
+          lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1],
+          hasMore: querySnapshot.docs.length === pageSize * 3,
+        }
+      } catch (error: any) {
+        // If we get an index error, fall back to client-side sorting
+        if (error.message && error.message.includes("requires an index")) {
+          console.log("Missing composite index for category + createdAt. Using client-side sorting instead.")
+          
+          // Remove the orderBy clause that's causing the issue
+          q = query(collection(db, "products"))
+          
+          // Re-apply all filters
+          if (filters?.category) {
+            q = query(q, where("category", "==", filters.category))
+          }
+          if (filters?.country) {
+            q = query(q, where("availableCountries", "array-contains", filters.country))
+          }
+          if (filters?.inStock !== undefined) {
+            q = query(q, where("inStock", "==", filters.inStock))
+          }
+          if (filters?.tags && filters.tags.length > 0) {
+            q = query(q, where("tags", "array-contains-any", filters.tags))
+          }
+          
+          // We'll sort by createdAt client-side
+          needsClientSideSort = true;
+        } else {
+          // Re-throw if it's not an index error
+          throw error;
+        }
+      }
+    } else {
+      // No category filter, so we can use the orderBy safely
+      q = query(q, orderBy("createdAt", "desc"), limit(pageSize))
+      
+      if (lastDoc) {
+        q = query(q, startAfter(lastDoc))
+      }
     }
 
     const querySnapshot = await getDocs(q)
@@ -103,6 +162,28 @@ export const getProducts = async (filters?: ProductFilters, pageSize = 20, lastD
     querySnapshot.forEach((doc) => {
       products.push({ id: doc.id, ...doc.data() } as Product)
     })
+
+    // Apply client-side sorting if needed
+    if (needsClientSideSort) {
+      products.sort((a, b) => {
+        const aDate = a.createdAt instanceof Date ? a.createdAt.getTime() : 
+                     (a.createdAt as any)?.toDate?.() ? (a.createdAt as any).toDate().getTime() : 0;
+        const bDate = b.createdAt instanceof Date ? b.createdAt.getTime() : 
+                     (b.createdAt as any)?.toDate?.() ? (b.createdAt as any).toDate().getTime() : 0;
+        return bDate - aDate; // Descending order
+      });
+      
+      // Apply pagination client-side
+      const startIndex = 0;
+      const endIndex = Math.min(pageSize, products.length);
+      const paginatedProducts = products.slice(startIndex, endIndex);
+      
+      return {
+        products: paginatedProducts,
+        lastDoc: querySnapshot.docs[Math.min(endIndex, querySnapshot.docs.length) - 1],
+        hasMore: products.length > pageSize,
+      };
+    }
 
     return {
       products,
