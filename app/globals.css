@@ -89,6 +89,18 @@
   :focus-visible {
     @apply ring-2 ring-primary/70 outline-none;
   }
+  
+  /* Custom text selection styles for better visibility */
+  ::selection {
+    background-color: rgba(22, 101, 52, 0.3); /* Green with opacity */
+    color: #000;
+  }
+  
+  /* Admin-specific styles */
+  .admin-layout ::selection {
+    background-color: rgba(37, 99, 235, 0.3); /* Blue with opacity */
+    color: #000;
+  }
 }
 
 @layer utilities {
@@ -206,4 +218,38 @@
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Admin Dashboard Styles */
+.admin-dashboard-link {
+  @apply bg-slate-800 text-white hover:bg-slate-700 transition-colors p-2 rounded;
+}
+
+/* Admin sidebar links - ensure good contrast */
+.admin-layout a {
+  @apply text-slate-900 dark:text-white;
+}
+
+.admin-layout a:hover {
+  @apply text-slate-700 dark:text-slate-300;
+}
+
+/* Admin page highlight fix */
+[class*="admin"] ::selection {
+  background-color: rgba(59, 130, 246, 0.3); /* Blue with opacity */
+  color: #000;
+}
+
+/* Improve visibility for admin sidebar */
+.admin-layout .bg-slate-900 a {
+  @apply text-white hover:text-slate-200;
+}
+
+.admin-layout .bg-slate-900 a.active,
+.admin-layout .bg-slate-900 a[aria-current="page"] {
+  @apply bg-slate-800 text-white;
+}
+
+.admin-layout .bg-slate-900 a:hover:not(.active):not([aria-current="page"]) {
+  @apply bg-slate-800/70;
 }

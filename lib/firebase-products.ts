@@ -26,6 +26,8 @@ export interface Product {
   subcategory?: string
   subtitle?: string
   images: string[]
+  cloudinaryImages?: Array<{publicId: string, url: string, alt?: string}>
+  cloudinaryMigrated?: boolean
   inStock: boolean
   stockQuantity: number
   weight?: number
@@ -259,17 +261,21 @@ export const addProduct = async (product: Omit<Product, "id" | "createdAt" | "up
     })
     return docRef.id
   } catch (error: any) {
+    console.error("Error adding product:", error)
     throw new Error(error.message)
   }
 }
 
 export const updateProduct = async (id: string, updates: Partial<Product>) => {
   try {
-    await updateDoc(doc(db, "products", id), {
+    const productRef = doc(db, "products", id)
+    await updateDoc(productRef, {
       ...updates,
       updatedAt: new Date(),
     })
+    return id
   } catch (error: any) {
+    console.error("Error updating product:", error)
     throw new Error(error.message)
   }
 }

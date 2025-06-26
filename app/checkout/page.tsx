@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { CreditCard, Truck, Shield, Lock, ArrowLeft } from "lucide-react"
 import { useCart } from "@/components/cart-provider"
-import { useCurrency } from "@/components/currency-provider"
+import { useSafeCurrency } from "@/hooks/use-safe-currency"
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -24,11 +24,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { createOrder } from "@/lib/firebase-orders"
+import StripeCheckout from "@/components/stripe-checkout"
 
 export default function CheckoutPage() {
   const router = useRouter()
   const { items, getTotalPrice, clearCart } = useCart()
-  const { formatPrice } = useCurrency()
+  const { formatPrice } = useSafeCurrency()
   const { user } = useAuth()
   const { toast } = useToast()
 
@@ -52,20 +54,18 @@ export default function CheckoutPage() {
     postalCode: "",
     country: "UK",
   })
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: "",
-    expiryDate: "",
-    cvv: "",
-    nameOnCard: "",
-  })
   const [shippingMethod, setShippingMethod] = useState("standard")
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [sameAsShipping, setSameAsShipping] = useState(true)
+  const [orderId, setOrderId] = useState<string | null>(null)
 
   const subtotal = getTotalPrice()
   const shippingCost = shippingMethod === "express" ? 9.99 : shippingMethod === "standard" ? 4.99 : 0
   const tax = subtotal * 0.2 // 20% VAT
   const total = subtotal + shippingCost + tax
+
+  // Convert to cents for Stripe
+  const totalInCents = Math.round(total * 100)
 
   const handleShippingChange = (field: string, value: string) => {
     setShippingInfo((prev) => ({ ...prev, [field]: value }))
@@ -73,10 +73,6 @@ export default function CheckoutPage() {
 
   const handleBillingChange = (field: string, value: string) => {
     setBillingInfo((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handlePaymentChange = (field: string, value: string) => {
-    setPaymentInfo((prev) => ({ ...prev, [field]: value }))
   }
 
   const validateStep = (stepNumber: number) => {
@@ -100,41 +96,120 @@ export default function CheckoutPage() {
           billingInfo.city &&
           billingInfo.postalCode
         )
-      case 3:
-        if (paymentMethod === "card") {
-          return paymentInfo.cardNumber && paymentInfo.expiryDate && paymentInfo.cvv && paymentInfo.nameOnCard
-        }
-        return true
       default:
         return false
     }
   }
 
-  const handlePlaceOrder = async () => {
+  const handleCreateOrder = async () => {
     setIsProcessing(true)
 
     try {
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 3000))
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to place an order.",
+          variant: "destructive",
+        })
+        router.push("/login?redirect=/checkout")
+        return
+      }
 
-      // Generate order ID
-      const orderId = `ORD-${Date.now()}`
+      // Prepare the order data without payment details yet
+      const orderData = {
+        userId: user.uid,
+        items: items.map(item => ({
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          image: item.image,
+          quantity: item.quantity,
+          options: item.options
+        })),
+        subtotal,
+        shipping: shippingCost,
+        tax,
+        total,
+        status: "pending" as const,
+        paymentStatus: "pending" as const,
+        paymentMethod: "stripe", // Always use Stripe now
+        shippingAddress: {
+          firstName: shippingInfo.firstName,
+          lastName: shippingInfo.lastName,
+          address1: shippingInfo.address,
+          city: shippingInfo.city,
+          postalCode: shippingInfo.postalCode,
+          country: shippingInfo.country,
+          phone: shippingInfo.phone,
+        },
+        billingAddress: sameAsShipping
+          ? {
+              firstName: shippingInfo.firstName,
+              lastName: shippingInfo.lastName,
+              address1: shippingInfo.address,
+              city: shippingInfo.city,
+              postalCode: shippingInfo.postalCode,
+              country: shippingInfo.country,
+              phone: shippingInfo.phone,
+            }
+          : {
+              firstName: billingInfo.firstName,
+              lastName: billingInfo.lastName,
+              address1: billingInfo.address,
+              city: billingInfo.city,
+              postalCode: billingInfo.postalCode,
+              country: billingInfo.country,
+              phone: shippingInfo.phone,
+            },
+        estimatedDelivery: shippingMethod === "express" 
+          ? Date.now() + 2 * 24 * 60 * 60 * 1000  // 2 days for express
+          : Date.now() + 5 * 24 * 60 * 60 * 1000, // 5 days for standard
+      }
 
-      // Clear cart
-      clearCart()
-
-      // Redirect to confirmation page
-      router.push(`/order-confirmation?orderId=${orderId}`)
-    } catch (error) {
+      // Create the order in Firebase Realtime Database
+      const createdOrderId = await createOrder(orderData);
+      setOrderId(createdOrderId);
+      
+      // Move to payment step
+      setStep(3);
+    } catch (error: any) {
+      console.error("Error creating order:", error);
       toast({
-        title: "Payment failed",
-        description: "There was an error processing your payment. Please try again.",
+        title: "Order setup failed",
+        description: error.message || "There was an error setting up your order. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
   }
+
+  const handlePaymentSuccess = async (paymentIntentId: string) => {
+    try {
+      // Update order with payment success
+      // This would update the order with the payment ID
+      
+      // Clear cart after successful payment
+      clearCart();
+      
+      toast({
+        title: "Payment successful",
+        description: "Your order has been placed successfully.",
+      });
+      
+      // Redirect will happen from the Stripe component
+    } catch (error) {
+      console.error("Error updating order after payment:", error);
+    }
+  };
+
+  const handlePaymentError = (error: Error) => {
+    toast({
+      title: "Payment failed",
+      description: error.message || "There was an issue processing your payment. Please try again.",
+      variant: "destructive",
+    });
+  };
 
   if (items.length === 0) {
     return (
@@ -151,7 +226,6 @@ export default function CheckoutPage() {
       </div>
     )
   }
-
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
@@ -186,7 +260,6 @@ export default function CheckoutPage() {
               { number: 1, title: "Shipping" },
               { number: 2, title: "Billing" },
               { number: 3, title: "Payment" },
-              { number: 4, title: "Review" },
             ].map((stepItem) => (
               <div key={stepItem.number} className="flex items-center">
                 <div
@@ -197,7 +270,7 @@ export default function CheckoutPage() {
                   {stepItem.number}
                 </div>
                 <span className="ml-2 text-sm font-medium">{stepItem.title}</span>
-                {stepItem.number < 4 && <div className="w-16 h-px bg-muted ml-4" />}
+                {stepItem.number < 3 && <div className="w-16 h-px bg-muted ml-4" />}
               </div>
             ))}
           </div>
@@ -426,140 +499,25 @@ export default function CheckoutPage() {
               </Card>
             )}
 
-            {/* Step 3: Payment Information */}
+            {/* Step 3: Payment */}
             {step === 3 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Payment Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label className="text-base font-semibold">Payment Method</Label>
-                    <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-3">
-                      <div className="flex items-center space-x-2 border p-3 rounded-lg">
-                        <RadioGroupItem value="card" id="card" />
-                        <Label htmlFor="card" className="flex-1 cursor-pointer">
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="h-4 w-4" />
-                            <span>Credit/Debit Card</span>
-                          </div>
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  {paymentMethod === "card" && (
-                    <>
-                      <div>
-                        <Label htmlFor="cardNumber">Card Number *</Label>
-                        <Input
-                          id="cardNumber"
-                          placeholder="1234 5678 9012 3456"
-                          value={paymentInfo.cardNumber}
-                          onChange={(e) => handlePaymentChange("cardNumber", e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="expiryDate">Expiry Date *</Label>
-                          <Input
-                            id="expiryDate"
-                            placeholder="MM/YY"
-                            value={paymentInfo.expiryDate}
-                            onChange={(e) => handlePaymentChange("expiryDate", e.target.value)}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="cvv">CVV *</Label>
-                          <Input
-                            id="cvv"
-                            placeholder="123"
-                            value={paymentInfo.cvv}
-                            onChange={(e) => handlePaymentChange("cvv", e.target.value)}
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="nameOnCard">Name on Card *</Label>
-                        <Input
-                          id="nameOnCard"
-                          value={paymentInfo.nameOnCard}
-                          onChange={(e) => handlePaymentChange("nameOnCard", e.target.value)}
-                          required
-                        />
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Step 4: Review Order */}
-            {step === 4 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Review Your Order</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Order Items */}
-                  <div>
-                    <h3 className="font-semibold mb-4">Order Items</h3>
-                    <div className="space-y-3">
-                      {items.map((item) => (
-                        <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                          <div className="relative w-12 h-12 rounded overflow-hidden">
-                            <Image
-                              src={item.image || "/placeholder.svg"}
-                              alt={item.name}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-medium">{item.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              Qty: {item.quantity} × {formatPrice(item.price)}
-                            </div>
-                          </div>
-                          <div className="font-medium">{formatPrice(item.price * item.quantity)}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Shipping Address */}
-                  <div>
-                    <h3 className="font-semibold mb-2">Shipping Address</h3>
-                    <div className="p-3 bg-muted rounded-lg">
-                      <div>
-                        {shippingInfo.firstName} {shippingInfo.lastName}
-                      </div>
-                      <div>{shippingInfo.address}</div>
-                      <div>
-                        {shippingInfo.city}, {shippingInfo.postalCode}
-                      </div>
-                      <div>{shippingInfo.country}</div>
-                    </div>
-                  </div>
-
-                  {/* Payment Method */}
-                  <div>
-                    <h3 className="font-semibold mb-2">Payment Method</h3>
-                    <div className="p-3 bg-muted rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="h-4 w-4" />
-                        <span>Credit Card ending in {paymentInfo.cardNumber.slice(-4)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <>
+                {orderId ? (
+                  <StripeCheckout 
+                    amount={totalInCents}
+                    orderId={orderId}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                    returnUrl="/order-confirmation"
+                  />
+                ) : (
+                  <Card>
+                    <CardContent className="pt-6 flex flex-col items-center justify-center min-h-[200px]">
+                      <p className="text-sm text-muted-foreground">Preparing payment...</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
 
             {/* Navigation Buttons */}
@@ -569,15 +527,18 @@ export default function CheckoutPage() {
                 {step > 1 ? "Previous" : "Back to Cart"}
               </Button>
 
-              {step < 4 ? (
-                <Button onClick={() => setStep(step + 1)} disabled={!validateStep(step)}>
-                  Continue
+              {step < 3 ? (
+                <Button 
+                  onClick={() => step === 2 ? handleCreateOrder() : setStep(step + 1)} 
+                  disabled={!validateStep(step) || isProcessing}
+                >
+                  {isProcessing ? (
+                    <>Processing...</>
+                  ) : (
+                    step === 2 ? "Proceed to Payment" : "Continue"
+                  )}
                 </Button>
-              ) : (
-                <Button onClick={handlePlaceOrder} disabled={isProcessing} className="bg-green-600 hover:bg-green-700">
-                  {isProcessing ? "Processing..." : `Place Order - ${formatPrice(total)}`}
-                </Button>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -592,7 +553,7 @@ export default function CheckoutPage() {
                   {items.map((item) => (
                     <div key={item.id} className="flex justify-between text-sm">
                       <span>
-                        {item.name} × {item.quantity}
+                        {item.name}  {item.quantity}
                       </span>
                       <span>{formatPrice(item.price * item.quantity)}</span>
                     </div>

@@ -6,7 +6,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Pencil, Trash2, Plus, ArrowLeft, FileUp, Eye } from "lucide-react"
+import { Pencil, Trash2, Plus, ArrowLeft, FileUp, Eye, CloudUpload, AlertTriangle } from "lucide-react"
 import { 
   Table, 
   TableBody, 
@@ -115,9 +115,21 @@ export default function AdminProducts() {
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline" asChild className="shrink-0">
+              <Link href="/admin/products/cloudinary-migration">
+                <CloudUpload className="mr-2 h-4 w-4" />
+                Cloudinary Migration
+              </Link>
+            </Button>
+            <Button variant="outline" asChild className="shrink-0">
               <Link href="/admin/products/import">
                 <FileUp className="mr-2 h-4 w-4" />
                 Import Products
+              </Link>
+            </Button>
+            <Button variant="outline" asChild className="shrink-0">
+              <Link href="/admin/products/cloudinary-report">
+                <AlertTriangle className="mr-2 h-4 w-4" />
+                Missing Images
               </Link>
             </Button>
             <Button asChild className="shrink-0">

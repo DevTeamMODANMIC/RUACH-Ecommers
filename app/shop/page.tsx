@@ -5,20 +5,49 @@ import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import ProductGrid from "@/components/product-grid"
 import { Product } from "@/types"
-import { Loader2, Filter } from "lucide-react"
+import { Loader2, Filter, ChevronDown, Search as SearchIcon, X, SlidersHorizontal, Check } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { products } from "@/lib/product-data"
+import { getProducts, ProductFilters } from "@/lib/firebase-products"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu"
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetDescription, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetTrigger,
+  SheetFooter,
+  SheetClose
+} from "@/components/ui/sheet"
+import { Badge } from "@/components/ui/badge"
 
 // Define available categories
 const categories = [
   { id: "all", name: "All Products" },
   { id: "beverages", name: "Beverages" },
+  { id: "drinks", name: "Drinks" },
   { id: "food", name: "Food" },
   { id: "flour", name: "Flour" },
   { id: "rice", name: "Rice" },
-  { id: "vegetables", name: "Vegetables" },
+  { id: "pap-custard", name: "Pap/Custard" },
   { id: "spices", name: "Spices" },
+  { id: "dried-spices", name: "Dried Spices" },
+  { id: "oil", name: "Oil" },
+  { id: "provisions", name: "Provisions" },
+  { id: "fresh-produce", name: "Fresh Produce" },
+  { id: "fresh-vegetables", name: "Fresh Vegetables" },
+  { id: "vegetables", name: "Vegetables" },
   { id: "meat", name: "Meat" }
 ];
 
@@ -31,6 +60,32 @@ const priceRanges = [
   { id: "over30", name: "Over £30", min: 30, max: Infinity }
 ];
 
+// Map URL category parameters to actual product categories
+const categoryMapping: Record<string, string> = {
+  "drinks": "beverages",
+  "beverages": "beverages",
+  "flour": "flour",
+  "rice": "rice",
+  "pap-custard": "food",
+  "spices": "spices",
+  "dried-spices": "spices",
+  "oil": "food",
+  "provisions": "food",
+  "fresh-produce": "vegetables",
+  "fresh-vegetables": "vegetables",
+  "vegetables": "vegetables",
+  "meat": "meat",
+  "food": "food"
+};
+
+// Sort options for products
+const sortOptions = [
+  { id: "popularity", name: "Popular" },
+  { id: "price-asc", name: "Price: Low to High" },
+  { id: "price-desc", name: "Price: High to Low" },
+  { id: "newest", name: "Newest" }
+];
+
 export default function ShopPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -40,54 +95,147 @@ export default function ShopPage() {
   
   const [selectedCategory, setSelectedCategory] = useState(categoryParam)
   const [selectedPriceRange, setSelectedPriceRange] = useState("all")
+  const [selectedSort, setSelectedSort] = useState("popularity")
   const [searchTerm, setSearchTerm] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(products)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+  const [activeFiltersCount, setActiveFiltersCount] = useState(0)
+  const [resultsCount, setResultsCount] = useState(products.length)
+  const [selectedOrigin, setSelectedOrigin] = useState("all")
+  const [expandedSections, setExpandedSections] = useState({
+    categories: true,
+    priceRange: true,
+    origin: true,
+    sort: true
+  })
+  
+  // Define origins
+  const origins = [
+    { id: "all", name: "All" },
+    { id: "nigeria", name: "Nigeria" },
+    { id: "ghana", name: "Ghana" },
+    { id: "kenya", name: "Kenya" },
+    { id: "south-africa", name: "South Africa" }
+  ];
+  
+  // Calculate active filters count
+  useEffect(() => {
+    let count = 0
+    if (selectedCategory !== "all") count++
+    if (selectedPriceRange !== "all") count++
+    if (selectedOrigin !== "all") count++
+    if (searchTerm) count++
+    setActiveFiltersCount(count)
+  }, [selectedCategory, selectedPriceRange, selectedOrigin, searchTerm])
   
   // Filter products based on selected filters
   useEffect(() => {
     setIsLoading(true)
     
-    // Apply filters
-    let result = [...products]
-    
-    // Filter by category
-    if (selectedCategory !== "all") {
-      result = result.filter(product => product.category === selectedCategory)
-    }
-    
-    // Filter by price range
-    if (selectedPriceRange !== "all") {
-      const range = priceRanges.find(range => range.id === selectedPriceRange)
-      if (range && range.min !== undefined && range.max !== undefined) {
-        result = result.filter(product => {
-          // Apply discount if available
-          const finalPrice = product.discount && product.discount > 0
-            ? product.price * (1 - product.discount / 100)
-            : product.price
-          return finalPrice >= range.min && finalPrice < range.max
-        })
+    async function loadProducts() {
+      try {
+        // Prepare Firebase filters
+        const firebaseFilters: ProductFilters = {}
+        
+        // Map the URL category to the actual product category
+        if (selectedCategory !== "all") {
+          const mappedCategory = categoryMapping[selectedCategory] || selectedCategory
+          firebaseFilters.category = mappedCategory
+        }
+        
+        // Map origin filter
+        if (selectedOrigin !== "all") {
+          firebaseFilters.country = selectedOrigin
+        }
+        
+        // Get products from Firebase
+        const result = await getProducts(firebaseFilters, 100)
+        let firebaseProducts = result.products
+        
+        // If no products found in Firebase, fall back to static data
+        if (firebaseProducts.length === 0) {
+          console.log("No products found in Firebase, using static data")
+          firebaseProducts = [...products]
+        }
+        
+        // Apply price range filter client-side
+        if (selectedPriceRange !== "all") {
+          const range = priceRanges.find(range => range.id === selectedPriceRange)
+          if (range && range.min !== undefined && range.max !== undefined) {
+            firebaseProducts = firebaseProducts.filter(product => {
+              // Apply discount if available
+              const finalPrice = product.discount && product.discount > 0
+                ? product.price * (1 - product.discount / 100)
+                : product.price
+              return finalPrice >= range.min && finalPrice < range.max
+            })
+          }
+        }
+        
+        // Apply search filter client-side
+        if (searchTerm) {
+          const term = searchTerm.toLowerCase()
+          firebaseProducts = firebaseProducts.filter(product => 
+            product.name.toLowerCase().includes(term) || 
+            (product.description && product.description.toLowerCase().includes(term)) ||
+            (product.category && product.category.toLowerCase().includes(term))
+          )
+        }
+        
+        // Apply sorting
+        if (selectedSort === "price-asc") {
+          firebaseProducts.sort((a, b) => {
+            const aPrice = a.discount ? a.price * (1 - a.discount / 100) : a.price
+            const bPrice = b.discount ? b.price * (1 - b.discount / 100) : b.price
+            return aPrice - bPrice
+          })
+        } else if (selectedSort === "price-desc") {
+          firebaseProducts.sort((a, b) => {
+            const aPrice = a.discount ? a.price * (1 - a.discount / 100) : a.price
+            const bPrice = b.discount ? b.price * (1 - b.discount / 100) : b.price
+            return bPrice - aPrice
+          })
+        } else if (selectedSort === "newest") {
+          firebaseProducts.sort((a, b) => {
+            const aDate = a.createdAt instanceof Date ? a.createdAt.getTime() : 0
+            const bDate = b.createdAt instanceof Date ? b.createdAt.getTime() : 0
+            return bDate - aDate
+          })
+        } else {
+          // Sort by popularity (default) or rating
+          firebaseProducts.sort((a, b) => {
+            const aRating = a.reviews?.average || a.rating || 0
+            const bRating = b.reviews?.average || b.rating || 0
+            return bRating - aRating
+          })
+        }
+        
+        setResultsCount(firebaseProducts.length)
+        setFilteredProducts(firebaseProducts)
+      } catch (error) {
+        console.error("Error loading products:", error)
+        // Fall back to static data on error
+        setFilteredProducts(products)
+        setResultsCount(products.length)
+      } finally {
+        setIsLoading(false)
       }
     }
     
-    // Filter by search term
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      result = result.filter(product => 
-        product.name.toLowerCase().includes(term) || 
-        product.description.toLowerCase().includes(term) ||
-        product.category.toLowerCase().includes(term)
-      )
-    }
-    
-    setFilteredProducts(result)
-    setIsLoading(false)
-  }, [selectedCategory, selectedPriceRange, searchTerm])
+    loadProducts()
+  }, [selectedCategory, selectedPriceRange, selectedOrigin, searchTerm, selectedSort])
   
-  // Update URL when category changes
+  // Update URL when filters change
   useEffect(() => {
-    const params = new URLSearchParams(searchParams)
+    // Convert readonly search params to a regular URLSearchParams by creating 
+    // a new URLSearchParams object and passing in the entries
+    const params = new URLSearchParams();
+    
+    // Copy existing parameters
+    searchParams.forEach((value, key) => {
+      params.set(key, value);
+    });
     
     if (selectedCategory === "all") {
       params.delete("category")
@@ -95,8 +243,14 @@ export default function ShopPage() {
       params.set("category", selectedCategory)
     }
     
+    if (selectedOrigin === "all") {
+      params.delete("origin")
+    } else {
+      params.set("origin", selectedOrigin)
+    }
+    
     router.replace(`/shop?${params.toString()}`)
-  }, [selectedCategory, router, searchParams])
+  }, [selectedCategory, selectedOrigin, router, searchParams])
   
   // Handle category change
   const handleCategoryChange = (categoryId: string) => {
@@ -108,98 +262,419 @@ export default function ShopPage() {
     setSelectedPriceRange(rangeId)
   }
   
+  // Handle sort change
+  const handleSortChange = (sortId: string) => {
+    setSelectedSort(sortId)
+  }
+  
   // Handle search
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
   }
+
+  // Handle origin change
+  const handleOriginChange = (originId: string) => {
+    setSelectedOrigin(originId)
+  }
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSelectedCategory("all")
+    setSelectedPriceRange("all")
+    setSelectedOrigin("all")
+    setSearchTerm("")
+  }
+
+  // Get the name of the selected category
+  const getSelectedCategoryName = () => {
+    const category = categories.find(cat => cat.id === selectedCategory)
+    return category ? category.name : "All Products"
+  }
+
+  // Get the name of the selected price range
+  const getSelectedPriceRangeName = () => {
+    const range = priceRanges.find(range => range.id === selectedPriceRange)
+    return range ? range.name : "All Prices"
+  }
+  
+  // Get the name of the selected sort option
+  const getSelectedSortName = () => {
+    const sort = sortOptions.find(sort => sort.id === selectedSort)
+    return sort ? sort.name : "Popular"
+  }
+  
+  // Get the name of the selected origin
+  const getSelectedOriginName = () => {
+    const origin = origins.find(org => org.id === selectedOrigin)
+    return origin ? origin.name : "All"
+  }
+  
+  // Toggle section visibility
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections({
+      ...expandedSections,
+      [section]: !expandedSections[section]
+    })
+  }
+  
+  // Filter component - reusable for both desktop and mobile
+  const FiltersComponent = ({ isMobile = false, onApply = () => {} }) => (
+    <div className={`${isMobile ? 'p-0' : 'bg-white rounded-lg border border-gray-200 p-4 shadow-sm sticky top-32'}`}>
+      {!isMobile && (
+        <div className="flex items-center mb-4 pb-2 border-b border-gray-200">
+          <Filter className="h-4 w-4 mr-2 text-green-600" />
+          <h2 className="font-medium text-gray-800">Filter Products</h2>
+        </div>
+      )}
+      
+      {/* Search - for mobile only */}
+      {isMobile && (
+        <div className="mb-4">
+          <h3 className="font-medium mb-2 text-sm text-gray-700">Search</h3>
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 border-gray-300 bg-gray-50 h-9 text-gray-800 placeholder:text-gray-400"
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Category Filter - Accordion style */}
+      <div className="mb-2 border border-gray-200 rounded-md">
+        <button 
+          onClick={() => toggleSection('categories')}
+          className="w-full flex justify-between items-center p-3 text-left focus:outline-none"
+        >
+          <span className="font-medium text-gray-700">Categories</span>
+          <ChevronDown 
+            className={`h-4 w-4 text-gray-500 transition-transform ${expandedSections.categories ? 'rotate-180' : ''}`} 
+          />
+        </button>
+        
+        {expandedSections.categories && (
+          <div className="p-3 border-t border-gray-200 space-y-2 max-h-40 overflow-y-auto">
+              {categories.map((category) => (
+              <div key={category.id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`category-${category.id}`}
+                  checked={selectedCategory === category.id}
+                  onChange={() => handleCategoryChange(category.id)}
+                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 focus:ring-1 bg-white"
+                />
+                <label 
+                  htmlFor={`category-${category.id}`} 
+                  className="ml-2 text-sm text-gray-700 cursor-pointer"
+                >
+                  {category.name}
+                </label>
+              </div>
+              ))}
+          </div>
+        )}
+      </div>
+      
+      {/* Price Range Filter - Accordion style */}
+      <div className="mb-2 border border-gray-200 rounded-md">
+        <button 
+          onClick={() => toggleSection('priceRange')}
+          className="w-full flex justify-between items-center p-3 text-left focus:outline-none"
+        >
+          <span className="font-medium text-gray-700">Price Range</span>
+          <ChevronDown 
+            className={`h-4 w-4 text-gray-500 transition-transform ${expandedSections.priceRange ? 'rotate-180' : ''}`} 
+          />
+        </button>
+        
+        {expandedSections.priceRange && (
+          <div className="p-3 border-t border-gray-200 space-y-2">
+              {priceRanges.map((range) => (
+              <div key={range.id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`price-${range.id}`}
+                  checked={selectedPriceRange === range.id}
+                  onChange={() => handlePriceRangeChange(range.id)}
+                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 focus:ring-1 bg-white"
+                />
+                <label 
+                  htmlFor={`price-${range.id}`} 
+                  className="ml-2 text-sm text-gray-700 cursor-pointer"
+                >
+                  {range.name}
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {/* Origin Filter - Accordion style */}
+      <div className="mb-2 border border-gray-200 rounded-md">
+        <button 
+          onClick={() => toggleSection('origin')}
+          className="w-full flex justify-between items-center p-3 text-left focus:outline-none"
+        >
+          <span className="font-medium text-gray-700">Origin</span>
+          <ChevronDown 
+            className={`h-4 w-4 text-gray-500 transition-transform ${expandedSections.origin ? 'rotate-180' : ''}`} 
+          />
+        </button>
+        
+        {expandedSections.origin && (
+          <div className="p-3 border-t border-gray-200 space-y-2">
+            {origins.map((origin) => (
+              <div key={origin.id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`origin-${origin.id}`}
+                  checked={selectedOrigin === origin.id}
+                  onChange={() => handleOriginChange(origin.id)}
+                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 focus:ring-1 bg-white"
+                />
+                <label 
+                  htmlFor={`origin-${origin.id}`} 
+                  className="ml-2 text-sm text-gray-700 cursor-pointer"
+                >
+                  {origin.name}
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {/* Sort By - Mobile Only */}
+      {isMobile && (
+        <div className="mb-2 border border-gray-200 rounded-md">
+          <button 
+            onClick={() => toggleSection('sort')}
+            className="w-full flex justify-between items-center p-3 text-left focus:outline-none"
+          >
+            <span className="font-medium text-gray-700">Sort By</span>
+            <ChevronDown 
+              className={`h-4 w-4 text-gray-500 transition-transform ${expandedSections.sort ? 'rotate-180' : ''}`} 
+            />
+          </button>
+          
+          {expandedSections.sort && (
+            <div className="p-3 border-t border-gray-200 space-y-2">
+              {sortOptions.map((option) => (
+                <div key={option.id} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`sort-${option.id}`}
+                    checked={selectedSort === option.id}
+                    onChange={() => handleSortChange(option.id)}
+                    className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 focus:ring-1 bg-white"
+                  />
+                  <label 
+                    htmlFor={`sort-${option.id}`} 
+                    className="ml-2 text-sm text-gray-700 cursor-pointer"
+                  >
+                    {option.name}
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Active Filters - Simplified */}
+      {(selectedCategory !== "all" || selectedPriceRange !== "all" || selectedOrigin !== "all" || searchTerm) && (
+        <div className="mt-3 pt-2 border-t border-gray-200">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs text-gray-700">Active Filters</h3>
+            <Button 
+              variant="link" 
+              size="sm" 
+              onClick={clearAllFilters}
+              className="text-xs text-red-600 hover:text-red-700 p-0 h-auto"
+            >
+              Clear All
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {selectedCategory !== "all" && (
+              <Badge variant="outline" className="text-xs bg-gray-50 border-gray-200 gap-1 py-1">
+                {getSelectedCategoryName()}
+                <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => setSelectedCategory("all")} />
+              </Badge>
+            )}
+            {selectedPriceRange !== "all" && (
+              <Badge variant="outline" className="text-xs bg-gray-50 border-gray-200 gap-1 py-1">
+                {getSelectedPriceRangeName()}
+                <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => setSelectedPriceRange("all")} />
+              </Badge>
+            )}
+            {selectedOrigin !== "all" && (
+              <Badge variant="outline" className="text-xs bg-gray-50 border-gray-200 gap-1 py-1">
+                {getSelectedOriginName()}
+                <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => setSelectedOrigin("all")} />
+              </Badge>
+            )}
+            {searchTerm && (
+              <Badge variant="outline" className="text-xs bg-gray-50 border-gray-200 gap-1 py-1">
+                {searchTerm}
+                <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => setSearchTerm("")} />
+              </Badge>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Filter Actions */}
+      {isMobile ? (
+        <SheetFooter className="mt-4 pt-4 border-t border-gray-200">
+          <SheetClose asChild>
+            <Button className="w-full bg-green-600 hover:bg-green-700" onClick={onApply}>Apply Filters</Button>
+          </SheetClose>
+        </SheetFooter>
+      ) : (
+        <Button 
+          className="w-full mt-3 bg-green-600 hover:bg-green-700"
+          onClick={clearAllFilters}
+        >
+          Reset Filters
+        </Button>
+      )}
+    </div>
+  )
   
   return (
-    <div className="min-h-screen py-8 pt-32">
+    <div className="min-h-screen py-8 pt-40 bg-gray-50">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-start mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Shop</h1>
             <p className="text-gray-600 mt-1">Browse our wide selection of products</p>
           </div>
           
-          <div className="w-full md:w-auto mt-4 md:mt-0">
-            <form onSubmit={handleSearch} className="flex w-full md:w-80">
-              <Input
-                type="search"
-                placeholder="Search products..."
-                className="rounded-r-none"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          {/* Search and Sort controls */}
+          <div className="w-full md:w-auto flex flex-col md:flex-row gap-3">
+            <form onSubmit={handleSearch} className="flex w-full md:w-60">
+              <div className="relative flex-1">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="search"
+                  placeholder="Search products..."
+                  className="pl-9 pr-4 rounded-l-md border-r-0"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
               <Button type="submit" className="rounded-l-none bg-green-600 hover:bg-green-700">
                 Search
               </Button>
             </form>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full md:w-auto justify-between whitespace-nowrap">
+                  <span className="mr-1">Sort:</span> {getSelectedSortName()}
+                  <ChevronDown className="h-4 w-4 ml-2 opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup value={selectedSort} onValueChange={handleSortChange}>
+                  {sortOptions.map((option) => (
+                    <DropdownMenuRadioItem
+                      key={option.id}
+                      value={option.id}
+                      className="cursor-pointer"
+                    >
+                      {option.name}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         
         <div className="lg:grid lg:grid-cols-4 lg:gap-8">
-          {/* Mobile filter toggle */}
+          {/* Mobile filter button */}
           <div className="lg:hidden mb-4">
-            <Button 
-              variant="outline" 
-              className="w-full flex items-center justify-center"
-              onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              {isMobileFilterOpen ? "Hide Filters" : "Show Filters"}
-            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="w-full flex items-center justify-center gap-2"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  <span>Filters</span>
+                  {activeFiltersCount > 0 && (
+                    <Badge className="ml-1 bg-green-500">{activeFiltersCount}</Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-full sm:max-w-md overflow-y-auto">
+                <SheetHeader className="mb-6">
+                  <SheetTitle>Filters</SheetTitle>
+                  <SheetDescription>
+                    Filter products by category, price, and more.
+                  </SheetDescription>
+                </SheetHeader>
+                <FiltersComponent isMobile={true} />
+              </SheetContent>
+            </Sheet>
           </div>
           
-          {/* Sidebar filters */}
-          <div className={`lg:block ${isMobileFilterOpen ? 'block' : 'hidden'}`}>
-            <div className="bg-white rounded-lg border border-gray-200 p-5 sticky top-24">
-              <h2 className="font-bold text-gray-900 mb-4">Categories</h2>
-              <ul className="space-y-2 mb-6">
-                {categories.map((category) => (
-                  <li key={category.id}>
-                    <button
-                      onClick={() => handleCategoryChange(category.id)}
-                      className={`w-full text-left py-1 px-2 rounded ${
-                        selectedCategory === category.id
-                          ? "bg-green-50 text-green-700 font-medium"
-                          : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {category.name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              
-              <h2 className="font-bold text-gray-900 mb-4">Price Range</h2>
-              <ul className="space-y-2">
-                {priceRanges.map((range) => (
-                  <li key={range.id}>
-                    <button
-                      onClick={() => handlePriceRangeChange(range.id)}
-                      className={`w-full text-left py-1 px-2 rounded ${
-                        selectedPriceRange === range.id
-                          ? "bg-green-50 text-green-700 font-medium"
-                          : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {range.name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* Desktop sidebar filters */}
+          <div className="hidden lg:block">
+            <FiltersComponent />
           </div>
           
           {/* Product grid */}
           <div className="lg:col-span-3">
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+            {/* Results count */}
+            <div className="mb-4 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Showing {resultsCount} {resultsCount === 1 ? 'product' : 'products'}
+                {activeFiltersCount > 0 && ' with applied filters'}
               </div>
-            ) : (
+              
+              {activeFiltersCount > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={clearAllFilters} 
+                  className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+            
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64 bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="flex flex-col items-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-green-600 mb-2" />
+                  <p className="text-gray-500 text-sm">Loading products...</p>
+                </div>
+              </div>
+            ) : filteredProducts.length > 0 ? (
               <ProductGrid products={filteredProducts} />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="text-center max-w-md">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
+                  <p className="text-gray-600 mb-6">
+                    We couldn't find any products matching your current filters. Try adjusting your search or clear filters to see all products.
+                  </p>
+                  <Button onClick={clearAllFilters}>
+                    Clear Filters
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         </div>

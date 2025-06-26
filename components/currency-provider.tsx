@@ -25,15 +25,17 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     setSymbol(newSymbol)
     setExchangeRate(newRate)
 
-    // Store in localStorage for persistence
-    localStorage.setItem(
-      "selectedCurrency",
-      JSON.stringify({
-        currency: newCurrency,
-        symbol: newSymbol,
-        exchangeRate: newRate,
-      }),
-    )
+    // Store in localStorage for persistence - only if in browser
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(
+        "selectedCurrency",
+        JSON.stringify({
+          currency: newCurrency,
+          symbol: newSymbol,
+          exchangeRate: newRate,
+        }),
+      )
+    }
   }
 
   const convertPrice = (gbpPrice: number): number => {
@@ -63,28 +65,39 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Load saved currency on mount
+  // Load saved currency on mount - only runs on client
   useEffect(() => {
-    const saved = localStorage.getItem("selectedCurrency")
-    if (saved) {
-      const { currency: savedCurrency, symbol: savedSymbol, exchangeRate: savedRate } = JSON.parse(saved)
-      setCurrencyState(savedCurrency)
-      setSymbol(savedSymbol)
-      setExchangeRate(savedRate)
+    // Check if we're running in the browser
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem("selectedCurrency")
+      if (saved) {
+        try {
+          const { currency: savedCurrency, symbol: savedSymbol, exchangeRate: savedRate } = JSON.parse(saved)
+          setCurrencyState(savedCurrency)
+          setSymbol(savedSymbol)
+          setExchangeRate(savedRate)
+        } catch (e) {
+          console.error("Error parsing saved currency:", e)
+          // If there's an error, just use the defaults
+        }
+      }
     }
   }, [])
 
-  // Sync currency with country changes
+  // Sync currency with country changes - only runs on client
   useEffect(() => {
-    const handleCountryChange = (event: CustomEvent) => {
-      const country = event.detail
-      setCurrencyState(country.currency)
-      setSymbol(country.symbol)
-      setExchangeRate(country.exchangeRate)
-    }
+    // Check if we're running in the browser
+    if (typeof window !== 'undefined') {
+      const handleCountryChange = (event: CustomEvent) => {
+        const country = event.detail
+        setCurrencyState(country.currency)
+        setSymbol(country.symbol)
+        setExchangeRate(country.exchangeRate)
+      }
 
-    window.addEventListener("countryChanged", handleCountryChange as EventListener)
-    return () => window.removeEventListener("countryChanged", handleCountryChange as EventListener)
+      window.addEventListener("countryChanged", handleCountryChange as EventListener)
+      return () => window.removeEventListener("countryChanged", handleCountryChange as EventListener)
+    }
   }, [])
 
   return (

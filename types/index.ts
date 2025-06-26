@@ -7,6 +7,7 @@ export type Product = {
   origin: string
   inStock: boolean
   images: string[]
+  cloudinaryImages?: CloudinaryImage[]
   discount?: number
   rating?: number
   reviews?: Review[]
@@ -20,6 +21,8 @@ export type Product = {
     height: number
   }
   shippingClass?: string
+  createdAt?: string
+  popularity?: number
 }
 
 export type Review = {
@@ -74,12 +77,17 @@ export type Order = {
   tax: number
   total: number
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded'
+  paymentMethod: string
+  paymentId?: string
   shippingAddress: UserAddress
   billingAddress: UserAddress
-  paymentMethod: string
   trackingNumber?: string
-  createdAt: string
-  updatedAt: string
+  trackingUrl?: string
+  notes?: string
+  estimatedDelivery?: string | number
+  createdAt: string | number | null
+  updatedAt: string | number | null
 }
 
 export type User = {
@@ -110,4 +118,11 @@ export type ShippingMethod = {
   name: string
   price: number
   estimatedDelivery: string
+}
+
+export type CloudinaryImage = {
+  publicId: string
+  url: string
+  alt?: string
+  primary?: boolean
 }

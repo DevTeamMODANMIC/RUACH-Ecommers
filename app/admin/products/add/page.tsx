@@ -22,6 +22,7 @@ import { auth } from "@/lib/firebase"
 import { onAuthStateChanged } from "firebase/auth"
 import { useToast } from "@/hooks/use-toast"
 import { useCurrency } from "@/hooks/use-currency"
+import CloudinaryUploadWidget from "@/components/cloudinary-upload-widget"
 
 const categories = [
   "Vegetables & Fruits",
@@ -50,6 +51,7 @@ export default function AddProduct() {
   const [submitting, setSubmitting] = useState(false)
   const [imageUrl, setImageUrl] = useState("")
   const [imageUrls, setImageUrls] = useState<string[]>([])
+  const [cloudinaryImages, setCloudinaryImages] = useState<Array<{publicId: string, url: string, alt?: string}>>([])
   
   const [formData, setFormData] = useState({
     name: "",
@@ -134,6 +136,16 @@ export default function AddProduct() {
     e.preventDefault()
     setSubmitting(true)
 
+    if (cloudinaryImages.length === 0) {
+      toast({
+        title: "Image required",
+        description: "Please upload at least one product image via Cloudinary before saving.",
+        variant: "destructive",
+      });
+      setSubmitting(false);
+      return;
+    }
+
     try {
       // Use the collected image URLs
       let productImages = imageUrls.length > 0 ? imageUrls : ["/product_images/unknown-product.jpg"]
@@ -145,6 +157,7 @@ export default function AddProduct() {
         price: parseFloat(formData.price),
         category: formData.category,
         images: productImages,
+        cloudinaryImages: cloudinaryImages.length > 0 ? cloudinaryImages : undefined,
         inStock: formData.inStock,
         stockQuantity: parseInt(formData.stockQuantity),
         origin: formData.origin,
@@ -156,17 +169,41 @@ export default function AddProduct() {
         },
       }
 
-      await addProduct(productData)
+      // Get current user token for authorization
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error("You must be logged in to add products");
+      }
+
+      const idToken = await currentUser.getIdToken();
+
+      // Call our API endpoint
+      const response = await fetch('/api/products/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify(productData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add product');
+      }
+
+      const result = await response.json();
+
       toast({
         title: "Product added",
-        description: "The product has been successfully added.",
+        description: "The product has been successfully added to Firebase and Cloudinary.",
       })
       router.push("/admin/products")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding product:", error)
       toast({
         title: "Error",
-        description: "Failed to add product. Please try again.",
+        description: error.message || "Failed to add product. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -294,37 +331,79 @@ export default function AddProduct() {
             </div>
           </div>
 
-          {/* Image URL Input Section */}
-          <div className="space-y-2">
+          {/* Cloudinary Image Upload Section */}
+          <div className="space-y-4">
             <Label>Product Images</Label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter image URL"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
+            
+            <div className="mb-6 border p-4 rounded-md bg-gray-50">
+              <h3 className="text-sm font-medium mb-3">Cloudinary Images (Recommended)</h3>
+              <CloudinaryUploadWidget
+                onUploadSuccess={(publicId, url) => {
+                  setCloudinaryImages([...cloudinaryImages, { publicId, url, alt: formData.name }]);
+                }}
+                buttonText="Upload Product Image"
               />
-              <Button 
-                type="button" 
-                onClick={handleAddImageUrl}
-                disabled={!imageUrl}
-                className="shrink-0"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Add
-              </Button>
+              
+              {cloudinaryImages.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                  {cloudinaryImages.map((image, index) => (
+                    <div key={index} className="relative">
+                      <div className="aspect-square rounded-md overflow-hidden border bg-white">
+                        <img 
+                          src={image.url} 
+                          alt={image.alt || `Product image ${index + 1}`}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md"
+                        onClick={() => {
+                          const newImages = [...cloudinaryImages];
+                          newImages.splice(index, 1);
+                          setCloudinaryImages(newImages);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <p className="text-xs text-gray-500">
-              Enter URLs to product images. You can use images from the public/product_images folder.
-              <br />
-              Example: /product_images/beverages/coke-50cl-250x250.jpg
-            </p>
-            <div className="mt-2 p-3 bg-gray-50 rounded-md text-xs text-gray-600">
-              <p className="font-medium mb-1">Available image directories:</p>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>/product_images/ - Main product images</li>
-                <li>/product_images/beverages/ - Beverage images</li>
-                <li>/public/a/ - Alternative images</li>
-              </ul>
+            
+            {/* Alternative URL Input Section */}
+            <div className="border-t border-gray-200 pt-4">
+              <h3 className="text-sm font-medium mb-3">Alternative URL Method</h3>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter image URL"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
+                <Button 
+                  type="button" 
+                  onClick={handleAddImageUrl}
+                  disabled={!imageUrl}
+                  className="shrink-0"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Enter URLs to product images. You can use images from the public/product_images folder.
+                <br />
+                Example: /product_images/beverages/coke-50cl-250x250.jpg
+              </p>
+              <div className="mt-2 p-3 bg-gray-50 rounded-md text-xs text-gray-600">
+                <p className="font-medium mb-1">Available image directories:</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>/product_images/ - Main product images</li>
+                  <li>/product_images/beverages/ - Beverage images</li>
+                  <li>/public/a/ - Alternative images</li>
+                </ul>
+              </div>
             </div>
             
             {/* Image URL Previews */}

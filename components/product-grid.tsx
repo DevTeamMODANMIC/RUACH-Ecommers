@@ -5,6 +5,8 @@ import { Product } from "@/types"
 import { ShoppingCart } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import { useCart } from "@/components/cart-provider"
+import CloudinaryImage from "@/components/cloudinary-image"
+import Image from "next/image"
 
 interface ProductGridProps {
   products: Product[]
@@ -20,7 +22,7 @@ export function ProductGrid({ products }: ProductGridProps) {
       price: product.discount && product.discount > 0 
         ? product.price * (1 - product.discount / 100) 
         : product.price,
-      image: product.images[0],
+      image: product.cloudinaryImages?.[0]?.url || product.images[0],
       quantity: 1
     });
   };
@@ -39,25 +41,29 @@ export function ProductGrid({ products }: ProductGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {products.map((product) => (
-        <div key={product.id} className="bg-white border border-gray-200 rounded overflow-hidden">
-          <Link href={`/products/${encodeURIComponent(product.id)}`}>
-            <div className="relative h-48">
-              <img 
-                src={product.images?.[0] || '/product_images/unknown-product.jpg'}
-                alt={product.name}
-                className="w-full h-full object-contain p-2"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/product_images/unknown-product.jpg";
-                }}
-              />
-              {product.discount && product.discount > 0 && (
-                <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-2 py-1">
-                  {product.discount}% OFF
-                </div>
+        <div key={product.id} className="group relative">
+          <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-md bg-gray-200 lg:aspect-none group-hover:opacity-75 lg:h-80">
+              {product.cloudinaryImages && product.cloudinaryImages.length > 0 ? (
+                <CloudinaryImage
+                  publicId={product.cloudinaryImages[0].publicId}
+                  alt={product.cloudinaryImages[0].alt || product.name}
+                className="h-full w-full object-cover object-center lg:h-full lg:w-full"
+                size="medium"
+                />
+              ) : (
+              <Image
+                src={product.images[0]}
+                  alt={product.name}
+                width={500}
+                height={500}
+                className="h-full w-full object-cover object-center lg:h-full lg:w-full"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "/product_images/unknown-product.jpg";
+                  }}
+                />
               )}
             </div>
-          </Link>
           
           <div className="p-3">
             <Link href={`/products/${encodeURIComponent(product.id)}`} className="hover:text-green-600">

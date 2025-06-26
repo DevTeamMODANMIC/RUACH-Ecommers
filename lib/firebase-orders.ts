@@ -1,17 +1,18 @@
-import { collection, doc, getDocs, getDoc, addDoc, updateDoc, query, where, orderBy } from "firebase/firestore"
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, query, where, orderBy, limit, onSnapshot } from "firebase/firestore"
 import { db } from "./firebase"
 
 export interface OrderItem {
   productId: string
-  productName: string
-  productImage: string
+  name: string  // Changed from productName to match AdminOrdersPage
+  image?: string  // Changed from productImage to match AdminOrdersPage
   quantity: number
   price: number
   total: number
 }
 
 export interface ShippingAddress {
-  name: string
+  firstName: string
+  lastName: string
   street: string
   city: string
   state: string
@@ -136,6 +137,85 @@ export const updatePaymentStatus = async (id: string, paymentStatus: Order["paym
       updatedAt: new Date(),
     })
   } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
+export const getAllOrders = async (maxOrders: number = 100): Promise<Order[]> => {
+  try {
+    const q = query(
+      collection(db, "orders"), 
+      orderBy("createdAt", "desc"),
+      limit(maxOrders)
+    )
+
+    const querySnapshot = await getDocs(q)
+    const orders: Order[] = []
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data()
+      orders.push({
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt.toDate(),
+        updatedAt: data.updatedAt.toDate(),
+        estimatedDelivery: data.estimatedDelivery?.toDate(),
+      } as Order)
+    })
+
+    return orders
+  } catch (error: any) {
+    console.error("Error getting all orders:", error)
+    return []
+  }
+}
+
+export const listenToAllOrders = (callback: (orders: Order[]) => void, maxOrders: number = 100) => {
+  try {
+    const q = query(
+      collection(db, "orders"), 
+      orderBy("createdAt", "desc"),
+      limit(maxOrders)
+    )
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const orders: Order[] = []
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data()
+        orders.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt.toDate(),
+          updatedAt: data.updatedAt.toDate(),
+          estimatedDelivery: data.estimatedDelivery?.toDate(),
+        } as Order)
+      })
+      
+      callback(orders)
+    }, (error) => {
+      console.error("Error listening to orders:", error)
+      callback([])
+    })
+
+    return unsubscribe
+  } catch (error: any) {
+    console.error("Error setting up orders listener:", error)
+    throw new Error(error.message)
+  }
+}
+
+export const updateOrder = async (id: string, updates: Partial<Order>) => {
+  try {
+    const updateData = {
+      ...updates,
+      updatedAt: new Date(),
+    }
+
+    await updateDoc(doc(db, "orders", id), updateData)
+    return true
+  } catch (error: any) {
+    console.error("Error updating order:", error)
     throw new Error(error.message)
   }
 }

@@ -30,6 +30,7 @@ export interface UserProfile {
     language: string
     notifications: boolean
   }
+  role?: "admin" | "user"
   createdAt: Date
   updatedAt: Date
 }
@@ -53,6 +54,7 @@ export const signUp = async (email: string, password: string, name: string) => {
         language: "en",
         notifications: true,
       },
+      role: "user",
       createdAt: new Date(),
       updatedAt: new Date(),
     }
@@ -92,6 +94,7 @@ export const signInWithGoogle = async () => {
           language: "en",
           notifications: true,
         },
+        role: "user",
         createdAt: new Date(),
         updatedAt: new Date(),
       }

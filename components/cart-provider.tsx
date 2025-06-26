@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { useToast } from "@/hooks/use-toast"
 import { Product } from "@/types"
@@ -24,13 +24,20 @@ interface CartContextType {
   getTotalPrice: () => number
   isInCart: (productId: string) => boolean
   getCartItem: (productId: string) => CartItem | undefined
+  isClient: boolean
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useLocalStorage<CartItem[]>("cart-items", [])
+  const [isClient, setIsClient] = useState(false)
   const { toast } = useToast()
+
+  // Mark when component is mounted on client
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Sync cart across tabs
   useEffect(() => {
@@ -93,18 +100,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const getTotalItems = () => {
+    // During SSR or initial hydration, return 0
+    if (!isClient) return 0
     return items.reduce((total, item) => total + item.quantity, 0)
   }
 
   const getTotalPrice = () => {
+    // During SSR or initial hydration, return 0
+    if (!isClient) return 0
     return items.reduce((total, item) => total + item.price * item.quantity, 0)
   }
 
   const isInCart = (productId: string) => {
+    // During SSR or initial hydration, return false
+    if (!isClient) return false
     return items.some((item) => item.productId === productId)
   }
 
   const getCartItem = (productId: string) => {
+    // During SSR or initial hydration, return undefined
+    if (!isClient) return undefined
     return items.find((item) => item.productId === productId)
   }
 
@@ -120,6 +135,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         getTotalPrice,
         isInCart,
         getCartItem,
+        isClient
       }}
     >
       {children}

@@ -10,7 +10,7 @@ const blogPosts = [
     id: 1,
     title: "The Health Benefits of African Superfoods",
     excerpt: "Discover the nutritional powerhouses that have been staples in African cuisine for centuries.",
-    image: "/placeholder.svg?height=300&width=400",
+    image: "https://images.unsplash.com/photo-1518732714860-b43d55a36fb3?auto=format&fit=crop&w=800&q=60",
     author: "Dr. Amara Johnson",
     date: "2024-01-15",
     category: "Health & Nutrition",
@@ -20,7 +20,7 @@ const blogPosts = [
     id: 2,
     title: "Traditional Cooking Methods: Preserving Authentic Flavors",
     excerpt: "Learn about time-honored cooking techniques that bring out the best in traditional ingredients.",
-    image: "/placeholder.svg?height=300&width=400",
+    image: "https://images.unsplash.com/photo-1525755662778-989d0524087e?auto=format&fit=crop&w=800&q=60",
     author: "Chef Kwame Asante",
     date: "2024-01-12",
     category: "Cooking Tips",
@@ -30,7 +30,7 @@ const blogPosts = [
     id: 3,
     title: "Spice Guide: Essential Seasonings for African Cuisine",
     excerpt: "A comprehensive guide to the spices that define the rich flavors of African cooking.",
-    image: "/placeholder.svg?height=300&width=400",
+    image: "https://images.unsplash.com/photo-1470697571711-31d8a9aad8e5?auto=format&fit=crop&w=800&q=60",
     author: "Fatima Al-Rashid",
     date: "2024-01-10",
     category: "Ingredients",
@@ -49,7 +49,7 @@ export default function BlogPreview() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           {blogPosts.map((post) => (
             <Card key={post.id} className="group hover:shadow-lg transition-shadow">
               <CardHeader className="p-0">
@@ -59,6 +59,7 @@ export default function BlogPreview() {
                     alt={post.title}
                     width={400}
                     height={300}
+                    unoptimized
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <Badge className="absolute top-4 left-4 bg-green-600">{post.category}</Badge>

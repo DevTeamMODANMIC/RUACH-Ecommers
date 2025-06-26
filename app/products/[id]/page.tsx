@@ -19,7 +19,9 @@ import {
 import { useCart } from "@/components/cart-provider"
 import { Product } from "@/types"
 import { products } from "@/lib/product-data"
-import { useCurrency } from "@/hooks/use-currency"
+import { useSafeCurrency } from "@/hooks/use-safe-currency"
+import CloudinaryImage from "@/components/cloudinary-image"
+import { getProduct as getFirebaseProduct } from "@/lib/firebase-products"
 
 export default function ProductDetailPage() {
   const params = useParams()
@@ -28,28 +30,69 @@ export default function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [isWishlisted, setIsWishlisted] = useState(false)
-  const { formatPrice } = useCurrency()
+  const { formatPrice } = useSafeCurrency()
   const { trackProductView } = useRecommendations()
   const { addToCart } = useCart()
+  const [product, setProduct] = useState<Product | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   
-  // First try to find the product by direct ID match
-  let product = products.find(p => p.id === productId)
+  useEffect(() => {
+    async function loadProduct() {
+      setLoading(true)
+      try {
+        // First try to get the product from Firebase
+        const firebaseProduct = await getFirebaseProduct(productId)
+        
+        if (firebaseProduct) {
+          setProduct({
+            ...firebaseProduct,
+            // Convert Firebase timestamps to strings if needed
+            createdAt: firebaseProduct.createdAt instanceof Date 
+              ? firebaseProduct.createdAt.toISOString() 
+              : typeof firebaseProduct.createdAt === 'string'
+                ? firebaseProduct.createdAt
+                : new Date().toISOString(),
+          })
+          setLoading(false)
+          return
+        }
+        
+        // If not found in Firebase, fall back to static data
+        const staticProduct = products.find(p => p.id === productId)
   
-  // If not found, try to match by transforming the URL slug into potential product IDs
-  if (!product) {
+        // If still not found, try to match by transforming the URL slug
+        if (!staticProduct) {
     // Convert slug like "sprite-50cl" to potential IDs like "beverage-3"
     const slugParts = productId.split('-')
     const productName = slugParts[0].toLowerCase()
     
     // Try to find a product with a name containing the first part of the slug
-    product = products.find(p => 
+          const matchedProduct = products.find(p => 
       p.name.toLowerCase().includes(productName) || 
       p.id.toLowerCase().includes(productName)
     )
-  }
-  
-  console.log("Product ID:", productId)
-  console.log("Found product:", product)
+          
+          if (matchedProduct) {
+            setProduct(matchedProduct)
+          } else {
+            setError("Product not found")
+          }
+        } else {
+          setProduct(staticProduct)
+        }
+      } catch (err) {
+        console.error("Error loading product:", err)
+        setError("Failed to load product")
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    if (productId) {
+      loadProduct()
+    }
+  }, [productId])
 
   useEffect(() => {
     if (product) {
@@ -67,21 +110,30 @@ export default function ProductDetailPage() {
         price: product.discount && product.discount > 0 
           ? product.price * (1 - product.discount / 100) 
           : product.price,
-        image: product.images[0],
+        image: product.cloudinaryImages?.[selectedImage]?.url || product.images[selectedImage] || product.images[0],
         quantity
       })
       alert("Product added to cart!")
     }
   }
 
-  if (!product) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center pt-32">
+      <div className="min-h-screen flex items-center justify-center pt-40">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Loading Product...</h1>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-40">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
           <p className="text-gray-600 mb-4">The product you're looking for doesn't exist.</p>
           <p className="text-gray-600 mb-4">Requested ID: {productId}</p>
-          <p className="text-gray-600 mb-4">Available IDs: {products.map(p => p.id).join(", ")}</p>
           <Button asChild variant="outline">
             <Link href="/shop">Back to Shop</Link>
           </Button>
@@ -96,7 +148,7 @@ export default function ProductDetailPage() {
     : null
 
   return (
-    <div className="min-h-screen py-8 pt-32">
+    <div className="min-h-screen py-8 pt-40">
       <div className="container mx-auto px-4">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-6">
@@ -129,15 +181,24 @@ export default function ProductDetailPage() {
           {/* Product Images */}
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="relative aspect-square overflow-hidden rounded-md mb-4">
-              <img
-                src={product.images[0] || "/product_images/unknown-product.jpg"}
-                alt={product.name}
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/product_images/unknown-product.jpg";
-                }}
-              />
+              {product.cloudinaryImages && product.cloudinaryImages.length > 0 ? (
+                <CloudinaryImage
+                  publicId={product.cloudinaryImages[selectedImage].publicId}
+                  alt={product.cloudinaryImages[selectedImage].alt || product.name}
+                  size="medium"
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <img
+                  src={product.images[selectedImage] || "/product_images/unknown-product.jpg"}
+                  alt={product.name}
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "/product_images/unknown-product.jpg";
+                  }}
+                />
+              )}
               {product.discount && product.discount > 0 && (
                 <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
                   {product.discount}% OFF
@@ -145,11 +206,34 @@ export default function ProductDetailPage() {
               )}
             </div>
             
-            {/* Additional images would go here */}
-            {product.images.length > 1 && (
+            {/* Additional images */}
+            {product.cloudinaryImages && product.cloudinaryImages.length > 1 ? (
+              <div className="grid grid-cols-4 gap-2">
+                {product.cloudinaryImages.slice(0, 4).map((image, index) => (
+                  <div 
+                    key={index} 
+                    className={`aspect-square border rounded-md overflow-hidden cursor-pointer
+                      ${selectedImage === index ? 'border-green-500' : 'border-gray-200'}`}
+                    onClick={() => setSelectedImage(index)}
+                  >
+                    <CloudinaryImage
+                      publicId={image.publicId}
+                      alt={image.alt || `${product.name} ${index + 1}`}
+                      size="thumbnail"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : product.images.length > 1 ? (
               <div className="grid grid-cols-4 gap-2">
                 {product.images.slice(0, 4).map((image, index) => (
-                  <div key={index} className="aspect-square border border-gray-200 rounded-md overflow-hidden">
+                  <div 
+                    key={index} 
+                    className={`aspect-square border rounded-md overflow-hidden cursor-pointer
+                      ${selectedImage === index ? 'border-green-500' : 'border-gray-200'}`}
+                    onClick={() => setSelectedImage(index)}
+                  >
                     <img 
                       src={image} 
                       alt={`${product.name} ${index + 1}`}
@@ -162,7 +246,7 @@ export default function ProductDetailPage() {
                   </div>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
 
           {/* Product Info */}

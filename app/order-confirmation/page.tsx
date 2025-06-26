@@ -7,78 +7,132 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { CheckCircle, Download, Mail, Truck, Calendar, ArrowRight } from "lucide-react"
-import { useCurrency } from "@/components/currency-provider"
+import { CheckCircle, Download, Mail, Truck, Calendar, ArrowRight, Loader2 } from "lucide-react"
+import { useSafeCurrency } from "@/hooks/use-safe-currency"
+import { getOrder, listenToOrder } from "@/lib/firebase-orders"
+import { Order } from "@/types"
+import { useAuth } from "@/components/auth-provider"
 
 export default function OrderConfirmationPage() {
   const searchParams = useSearchParams()
   const orderId = searchParams.get("orderId")
-  const { formatPrice } = useCurrency()
-  const [orderDetails, setOrderDetails] = useState<any>(null)
+  const { formatPrice } = useSafeCurrency()
+  const { user } = useAuth()
+  const [orderDetails, setOrderDetails] = useState<Order | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // In a real app, you'd fetch order details from your API
-    if (orderId) {
-      // Mock order details
-      setOrderDetails({
-        id: orderId,
-        date: new Date().toISOString(),
-        status: "confirmed",
-        total: 89.97,
-        items: [
-          {
-            id: 1,
-            name: "Premium Jollof Rice Mix",
-            quantity: 2,
-            price: 8.99,
-            image: "/placeholder.svg?height=100&width=100",
-          },
-          {
-            id: 4,
-            name: "Basmati Rice Premium (5kg)",
-            quantity: 1,
-            price: 24.99,
-            image: "/placeholder.svg?height=100&width=100",
-          },
-        ],
-        shipping: {
-          method: "Standard Delivery",
-          cost: 4.99,
-          estimatedDelivery: "5-7 business days",
-          address: {
-            name: "John Doe",
-            line1: "123 Main Street",
-            city: "London",
-            postalCode: "SW1A 1AA",
-            country: "United Kingdom",
-          },
-        },
-        payment: {
-          method: "Credit Card",
-          last4: "1234",
-        },
-      })
-    }
-  }, [orderId])
+    let unsubscribe: (() => void) | undefined;
 
-  if (!orderId || !orderDetails) {
+    const fetchOrder = async () => {
+      if (!orderId) {
+        setLoading(false)
+        setError("No order ID provided")
+        return
+      }
+
+      try {
+        // First get the initial order data
+        const initialOrder = await getOrder(orderId)
+        
+        if (!initialOrder) {
+          setLoading(false)
+          setError("Order not found")
+          return
+        }
+        
+        // Check if the user is authorized to view this order
+        if (user?.uid !== initialOrder.userId) {
+          setLoading(false)
+          setError("You are not authorized to view this order")
+          return
+        }
+
+        setOrderDetails(initialOrder)
+        setLoading(false)
+        
+        // Then set up real-time listener for updates
+        unsubscribe = listenToOrder(orderId, (order) => {
+          if (order) {
+            setOrderDetails(order)
+          }
+        })
+      } catch (err: any) {
+        console.error("Error fetching order:", err)
+        setError(err.message || "Failed to load order details")
+        setLoading(false)
+      }
+    }
+
+    fetchOrder()
+
+    // Clean up the listener when the component unmounts
+    return () => {
+      if (unsubscribe) {
+        unsubscribe()
+      }
+    }
+  }, [orderId, user])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-8 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-medium">Loading order details...</h2>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !orderDetails) {
     return (
       <div className="min-h-screen py-8">
         <div className="container mx-auto px-4">
           <div className="text-center py-16">
-            <h1 className="text-3xl font-bold mb-4">Order Not Found</h1>
-            <p className="text-muted-foreground mb-8">We couldn't find the order you're looking for.</p>
+            <h1 className="text-3xl font-bold mb-4">
+              {error === "Order not found" ? "Order Not Found" : "Error Loading Order"}
+            </h1>
+            <p className="text-muted-foreground mb-8">
+              {error || "We couldn't find the order you're looking for."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild>
               <Link href="/">Return Home</Link>
             </Button>
+              <Button variant="outline" asChild>
+                <Link href="/profile/orders">View All Orders</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
     )
   }
 
-  const estimatedDeliveryDate = new Date()
-  estimatedDeliveryDate.setDate(estimatedDeliveryDate.getDate() + 7)
+  // Format the estimated delivery date
+  const estimatedDeliveryDate = orderDetails.estimatedDelivery 
+    ? new Date(orderDetails.estimatedDelivery) 
+    : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Default to 7 days from now
+
+  // Get status badge color
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return "bg-yellow-100 text-yellow-800";
+      case 'processing':
+        return "bg-blue-100 text-blue-800";
+      case 'shipped':
+        return "bg-purple-100 text-purple-800";
+      case 'delivered':
+        return "bg-green-100 text-green-800";
+      case 'cancelled':
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
   return (
     <div className="min-h-screen py-8">
@@ -102,7 +156,7 @@ export default function OrderConfirmationPage() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Order Details</span>
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  <Badge variant="secondary" className={getStatusBadgeVariant(orderDetails.status)}>
                     {orderDetails.status.charAt(0).toUpperCase() + orderDetails.status.slice(1)}
                   </Badge>
                 </CardTitle>
@@ -116,7 +170,7 @@ export default function OrderConfirmationPage() {
                   <div>
                     <span className="text-muted-foreground">Order Date:</span>
                     <div className="font-medium">
-                      {new Date(orderDetails.date).toLocaleDateString("en-GB", {
+                      {new Date(orderDetails.createdAt || Date.now()).toLocaleDateString("en-GB", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -126,7 +180,8 @@ export default function OrderConfirmationPage() {
                   <div>
                     <span className="text-muted-foreground">Payment Method:</span>
                     <div className="font-medium">
-                      {orderDetails.payment.method} ending in {orderDetails.payment.last4}
+                      {orderDetails.paymentMethod} 
+                      {orderDetails.paymentId && ` (ID: ${orderDetails.paymentId.slice(-6)})`}
                     </div>
                   </div>
                   <div>
@@ -144,10 +199,22 @@ export default function OrderConfirmationPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {orderDetails.items.map((item: any) => (
-                    <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                      <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
+                  {orderDetails.items.map((item) => (
+                    <div key={item.productId} className="flex items-center gap-4 p-4 border rounded-lg">
+                      <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                        {item.image ? (
+                          <img 
+                            src={item.image} 
+                            alt={item.name} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "/product_images/unknown-product.jpg";
+                            }}
+                          />
+                        ) : (
                         <span className="text-2xl">📦</span>
+                        )}
                       </div>
                       <div className="flex-1">
                         <h3 className="font-medium">{item.name}</h3>
@@ -174,19 +241,21 @@ export default function OrderConfirmationPage() {
                 <div>
                   <h4 className="font-medium mb-2">Delivery Address</h4>
                   <div className="text-sm text-muted-foreground">
-                    <div>{orderDetails.shipping.address.name}</div>
-                    <div>{orderDetails.shipping.address.line1}</div>
+                    <div>{orderDetails.shippingAddress.firstName} {orderDetails.shippingAddress.lastName}</div>
+                    <div>{orderDetails.shippingAddress.address1}</div>
                     <div>
-                      {orderDetails.shipping.address.city}, {orderDetails.shipping.address.postalCode}
+                      {orderDetails.shippingAddress.city}, {orderDetails.shippingAddress.postalCode}
                     </div>
-                    <div>{orderDetails.shipping.address.country}</div>
+                    <div>{orderDetails.shippingAddress.country}</div>
                   </div>
                 </div>
                 <Separator />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <span className="text-muted-foreground">Shipping Method:</span>
-                    <div className="font-medium">{orderDetails.shipping.method}</div>
+                    <div className="font-medium">
+                      {orderDetails.shipping === 4.99 ? "Standard Delivery" : "Express Delivery"}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Estimated Delivery:</span>
@@ -201,6 +270,12 @@ export default function OrderConfirmationPage() {
                     </div>
                   </div>
                 </div>
+                {orderDetails.trackingNumber && (
+                  <div>
+                    <span className="text-muted-foreground">Tracking Number:</span>
+                    <div className="font-medium">{orderDetails.trackingNumber}</div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -222,7 +297,7 @@ export default function OrderConfirmationPage() {
                   Email Receipt
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/profile/orders">
+                  <Link href={`/profile/orders/${orderDetails.id}`}>
                     <Truck className="h-4 w-4 mr-2" />
                     Track Order
                   </Link>
@@ -230,10 +305,10 @@ export default function OrderConfirmationPage() {
               </CardContent>
             </Card>
 
-            {/* What's Next */}
+            {/* Order Status */}
             <Card>
               <CardHeader>
-                <CardTitle>What's Next?</CardTitle>
+                <CardTitle>Order Status</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3 text-sm">
@@ -243,75 +318,70 @@ export default function OrderConfirmationPage() {
                     </div>
                     <div>
                       <div className="font-medium">Order Confirmed</div>
-                      <div className="text-muted-foreground">We've received your order</div>
+                      <div className="text-muted-foreground">
+                        {new Date(orderDetails.createdAt || Date.now()).toLocaleString()}
+                      </div>
                     </div>
                   </div>
+                  
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-xs font-medium">2</span>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                      orderDetails.status === 'processing' || orderDetails.status === 'shipped' || orderDetails.status === 'delivered' 
+                        ? 'bg-green-100' 
+                        : 'bg-muted'
+                    }`}>
+                      {orderDetails.status === 'processing' || orderDetails.status === 'shipped' || orderDetails.status === 'delivered' ? (
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <span className="h-3 w-3" />
+                      )}
                     </div>
                     <div>
                       <div className="font-medium">Processing</div>
-                      <div className="text-muted-foreground">We're preparing your items</div>
+                      <div className="text-muted-foreground">Your order is being prepared</div>
                     </div>
                   </div>
+                  
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-xs font-medium">3</span>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                      orderDetails.status === 'shipped' || orderDetails.status === 'delivered' 
+                        ? 'bg-green-100' 
+                        : 'bg-muted'
+                    }`}>
+                      {orderDetails.status === 'shipped' || orderDetails.status === 'delivered' ? (
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <span className="h-3 w-3" />
+                      )}
                     </div>
                     <div>
                       <div className="font-medium">Shipped</div>
-                      <div className="text-muted-foreground">Your order is on its way</div>
+                      <div className="text-muted-foreground">On its way to you</div>
                     </div>
                   </div>
+                  
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-xs font-medium">4</span>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                      orderDetails.status === 'delivered' 
+                        ? 'bg-green-100' 
+                        : 'bg-muted'
+                    }`}>
+                      {orderDetails.status === 'delivered' ? (
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <span className="h-3 w-3" />
+                      )}
                     </div>
                     <div>
                       <div className="font-medium">Delivered</div>
-                      <div className="text-muted-foreground">Enjoy your products!</div>
+                      <div className="text-muted-foreground">Package received</div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Continue Shopping */}
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center space-y-4">
-                  <h3 className="font-semibold">Continue Shopping</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Discover more authentic products from around the world
-                  </p>
-                  <Button asChild className="w-full">
-                    <Link href="/products">
-                      Browse Products
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Link>
-                  </Button>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
-
-        {/* Email Confirmation Notice */}
-        <Card className="mt-8">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div>
-                <h3 className="font-medium">Confirmation Email Sent</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  We've sent a confirmation email with your order details to your email address. If you don't see it in
-                  your inbox, please check your spam folder.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

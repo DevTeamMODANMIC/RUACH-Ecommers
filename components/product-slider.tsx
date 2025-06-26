@@ -16,31 +16,54 @@ interface SliderItem {
 
 export default function ProductSlider() {
   const [currentSlide, setCurrentSlide] = useState(0)
-  const [showDebug, setShowDebug] = useState(false)
+  const [isLoading, setIsLoading] = useState<boolean[]>([true, true, true])
+  const [touchStart, setTouchStart] = useState(0)
+  const [touchEnd, setTouchEnd] = useState(0)
   
   const sliderItems: SliderItem[] = [
     {
       id: "slide1",
       title: "African Beverages",
       description: "Discover authentic drinks from across Africa",
-      image: "/a/slider.png",
-      link: "/shop?category=Beverages"
+      image: "/product_images/beverages/Fanta-PET-Bottles-50cl.jpg",
+      link: "/shop?category=beverages"
     },
     {
       id: "slide2",
       title: "Traditional Foods",
       description: "Experience the rich flavors of African cuisine",
-      image: "/placeholder.jpg",
-      link: "/shop?category=Food"
+      image: "/product_images/food/bread-250x250.png",
+      link: "/shop?category=food"
     },
     {
       id: "slide3",
-      title: "Special Offers",
-      description: "Save on bulk orders and popular products",
-      image: "/placeholder.jpg",
-      link: "/bulk-order"
+      title: "Premium Spices",
+      description: "Enhance your dishes with authentic flavors",
+      image: "/product_images/spices/Bawa-pepper-250x250.jpg",
+      link: "/shop?category=spices"
     }
   ]
+  
+  // Function to handle touch swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+  
+  const handleTouchEnd = () => {
+    if (touchStart - touchEnd > 50) {
+      // swipe left
+      nextSlide()
+    }
+    
+    if (touchStart - touchEnd < -50) {
+      // swipe right
+      prevSlide()
+    }
+  }
   
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % sliderItems.length)
@@ -48,6 +71,14 @@ export default function ProductSlider() {
   
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + sliderItems.length) % sliderItems.length)
+  }
+  
+  const handleImageLoad = (index: number) => {
+    setIsLoading((prev) => {
+      const newState = [...prev]
+      newState[index] = false
+      return newState
+    })
   }
   
   // Auto-advance slides every 5 seconds
@@ -60,59 +91,49 @@ export default function ProductSlider() {
   }, [])
   
   return (
-    <section className="relative w-full h-[400px] overflow-hidden bg-white border-y border-gray-200 my-8">
-      {/* Debug toggle */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="absolute top-4 right-4 z-10">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowDebug(!showDebug)}
-            className="bg-white/80 backdrop-blur-sm border-gray-300 text-gray-700"
-          >
-            {showDebug ? "Hide Debug" : "Show Debug"}
-          </Button>
-        </div>
-      )}
-      
-      {/* Debug info */}
-      {showDebug && (
-        <div className="absolute top-16 right-4 z-10 bg-white/90 backdrop-blur-sm p-4 rounded max-w-xs overflow-auto max-h-60 text-gray-700 shadow-md border border-gray-200">
-          <h3 className="font-bold mb-2 text-sm text-gray-800">Slider Images:</h3>
-          <pre className="text-xs">{JSON.stringify(sliderItems.map(item => ({
-            id: item.id,
-            image: item.image
-          })), null, 2)}</pre>
-        </div>
-      )}
-      
+    <section 
+      className="relative w-full h-[500px] sm:h-[550px] md:h-[600px] overflow-hidden bg-white border-y border-gray-200 mt-4 mb-10 shadow-md"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div 
         className="flex transition-transform duration-500 ease-in-out h-full"
         style={{ transform: `translateX(-${currentSlide * 100}%)` }}
       >
-        {sliderItems.map((item) => (
+        {sliderItems.map((item, index) => (
           <div key={item.id} className="min-w-full h-full relative">
+            {/* Loading indicator */}
+            {isLoading[index] && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                <div className="w-12 h-12 border-4 border-gray-300 border-t-green-600 rounded-full animate-spin"></div>
+              </div>
+            )}
+            
             <Image
               src={item.image}
               alt={item.title}
               fill
-              className="object-cover"
-              priority
+              className="object-cover object-center"
+              sizes="100vw"
+              quality={90}
+              priority={index === 0}
+              onLoad={() => handleImageLoad(index)}
               onError={(e) => {
                 console.error(`Failed to load image: ${item.image}`);
                 const imgElement = e.currentTarget as HTMLImageElement;
-                imgElement.src = "/placeholder.jpg";
+                imgElement.src = "/product_images/unknown-product.jpg";
                 imgElement.onerror = null;
               }}
             />
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <div className="text-center text-white p-6 max-w-lg">
-                <h2 className="text-4xl font-bold mb-2">{item.title}</h2>
-                <p className="mb-6 text-lg">{item.description}</p>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/40 flex items-center justify-start">
+              <div className="text-left text-white p-8 md:p-12 max-w-xl">
+                <h2 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 drop-shadow-md">{item.title}</h2>
+                <p className="mb-8 text-base md:text-xl text-white/90 max-w-lg drop-shadow-sm">{item.description}</p>
                 <Button 
                   asChild 
                   size="lg" 
-                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all rounded-full group relative overflow-hidden"
+                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-base md:text-lg font-medium shadow-lg hover:shadow-xl transition-all rounded-md group relative overflow-hidden"
                 >
                   <Link href={item.link}>
                     <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-500/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></span>
@@ -129,27 +150,27 @@ export default function ProductSlider() {
       {/* Navigation buttons */}
       <button 
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-gray-100 rounded-full p-2 backdrop-blur-sm text-gray-800 shadow-md border border-gray-200"
+        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white hover:bg-opacity-90 rounded-full p-3 backdrop-blur-sm text-gray-800 shadow-md border border-gray-200 z-10"
         aria-label="Previous slide"
       >
         <ChevronLeft className="h-6 w-6" />
       </button>
       <button 
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-gray-100 rounded-full p-2 backdrop-blur-sm text-gray-800 shadow-md border border-gray-200"
+        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white hover:bg-opacity-90 rounded-full p-3 backdrop-blur-sm text-gray-800 shadow-md border border-gray-200 z-10"
         aria-label="Next slide"
       >
         <ChevronRight className="h-6 w-6" />
       </button>
       
       {/* Indicator dots */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3 z-10">
         {sliderItems.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full ${
-              currentSlide === index ? "bg-green-500" : "bg-gray-400/50"
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              currentSlide === index ? "bg-green-500 w-8" : "bg-white/60 hover:bg-white/80"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />

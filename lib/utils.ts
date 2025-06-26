@@ -9,6 +9,12 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number, currency: string = 'GBP', locale: string = 'en-GB') {
+  // During SSR, return a placeholder value
+  if (typeof window === 'undefined') {
+    return `£${amount.toFixed(2)}`;
+  }
+  
+  // In the browser, use Intl.NumberFormat
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,
