@@ -1,4 +1,9 @@
-﻿"use client";
+﻿/**
+ * TEMPORARILY DISABLED: This component is part of the Stripe integration that has been paused.
+ * Do not use this component until the Stripe integration is re-enabled.
+ */
+
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";

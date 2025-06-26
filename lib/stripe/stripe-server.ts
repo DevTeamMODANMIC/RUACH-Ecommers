@@ -1,4 +1,9 @@
-﻿import Stripe from 'stripe';
+﻿/**
+ * TEMPORARILY DISABLED: This library is part of the Stripe integration that has been paused.
+ * Do not use these functions until the Stripe integration is re-enabled.
+ */
+
+import Stripe from 'stripe';
 
 // Initialize Stripe with the secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {

@@ -1,7 +1,19 @@
-﻿import { NextResponse } from "next/server";
+/**
+ * TEMPORARILY DISABLED: This API route is part of the Stripe integration that has been paused.
+ * This route will not function correctly until the Stripe integration is re-enabled.
+ */
+
+import { NextResponse } from "next/server";
 import { createPaymentIntent } from "@/lib/stripe/stripe-server";
 
 export async function POST(request: Request) {
+  return NextResponse.json(
+    { error: "Stripe payment processing is temporarily disabled" },
+    { status: 503 }
+  );
+  
+  // Original implementation below - uncomment when re-enabling Stripe
+  /*
   try {
     const { amount, currency = "usd", metadata = {} } = await request.json();
 
@@ -31,4 +43,5 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+  */
 }
