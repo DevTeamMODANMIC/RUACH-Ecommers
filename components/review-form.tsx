@@ -323,7 +323,7 @@ export function ReviewForm({ productId, productName, availableCountries, onClose
                   onCheckedChange={(checked) => setVerifiedPurchase(checked as boolean)}
                 />
                 <Label htmlFor="verified" className="text-sm">
-                  I purchased this product from Ayotayo
+                  I purchased this product from Heritage of Skegness
                 </Label>
               </div>
 

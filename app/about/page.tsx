@@ -2,20 +2,20 @@ import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 
 export const metadata = {
-  title: "About Ayotayo - Our Story & Mission",
-  description: "Learn about Ayotayo's journey, our commitment to authentic African and international foods, and our vision for bringing diverse flavors to your table.",
+  title: "About Heritage of Skegness - Our Story & Mission",
+  description: "Learn about Heritage of Skegness's journey, our commitment to authentic British and international foods, and our vision for bringing diverse flavors to your table.",
 }
 
 export default function AboutPage() {
   return (
     <div className="container mx-auto px-4 py-8 sm:py-12">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-center">About Ayotayo</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-center">About Heritage of Skegness</h1>
         
         <div className="relative h-[200px] sm:h-[250px] md:h-[300px] lg:h-[400px] mb-6 sm:mb-8 rounded-lg overflow-hidden">
           <Image 
             src="/placeholder.svg?height=600&width=1200" 
-            alt="Ayotayo Store" 
+            alt="Heritage of Skegness Store" 
             fill
             className="object-cover"
           />
@@ -24,15 +24,15 @@ export default function AboutPage() {
         <div className="prose prose-sm sm:prose-base lg:prose-lg max-w-none mb-8 sm:mb-12">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">Our Story</h2>
           <p className="mb-3 sm:mb-4 text-sm sm:text-base">
-            Ayotayo was founded in 2015 with a simple mission: to bring authentic African and international foods to customers around the world. What started as a small family business in London has grown into a thriving online marketplace connecting people with their cultural heritage through food.
+            Heritage of Skegness was founded with a simple mission: to bring authentic British and international foods to customers around the world. What started as a small family business in Skegness has grown into a thriving online marketplace connecting people with their cultural heritage through food.
           </p>
           <p className="mb-4 sm:mb-6 text-sm sm:text-base">
-            Our founder, Ayo Adeyemi, recognized the challenge many immigrants faced in finding authentic ingredients from their home countries. This personal experience inspired the creation of Ayotayo, a place where everyone could access traditional ingredients and discover new flavors from diverse cultures.
+            Our founder recognized the challenge many people faced in finding authentic ingredients from their home countries. This personal experience inspired the creation of Heritage of Skegness, a place where everyone could access traditional ingredients and discover new flavors from diverse cultures.
           </p>
 
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">Our Mission</h2>
           <p className="mb-4 sm:mb-6 text-sm sm:text-base">
-            At Ayotayo, we believe food is a powerful connection to culture and community. Our mission is to make authentic international ingredients accessible, promote cultural exchange through culinary experiences, and support ethical food practices that respect both people and planet.
+            At Heritage of Skegness, we believe food is a powerful connection to culture and community. Our mission is to make authentic international ingredients accessible, promote cultural exchange through culinary experiences, and support ethical food practices that respect both people and planet.
           </p>
 
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">Our Values</h2>
@@ -72,11 +72,11 @@ export default function AboutPage() {
         <div className="bg-muted rounded-lg p-4 sm:p-8 mb-8 sm:mb-12">
           <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Contact Us</h2>
           <p className="mb-3 sm:mb-4 text-sm sm:text-base">
-            Have questions about our products or want to learn more about Ayotayo? We'd love to hear from you!
+            Have questions about our products or want to learn more about Heritage of Skegness? We'd love to hear from you!
           </p>
-          <p className="mb-2 text-sm sm:text-base"><strong>Email:</strong> info@ayotayo.co.uk</p>
+          <p className="mb-2 text-sm sm:text-base"><strong>Email:</strong> info@heritageofskegness.co.uk</p>
           <p className="mb-2 text-sm sm:text-base"><strong>Phone:</strong> +44 (0)20 1234 5678</p>
-          <p className="mb-2 text-sm sm:text-base"><strong>Address:</strong> 123 Market Street, London, UK</p>
+          <p className="mb-2 text-sm sm:text-base"><strong>Address:</strong> 123 High Street, Skegness, UK</p>
         </div>
       </div>
     </div>

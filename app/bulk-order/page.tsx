@@ -355,7 +355,7 @@ export default function BulkOrderPage() {
                   <h3 className="font-medium mb-2">Contact Us Directly</h3>
                   <p className="text-sm text-muted-foreground mb-2">For immediate assistance with bulk orders:</p>
                   <p className="text-sm">
-                    Email: <span className="font-medium">bulk@ayotayo.co.uk</span>
+                    Email: <span className="font-medium">bulk@heritageofskegness.co.uk</span>
                     <br />
                     Phone: <span className="font-medium">+44 20 1234 5678</span>
                   </p>
