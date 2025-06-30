@@ -144,7 +144,7 @@ export default function Header() {
                 <div className="relative h-12 w-12 mr-2">
                   <Image
                     src="/images/logo/borderlessbuy-logo.png"
-                    alt="BorderlessBuy Logo"
+                    alt="Heritage of Skegness Logo"
                     width={48}
                     height={48}
                     className="object-contain"
@@ -159,9 +159,6 @@ export default function Header() {
               )}
               <div className="flex flex-col">
                 <span className="text-lg font-bold text-gray-900 tracking-tight leading-tight">
-                  BorderlessBuy
-                </span>
-                <span className="text-xs -mt-0.5 hidden sm:block text-green-600 font-medium tracking-wide">
                   Heritage of Skegness
                 </span>
               </div>

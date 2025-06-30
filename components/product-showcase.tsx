@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -20,8 +19,6 @@ export default function ProductShowcase({
   title = "Popular Products", 
   subtitle = "Authentic products from around the world" 
 }: ProductShowcaseProps) {
-  const [showDebug, setShowDebug] = useState(false)
-  
   // Product data by category
   const productData = {
     "Beverages": [
@@ -349,26 +346,8 @@ export default function ProductShowcase({
               View All Products
               <ChevronRight className="h-4 w-4 ml-1" />
             </Link>
-            
-            {process.env.NODE_ENV === 'development' && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setShowDebug(!showDebug)}
-                className="ml-4"
-              >
-                {showDebug ? "Hide Debug" : "Show Debug"}
-              </Button>
-            )}
           </div>
         </div>
-        
-        {showDebug && (
-          <div className="bg-gray-100 p-4 rounded mb-6">
-            <h3 className="font-bold mb-2">Image Paths:</h3>
-            <pre className="text-xs overflow-auto">{JSON.stringify(products.map(p => ({ name: p.name, image: p.image })), null, 2)}</pre>
-          </div>
-        )}
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.map((product) => (
@@ -449,3 +428,4 @@ export default function ProductShowcase({
     </section>
   )
 }
+

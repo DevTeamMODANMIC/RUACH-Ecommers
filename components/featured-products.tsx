@@ -12,7 +12,6 @@ import { getProducts, type Product } from "@/lib/firebase-products"
 export default function FeaturedProducts() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [showDebug, setShowDebug] = useState(false)
   
   // Hardcoded featured products with images from /a directory
 const featuredProducts = [
@@ -149,25 +148,7 @@ const featuredProducts = [
         <p className="text-gray-600 text-center max-w-2xl mb-8">
           Discover our curated selection of premium African and international products, from beverages and food to spices and fresh produce.
         </p>
-        
-        {process.env.NODE_ENV === 'development' && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowDebug(!showDebug)}
-            className="ml-4"
-          >
-            {showDebug ? "Hide Debug" : "Show Debug"}
-          </Button>
-        )}
       </div>
-
-      {showDebug && (
-        <div className="bg-gray-100 p-4 rounded mb-6 overflow-auto max-h-60 max-w-6xl mx-auto">
-          <h3 className="font-bold mb-2 text-gray-800">Image Paths:</h3>
-          <pre className="text-xs text-gray-600">{JSON.stringify(products.map(p => ({ name: p.name, images: p.images })), null, 2)}</pre>
-        </div>
-      )}
       
       {products.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">

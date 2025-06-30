@@ -27,7 +27,7 @@ const poppins = Poppins({
 })
 
 // Site name should be consistent across all environments
-const SITE_NAME = "BorderlessBuy";
+const SITE_NAME = "Heritage of Skegness";
 
 export const metadata: Metadata = {
   title: `${SITE_NAME} - Premium African & International Foods`,
@@ -35,18 +35,18 @@ export const metadata: Metadata = {
     "Discover authentic African and international foods, spices, and beverages. Fresh produce, quality ingredients, and traditional flavors delivered to your door.",
   keywords: "African food, international cuisine, spices, beverages, fresh produce, online grocery, Heritage of Skegness",
   authors: [{ name: SITE_NAME }],
-  metadataBase: new URL("https://borderlessbuy.co.uk"),
+  metadataBase: new URL("https://heritageofskegness.co.uk"),
   openGraph: {
     title: `${SITE_NAME} - Heritage of Skegness`,
     description: "Discover authentic African and international foods, spices, and beverages.",
-    url: "https://borderlessbuy.co.uk",
+    url: "https://heritageofskegness.co.uk",
     siteName: SITE_NAME,
     images: [
       {
         url: "/images/logo/borderlessbuy-logo.png",
         width: 800,
         height: 800,
-        alt: "BorderlessBuy - Heritage of Skegness"
+        alt: "Heritage of Skegness"
       },
     ],
     locale: "en_GB",
