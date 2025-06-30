@@ -70,7 +70,6 @@ export default function Footer() {
                 {[
                   { href: "/about", label: "About Us" },
                   { href: "/shop", label: "Shop" },
-                  { href: "/blog", label: "Blog" },
                   { href: "/contact", label: "Contact" },
                   { href: "/bulk-order", label: "Bulk Orders" },
                 ].map(({ href, label }) => (

@@ -7,7 +7,6 @@ import { BulkOrderCTA } from "@/components/bulk-order-cta"
 const FeaturedProducts = lazy(() => import("@/components/featured-products"))
 const ProductShowcase = lazy(() => import("@/components/product-showcase"))
 const ProductSlider = lazy(() => import("@/components/product-slider"))
-const BlogPreview = lazy(() => import("@/components/blog-preview"))
 const PersonalizedRecommendations = lazy(() => import("@/components/personalized-recommendations").then(mod => ({ default: mod.PersonalizedRecommendations })))
 
 export default function HomePage() {
@@ -46,9 +45,6 @@ export default function HomePage() {
         </Suspense>
         <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading recommendations...</div>}>
           <PersonalizedRecommendations />
-        </Suspense>
-        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading blog posts...</div>}>
-          <BlogPreview />
         </Suspense>
         <div className="mb-20">
         <BulkOrderCTA />

@@ -19,7 +19,6 @@ import {
   Info,
   Package,
   MessageCircle,
-  BookOpen,
   LogOut,
   Phone,
 } from "lucide-react";
@@ -53,7 +52,6 @@ const mainNavItems = [
   { title: "About us", href: "/about", icon: Info },
   { title: "Bulk Order", href: "/bulk-order", icon: Package },
   { title: "Contact us", href: "/contact", icon: MessageCircle },
-  { title: "Blog", href: "/blog", icon: BookOpen },
 ];
 
 const categoryNavItems = [
@@ -62,12 +60,13 @@ const categoryNavItems = [
   { title: "Rice", href: "/shop?category=rice" },
   { title: "Pap/Custard", href: "/shop?category=pap-custard" },
   { title: "Spices", href: "/shop?category=spices" },
-  { title: "Beverages", href: "/shop?category=beverages" },
+  { title: "Drinks & Beverages", href: "/shop?category=drinks" },
   { title: "Dried Spices", href: "/shop?category=dried-spices" },
   { title: "Oil", href: "/shop?category=oil" },
   { title: "Provisions", href: "/shop?category=provisions" },
   { title: "Fresh Produce", href: "/shop?category=fresh-produce" },
   { title: "Fresh Vegetables", href: "/shop?category=fresh-vegetables" },
+  { title: "Fish & Meat", href: "/shop?category=meat" },
 ];
 
 export default function Header() {

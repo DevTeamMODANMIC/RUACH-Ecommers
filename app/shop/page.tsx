@@ -35,8 +35,7 @@ import { Badge } from "@/components/ui/badge"
 // Define available categories
 const categories = [
   { id: "all", name: "All Products" },
-  { id: "beverages", name: "Beverages" },
-  { id: "drinks", name: "Drinks" },
+  { id: "drinks", name: "Drinks & Beverages" },
   { id: "food", name: "Food" },
   { id: "flour", name: "Flour" },
   { id: "rice", name: "Rice" },
@@ -48,7 +47,7 @@ const categories = [
   { id: "fresh-produce", name: "Fresh Produce" },
   { id: "fresh-vegetables", name: "Fresh Vegetables" },
   { id: "vegetables", name: "Vegetables" },
-  { id: "meat", name: "Meat" }
+  { id: "meat", name: "Fish & Meat" }
 ];
 
 // Define price ranges
@@ -62,8 +61,8 @@ const priceRanges = [
 
 // Map URL category parameters to actual product categories
 const categoryMapping: Record<string, string> = {
-  "drinks": "beverages",
-  "beverages": "beverages",
+  "drinks": "drinks",
+  "beverages": "drinks",
   "flour": "flour",
   "rice": "rice",
   "pap-custard": "food",
@@ -80,7 +79,8 @@ const categoryMapping: Record<string, string> = {
 
 // Add reverse mapping for product categories to URL parameters
 const productCategoryMapping: Record<string, string> = {
-  "beverages": "beverages",
+  "drinks": "drinks",
+  "beverages": "drinks",
   "flour": "flour",
   "rice": "rice",
   "food": "food",
@@ -167,19 +167,24 @@ export default function ShopPage() {
           const { products: firebaseProducts } = await getProducts(firebaseFilters)
           console.log(`Found ${firebaseProducts.length} products from Firebase`)
 
+          // FALLBACK: If Firebase returns no products (e.g. running locally without data) use mock data
+          const baseProducts = firebaseProducts.length > 0 ? firebaseProducts : products
+
           // Apply category filter client-side
-          let filteredFirebaseProducts = [...firebaseProducts]
+          let filteredFirebaseProducts = [...baseProducts]
           if (categoryFilter) {
             console.log("Applying category filter client-side:", categoryFilter)
             filteredFirebaseProducts = filteredFirebaseProducts.filter((product) => {
               const productCategory = String(product.category || "").toLowerCase().trim()
               const categoryFilterLower = categoryFilter.toLowerCase().trim()
               
-              // More flexible matching for categories
+              // More flexible matching for categories, including drinks/beverages synonym
               const matches = 
                 productCategory === categoryFilterLower || 
                 productCategory.includes(categoryFilterLower) ||
-                categoryFilterLower.includes(productCategory)
+                categoryFilterLower.includes(productCategory) ||
+                (categoryFilterLower === "drinks" && productCategory === "beverages") ||
+                (categoryFilterLower === "beverages" && productCategory === "drinks")
               
               return matches
             })
@@ -233,8 +238,18 @@ export default function ShopPage() {
               const mappedCategory = categoryMapping[selectedCategory] || selectedCategory
               localProducts = localProducts.filter((product) => {
                 const productCategory = String(product.category || "").toLowerCase();
-                return productCategory === mappedCategory.toLowerCase() || 
-                       productCategory === selectedCategory.toLowerCase();
+                const mappedLower = mappedCategory.toLowerCase();
+                const selectedLower = selectedCategory.toLowerCase();
+
+                if (productCategory === mappedLower || productCategory === selectedLower) return true;
+
+                // Treat drinks/beverages as interchangeable
+                if ((mappedLower === "drinks" && productCategory === "beverages") ||
+                    (mappedLower === "beverages" && productCategory === "drinks")) {
+                  return true;
+                }
+
+                return false;
               })
             }
             

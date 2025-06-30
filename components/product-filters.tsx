@@ -85,13 +85,13 @@ export function ProductFilters() {
   }
 
   const categoryOptions = [
-    { id: 'beverages', label: 'Beverages' },
+    { id: 'drinks', label: 'Drinks & Beverages' },
     { id: 'food', label: 'Food & Snacks' },
     { id: 'rice', label: 'Rice & Grains' },
     { id: 'flour', label: 'Flour' },
     { id: 'spices', label: 'Spices & Seasonings' },
     { id: 'vegetables', label: 'Vegetables & Fruits' },
-    { id: 'meat', label: 'Meat & Fish' },
+    { id: 'meat', label: 'Fish & Meat' },
     { id: 'oil', label: 'Oil' }
   ]
   
@@ -100,6 +100,8 @@ export function ProductFilters() {
     { id: 'ghana', label: 'Ghana' },
     { id: 'kenya', label: 'Kenya' },
     { id: 'south-africa', label: 'South Africa' },
+    { id: 'international', label: 'International' },
+    { id: 'uk', label: 'United Kingdom' },
   ]
 
   return (
