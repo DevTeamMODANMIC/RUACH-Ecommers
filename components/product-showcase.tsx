@@ -1,12 +1,17 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, ShoppingCart, Plus, ChevronRight } from "lucide-react"
+import { Star, ShoppingCart, Plus, ChevronRight, Eye, X, Heart } from "lucide-react"
 import { getRandomCategoryImage } from "@/lib/utils"
+import { useCart } from "@/components/cart-provider"
+import { formatCurrency } from "@/lib/utils"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog"
+import { useWishlist, type WishlistItem } from "@/hooks/use-wishlist"
 
 interface ProductShowcaseProps {
   category?: string;
@@ -19,6 +24,11 @@ export default function ProductShowcase({
   title = "Popular Products", 
   subtitle = "Authentic products from around the world" 
 }: ProductShowcaseProps) {
+  const [hoveredProductId, setHoveredProductId] = useState<string | null>(null);
+  const [quickViewProduct, setQuickViewProduct] = useState<any | null>(null);
+  const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
+
   // Product data by category
   const productData = {
     "Beverages": [
@@ -308,123 +318,257 @@ export default function ProductShowcase({
     ]
   };
 
-  // Get products for the selected category
-  const products = productData[category as keyof typeof productData] || productData.Beverages;
+  // Get products for the selected category, or default to empty array
+  const products = productData[category as keyof typeof productData] || [];
 
-  // Function to handle image error and try fallback images
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error(`Failed to load image: ${(e.target as HTMLImageElement).src}`);
-    const imgElement = e.currentTarget;
-    imgElement.src = "/placeholder.jpg";
-    imgElement.onerror = null; // Prevent infinite loops
-  };
-
-  // Add a function to map showcase categories to shop page categories
+  // Get a URL-friendly category name for the "View All" link
   const mapCategoryToShopCategory = (showcaseCategory: string): string => {
     const categoryMap: Record<string, string> = {
-      "Beverages": "beverages",
+      "Beverages": "drinks",
       "Food": "food",
       "Spices": "spices",
       "Flour": "flour",
       "Vegetables & Fruits": "vegetables",
       "Meat & Fish": "meat"
     };
-    return categoryMap[showcaseCategory] || showcaseCategory.toLowerCase();
+    return categoryMap[showcaseCategory] || "all";
+  };
+
+  const handleAddToCart = (product: any, e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      quantity: 1
+    });
+  };
+
+  const handleQuickView = (product: any, e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    setQuickViewProduct(product);
+  };
+
+  const handleToggleWishlist = (product: any, e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    
+    const wishlistItem: WishlistItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      category: product.subtitle || category
+    };
+    
+    toggleWishlist(wishlistItem);
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.target as HTMLImageElement;
+    target.src = "/product_images/unknown-product.jpg";
   };
 
   return (
-    <section className="py-16 bg-gradient-to-b from-white to-green-50">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-800">{title}</h2>
-            <p className="text-gray-600 mt-2">{subtitle}</p>
-          </div>
-          
-          <div className="mt-4 md:mt-0 flex items-center">
-            <Link href={`/shop?category=${encodeURIComponent(mapCategoryToShopCategory(category))}`} className="flex items-center text-green-600 hover:text-green-700 font-medium">
-              View All Products
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Link>
-          </div>
+    <section className="my-12">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">{title}</h2>
+          <p className="mt-1 text-gray-600">{subtitle}</p>
         </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <Card key={product.id} className="overflow-hidden transition-all hover:shadow-lg border border-gray-200 hover:border-green-200 group">
-              <Link href={product.slug}>
-                <div className="relative h-48 bg-gray-50 flex items-center justify-center p-4 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  
-                  {(product.isBestSeller || product.isNew || product.isBulk) && (
-                    <div className="absolute top-3 left-3 flex flex-col gap-2">
-                      {product.isBestSeller && (
-                        <Badge className="bg-amber-500 hover:bg-amber-600">Best Seller</Badge>
-                      )}
-                      {product.isNew && (
-                        <Badge className="bg-blue-500 hover:bg-blue-600">New</Badge>
-                      )}
-                      {product.isBulk && (
-                        <Badge className="bg-purple-500 hover:bg-purple-600">Bulk</Badge>
-                      )}
-                    </div>
-                  )}
-                  
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-contain p-2 transform group-hover:scale-110 transition-transform duration-300"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                    onError={handleImageError}
-                    priority
+        <Link 
+          href={`/shop?category=${mapCategoryToShopCategory(category)}`} 
+          className="mt-2 md:mt-0 flex items-center text-green-600 hover:text-green-700 font-medium"
+        >
+          View all <ChevronRight className="h-4 w-4 ml-1" />
+        </Link>
+      </div>
+
+      {/* Product Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {products.map(product => (
+          <Card 
+            key={product.id}
+            className="overflow-hidden border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all duration-300 group"
+            onMouseEnter={() => setHoveredProductId(product.id)}
+            onMouseLeave={() => setHoveredProductId(null)}
+          >
+            <div className="relative aspect-square overflow-hidden bg-gray-100">
+              {/* Product tags */}
+              <div className="absolute top-2 left-2 z-10 flex flex-col gap-2">
+                {product.isBestSeller && (
+                  <Badge className="bg-amber-500 hover:bg-amber-600">Best Seller</Badge>
+                )}
+                {product.isNew && (
+                  <Badge className="bg-blue-500 hover:bg-blue-600">New</Badge>
+                )}
+                {product.isBulk && (
+                  <Badge className="bg-purple-500 hover:bg-purple-600">Bulk</Badge>
+                )}
+              </div>
+
+              {/* Wishlist button */}
+              <div className="absolute top-2 right-2 z-10">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 rounded-full bg-white/80 hover:bg-gray-100 text-gray-500 hover:text-rose-500"
+                  onClick={(e) => handleToggleWishlist(product, e)}
+                >
+                  <Heart 
+                    className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-rose-500 text-rose-500' : ''}`} 
                   />
+                  <span className="sr-only">Toggle wishlist</span>
+                </Button>
+              </div>
+
+              {/* Product image with link */}
+              <Link href={product.slug || `/products/${product.id}`} className="block">
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  width={300}
+                  height={300}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  onError={handleImageError}
+                />
+              </Link>
+              
+              {/* Hover action overlay */}
+              <div className={`absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center gap-2 transition-opacity duration-300 ${hoveredProductId === product.id ? 'opacity-100' : 'opacity-0'}`}>
+                <button 
+                  onClick={(e) => handleQuickView(product, e)}
+                  className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-green-500 hover:text-white transition-colors"
+                  aria-label="Quick view"
+                >
+                  <Eye className="h-5 w-5" />
+                </button>
+                <button 
+                  onClick={(e) => handleAddToCart(product, e)}
+                  className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-green-500 hover:text-white transition-colors"
+                  aria-label="Add to cart"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <CardContent className="p-4">
+              {/* Rating */}
+              <div className="flex items-center mb-1">
+                <div className="flex items-center">
+                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  <span className="ml-1 text-sm font-medium">{product.rating}</span>
+                </div>
+                <span className="mx-1 text-gray-400">•</span>
+                <span className="text-sm text-gray-500">{product.reviews} reviews</span>
+              </div>
+              
+              {/* Product info */}
+              <Link href={product.slug || `/products/${product.id}`} className="block group-hover:text-green-600 transition-colors">
+                <h3 className="font-medium text-gray-900">{product.name}</h3>
+              </Link>
+              <p className="text-sm text-gray-500">{product.subtitle}</p>
+              
+              {/* Price and add button */}
+              <div className="flex items-center justify-between mt-4">
+                <span className="font-bold text-gray-900">{formatCurrency(product.price)}</span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Quick View Modal */}
+      <Dialog open={quickViewProduct !== null} onOpenChange={(isOpen) => !isOpen && setQuickViewProduct(null)}>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">{quickViewProduct?.name}</DialogTitle>
+            <DialogClose className="absolute right-4 top-4">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+          </DialogHeader>
+
+          {quickViewProduct && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
+                <Image
+                  src={quickViewProduct.image}
+                  alt={quickViewProduct.name}
+                  fill
+                  className="object-cover object-center"
+                  onError={handleImageError}
+                />
+                
+                {/* Product tags */}
+                <div className="absolute top-2 left-2 z-10 flex flex-col gap-2">
+                  {quickViewProduct.isBestSeller && (
+                    <Badge className="bg-amber-500 hover:bg-amber-600">Best Seller</Badge>
+                  )}
+                  {quickViewProduct.isNew && (
+                    <Badge className="bg-blue-500 hover:bg-blue-600">New</Badge>
+                  )}
+                  {quickViewProduct.isBulk && (
+                    <Badge className="bg-purple-500 hover:bg-purple-600">Bulk</Badge>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex flex-col">
+                <div className="mb-2">
+                  {/* Rating */}
+                  <div className="flex items-center mb-2">
+                    <div className="flex items-center">
+                      <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                      <span className="ml-1 text-sm font-medium">{quickViewProduct.rating}</span>
+                    </div>
+                    <span className="mx-1 text-gray-400">•</span>
+                    <span className="text-sm text-gray-500">{quickViewProduct.reviews} reviews</span>
+                  </div>
+                  
+                  <h2 className="text-2xl font-bold">{quickViewProduct.name}</h2>
+                  <p className="text-gray-600">{quickViewProduct.subtitle}</p>
                 </div>
                 
-                <CardContent className="p-4 relative">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-medium text-lg text-gray-800 group-hover:text-green-600 transition-colors">
-                        {product.name}
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-0.5">{product.subtitle}</p>
-                    </div>
-                  </div>
+                <div className="mb-4">
+                  <span className="text-2xl font-bold">
+                    {formatCurrency(quickViewProduct.price)}
+                  </span>
+                </div>
+                
+                <div className="mt-auto flex flex-col sm:flex-row gap-3">
+                  <button 
+                    onClick={() => handleAddToCart(quickViewProduct)}
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    Add to Cart
+                  </button>
                   
-                  <div className="flex items-center mt-2">
-                    <div className="flex items-center">
-                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                      <span className="text-sm font-medium ml-1 text-gray-700">{product.rating}</span>
-                    </div>
-                    <span className="mx-2 text-gray-300">|</span>
-                    <span className="text-xs text-gray-500">{product.reviews} reviews</span>
-                  </div>
+                  <button
+                    onClick={() => handleToggleWishlist(quickViewProduct)}
+                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 border rounded-lg 
+                    ${isInWishlist(quickViewProduct.id) 
+                      ? 'border-rose-200 bg-rose-50 text-rose-500 hover:bg-rose-100' 
+                      : 'border-gray-300 hover:bg-gray-50'}`}
+                  >
+                    <Heart className={`h-4 w-4 ${isInWishlist(quickViewProduct.id) ? 'fill-rose-500' : ''}`} />
+                    {isInWishlist(quickViewProduct.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                  </button>
                   
-                  <div className="flex items-center justify-between mt-3">
-                    <p className="text-green-600 font-bold text-lg">£{product.price.toFixed(2)}</p>
-                    <Button size="sm" variant="ghost" className="rounded-full hover:bg-green-50 hover:text-green-600">
-                      <ShoppingCart className="h-4 w-4" />
-                      <span className="sr-only">Add to cart</span>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Link>
-            </Card>
-          ))}
-        </div>
-        
-        <div className="mt-12 flex flex-col items-center justify-center">
-          <Link href={`/shop?category=${encodeURIComponent(mapCategoryToShopCategory(category))}`}>
-            <Button 
-              className="bg-green-600 hover:bg-green-700 text-white rounded-full px-8 py-6 text-base font-medium shadow-md hover:shadow-lg transform transition-all duration-300 hover:scale-105 flex items-center gap-2 group mx-auto"
-            >
-              View All {category}
-              <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
-            </Button>
-          </Link>
-          <p className="text-gray-500 text-sm mt-3">Discover our full range of authentic {category.toLowerCase()}</p>
-        </div>
-      </div>
+                  <Link
+                    href={quickViewProduct.slug || `/products/${quickViewProduct.id}`}
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    View Details
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }

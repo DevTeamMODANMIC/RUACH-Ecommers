@@ -24,17 +24,22 @@ import { useToast } from "@/hooks/use-toast"
 import { useCurrency } from "@/hooks/use-currency"
 import CloudinaryUploadWidget from "@/components/cloudinary-upload-widget"
 
+// Match categories exactly with shop page
 const categories = [
-  "Vegetables & Fruits",
-  "Meat & Poultry",
-  "Spices & Seasonings",
-  "Grains & Rice",
-  "Sauces & Oils",
-  "Beverages",
-  "Snacks & Sweets",
-  "Frozen Foods",
-  "Canned & Preserved",
-  "Other"
+  { id: "drinks", name: "Drinks & Beverages" },
+  { id: "food", name: "Food" },
+  { id: "flour", name: "Flour" },
+  { id: "rice", name: "Rice" },
+  { id: "pap-custard", name: "Pap/Custard" },
+  { id: "spices", name: "Spices" },
+  { id: "dried-spices", name: "Dried Spices" },
+  { id: "oil", name: "Oil" },
+  { id: "provisions", name: "Provisions" },
+  { id: "fresh-produce", name: "Fresh Produce" },
+  { id: "fresh-vegetables", name: "Fresh Vegetables" },
+  { id: "vegetables", name: "Vegetables" },
+  { id: "meat", name: "Fish & Meat" },
+  { id: "other", name: "Other" }
 ]
 
 const countries = [
@@ -95,15 +100,50 @@ export default function EditProduct({ params }: EditProductProps) {
       if (productData) {
         setProduct(productData)
         setExistingImages(productData.images || [])
+        
+        console.log("Fetched product data:", {
+          id: productData.id,
+          name: productData.name,
+          hasCloudinaryImages: !!(productData.cloudinaryImages && productData.cloudinaryImages.length > 0),
+          cloudinaryImageCount: productData.cloudinaryImages?.length || 0,
+          hasLegacyImages: !!(productData.images && productData.images.length > 0),
+          legacyImageCount: productData.images?.length || 0
+        });
+        
         // Initialize cloudinary images if they exist
         if (productData.cloudinaryImages && productData.cloudinaryImages.length > 0) {
+          console.log("Setting cloudinary images:", productData.cloudinaryImages);
           setCloudinaryImages(productData.cloudinaryImages)
         }
+
+        // Map existing category string to category ID if needed
+        let categoryId = productData.category;
+        
+        // Helper to normalize strings (lowercase, remove spaces, slashes, dashes)
+        const normalize = (str: string) => str.toLowerCase().replace(/[\s/_-]+/g, "");
+        
+        // Check if the category is an old string format and needs mapping
+        if (productData.category && !categories.some(cat => cat.id === productData.category)) {
+          const normalizedProductCat = normalize(productData.category);
+          
+          // Try to match by normalized name or id
+          const matchingCategory = categories.find(cat => 
+            normalize(cat.id) === normalizedProductCat || normalize(cat.name) === normalizedProductCat
+          );
+          
+          if (matchingCategory) {
+            categoryId = matchingCategory.id;
+          } else {
+            // Default to "other" if no match found
+            categoryId = "other";
+          }
+        }
+        
         setFormData({
           name: productData.name,
           description: productData.description,
           price: productData.price.toString(),
-          category: productData.category,
+          category: categoryId,
           inStock: productData.inStock,
           stockQuantity: productData.stockQuantity.toString(),
           origin: productData.origin,
@@ -186,10 +226,22 @@ export default function EditProduct({ params }: EditProductProps) {
     setSubmitting(true)
 
     try {
-      if (cloudinaryImages.length === 0) {
+      // Don't require new Cloudinary images if product already has images
+      // Either existing Cloudinary images or legacy URL-based images are acceptable
+      const hasExistingCloudinaryImages = cloudinaryImages.length > 0;
+      const hasLegacyImages = existingImages.length > 0;
+      
+      console.log("Edit product form submission:", {
+        hasExistingCloudinaryImages,
+        cloudinaryImageCount: cloudinaryImages.length,
+        hasLegacyImages,
+        legacyImageCount: existingImages.length
+      });
+      
+      if (!hasExistingCloudinaryImages && !hasLegacyImages) {
         toast({
           title: "Image required",
-          description: "Please upload at least one product image via Cloudinary before saving.",
+          description: "Please upload at least one product image before saving.",
           variant: "destructive",
         })
         setSubmitting(false)
@@ -199,20 +251,48 @@ export default function EditProduct({ params }: EditProductProps) {
       // Keep legacy images for backward compat (optional)
       const allImages = existingImages.length > 0 ? existingImages : ["/product_images/unknown-product.jpg"]
 
+      // Find display name for the selected category
+      const selectedCategory = categories.find(cat => cat.id === formData.category);
+      const displayCategory = selectedCategory ? selectedCategory.name : formData.category;
+
       // Prepare data for Firebase
       const productData = {
+        // Keep essential data from the existing product if available
+        ...(product && {
+          createdAt: product.createdAt,
+          reviews: product.reviews,
+          // Preserve other fields not in the form but important
+          weight: product.weight,
+          dimensions: product.dimensions,
+          subcategory: product.subcategory,
+          originalPrice: product.originalPrice,
+          // UI display properties
+          rating: product.rating,
+          reviewCount: product.reviewCount,
+          bestseller: product.bestseller,
+          new: product.new,
+          popular: product.popular,
+          isNew: product.isNew,
+          isBulk: product.isBulk,
+          discount: product.discount,
+        }),
+        
+        // Form data (overrides existing data if changed)
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
-        category: formData.category,
+        category: formData.category, // This is the category ID
+        displayCategory: displayCategory, // This is the human-readable category name
         images: allImages,
-        cloudinaryImages: cloudinaryImages.length > 0 ? cloudinaryImages : undefined,
+        // Only include cloudinaryImages if there are actual images
+        ...(cloudinaryImages.length > 0 && { cloudinaryImages }),
         inStock: formData.inStock,
         stockQuantity: parseInt(formData.stockQuantity),
         origin: formData.origin,
         availableCountries: formData.availableCountries,
         tags: formData.tags.split(",").map(tag => tag.trim()).filter(tag => tag !== ""),
-        cloudinaryMigrated: true, // Mark as migrated to Cloudinary
+        // Only mark as migrated if we have Cloudinary images
+        ...(cloudinaryImages.length > 0 && { cloudinaryMigrated: true }),
       }
 
       // Get current user token for authorization
@@ -222,6 +302,19 @@ export default function EditProduct({ params }: EditProductProps) {
       }
 
       const idToken = await currentUser.getIdToken();
+      
+      console.log("Making product update API call:", {
+        url: `/api/products/update/${id}`,
+        productId: id,
+        method: 'PUT',
+        productData: {
+          name: productData.name,
+          category: productData.category,
+          displayCategory: productData.displayCategory,
+          imageCount: productData.images.length,
+          cloudinaryImageCount: cloudinaryImages.length,
+        }
+      });
 
       // Call our API endpoint for updating products
       const response = await fetch(`/api/products/update/${id}`, {
@@ -232,16 +325,35 @@ export default function EditProduct({ params }: EditProductProps) {
         },
         body: JSON.stringify(productData)
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update product');
+      
+      // Save the status code before consuming the response
+      const responseStatus = response.status;
+      
+      // Try to parse the response as JSON
+      let responseData;
+      try {
+        responseData = await response.json();
+        console.log("Product update API response:", {
+          status: responseStatus,
+          ok: response.ok,
+          data: responseData
+        });
+      } catch (jsonError) {
+        console.error("Error parsing API response:", jsonError);
+        // If we can't parse the response, continue with the status code we captured
+        responseData = { error: "Could not parse API response" };
       }
 
-      // If API not available, fall back to direct Firebase update
-      if (response.status === 404) {
+      // If the API route is not available or returns 404, fall back to direct Firebase update
+      if (responseStatus === 404) {
+        console.log("API returned 404, falling back to direct Firebase update");
         await updateProduct(id, productData);
+      } 
+      // If the API returned an error status, throw an error
+      else if (!response.ok) {
+        throw new Error(responseData?.error || 'Failed to update product');
       }
+      // Otherwise, API call was successful, no further action needed
 
       toast({
         title: "Product updated",
@@ -259,6 +371,84 @@ export default function EditProduct({ params }: EditProductProps) {
       setSubmitting(false)
     }
   }
+
+  // Function to explicitly export the current product to Firebase
+  const handleExportToFirebase = async () => {
+    try {
+      setSubmitting(true);
+      
+      // Find display name for the selected category
+      const selectedCategory = categories.find(cat => cat.id === formData.category);
+      const displayCategory = selectedCategory ? selectedCategory.name : formData.category;
+      
+      // Keep legacy images for backward compat (optional)
+      const allImages = existingImages.length > 0 ? existingImages : ["/product_images/unknown-product.jpg"];
+
+      // Prepare data for Firebase - same as in handleSubmit
+      const productData = {
+        // Keep essential data from the existing product if available
+        ...(product && {
+          createdAt: product.createdAt,
+          reviews: product.reviews,
+          // Preserve other fields not in the form but important
+          weight: product.weight,
+          dimensions: product.dimensions,
+          subcategory: product.subcategory,
+          originalPrice: product.originalPrice,
+          // UI display properties
+          rating: product.rating,
+          reviewCount: product.reviewCount,
+          bestseller: product.bestseller,
+          new: product.new,
+          popular: product.popular,
+          isNew: product.isNew,
+          isBulk: product.isBulk,
+          discount: product.discount,
+        }),
+        
+        // Form data (overrides existing data if changed)
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        category: formData.category, // This is the category ID
+        displayCategory: displayCategory, // This is the human-readable category name
+        images: allImages,
+        // Only include cloudinaryImages if there are actual images
+        ...(cloudinaryImages.length > 0 && { cloudinaryImages }),
+        inStock: formData.inStock,
+        stockQuantity: parseInt(formData.stockQuantity),
+        origin: formData.origin,
+        availableCountries: formData.availableCountries,
+        tags: formData.tags.split(",").map(tag => tag.trim()).filter(tag => tag !== ""),
+        // Only mark as migrated if we have Cloudinary images
+        ...(cloudinaryImages.length > 0 && { cloudinaryMigrated: true }),
+      };
+      
+      console.log("Exporting product to Firebase:", {
+        id,
+        name: productData.name,
+        category: productData.category,
+        displayCategory: productData.displayCategory,
+      });
+
+      // Direct Firebase update
+      await updateProduct(id, productData);
+      
+      toast({
+        title: "Export successful",
+        description: "The product has been successfully exported to Firebase.",
+      });
+    } catch (error: any) {
+      console.error("Error exporting product to Firebase:", error);
+      toast({
+        title: "Export Failed",
+        description: error.message || "Failed to export product to Firebase. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -328,8 +518,8 @@ export default function EditProduct({ params }: EditProductProps) {
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -529,21 +719,24 @@ export default function EditProduct({ params }: EditProductProps) {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-4 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/admin/products")}
-              disabled={submitting}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={submitting}
-            >
-              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {submitting ? "Saving..." : "Update Product"}
+          <div className="mt-6 flex items-center gap-4 justify-between">
+            <div className="flex items-center gap-4">
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Updating..." : "Update Product"}
+              </Button>
+              
+              <Button 
+                type="button" 
+                variant="outline" 
+                disabled={submitting}
+                onClick={handleExportToFirebase}
+              >
+                {submitting ? "Exporting..." : "Export to Firebase"}
+              </Button>
+            </div>
+            
+            <Button variant="ghost" type="button" asChild>
+              <Link href="/admin/products">Cancel</Link>
             </Button>
           </div>
         </form>

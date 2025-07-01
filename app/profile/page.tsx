@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,10 +13,13 @@ import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { User, Package, Heart, Settings, Bell, Shield, CreditCard, MapPin, Edit } from "lucide-react"
+import { User, Package, Heart, Settings, Bell, Shield, CreditCard, MapPin, Edit, Plus, Home, Building, Briefcase, ShoppingCart, Trash2, ExternalLink } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { useCurrency } from "@/components/currency-provider"
 import { useToast } from "@/hooks/use-toast"
+import { useLocalStorage } from "@/hooks/use-local-storage"
+import { useWishlist } from "@/hooks/use-wishlist"
+import { useCart } from "@/components/cart-provider"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,6 +28,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 export default function ProfilePage() {
   const { user, logout } = useAuth()
@@ -49,6 +56,24 @@ export default function ProfilePage() {
       isDefault: true,
     },
   ])
+
+  // Address dialog state
+  const [addressDialogOpen, setAddressDialogOpen] = useState(false)
+  const [currentAddress, setCurrentAddress] = useState<any>(null)
+  const [addressForm, setAddressForm] = useState({
+    id: 0,
+    type: "Home",
+    name: "",
+    address: "",
+    city: "",
+    postalCode: "",
+    country: "",
+    isDefault: false,
+  })
+
+  // Use localStorage for wishlist to maintain consistency with the main wishlist page
+  const { wishlistItems, removeFromWishlist } = useWishlist()
+
   const [preferences, setPreferences] = useState({
     emailNotifications: true,
     smsNotifications: false,
@@ -61,6 +86,9 @@ export default function ProfilePage() {
 
   // Mock order history
   const orderHistory = [
+    // For testing purposes only - in production this would come from the database
+    // Uncomment these for testing and comment out the empty array
+    /*
     {
       id: "ORD-2024-001",
       date: "2024-01-15",
@@ -81,26 +109,12 @@ export default function ProfilePage() {
       status: "Shipped",
       total: 123.45,
       items: 5,
-    },
+    }
+    */
+    // Empty array represents a new user with no orders
   ]
 
-  // Mock wishlist
-  const wishlist = [
-    {
-      id: 1,
-      name: "Premium Jollof Rice Mix",
-      price: 8.99,
-      image: "/placeholder.svg?height=100&width=100",
-      inStock: true,
-    },
-    {
-      id: 2,
-      name: "Basmati Rice Premium (5kg)",
-      price: 24.99,
-      image: "/placeholder.svg?height=100&width=100",
-      inStock: false,
-    },
-  ]
+  const { addToCart } = useCart()
 
   const handleSaveProfile = () => {
     // In a real app, you'd save to your backend
@@ -116,6 +130,64 @@ export default function ProfilePage() {
     toast({
       title: "Preference updated",
       description: "Your preference has been saved.",
+    })
+  }
+
+  const handleAddressChange = (key: string, value: any) => {
+    setAddressForm((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const openAddAddressDialog = () => {
+    setCurrentAddress(null)
+    setAddressForm({
+      id: Date.now(), // Generate a temporary ID
+      type: "Home",
+      name: `${profileData.firstName} ${profileData.lastName}`.trim() || "John Doe",
+      address: "",
+      city: "",
+      postalCode: "",
+      country: "United Kingdom",
+      isDefault: addresses.length === 0, // Make default if it's the first address
+    })
+    setAddressDialogOpen(true)
+  }
+
+  const openEditAddressDialog = (address: any) => {
+    setCurrentAddress(address)
+    setAddressForm({
+      ...address
+    })
+    setAddressDialogOpen(true)
+  }
+
+  const handleDeleteAddress = (id: number) => {
+    const updatedAddresses = addresses.filter(address => address.id !== id)
+    
+    // If we deleted the default address and have other addresses, make another one default
+    if (addresses.find(a => a.id === id)?.isDefault && updatedAddresses.length > 0) {
+      updatedAddresses[0].isDefault = true
+    }
+    
+    setAddresses(updatedAddresses)
+    toast({
+      title: "Address deleted",
+      description: "The address has been removed from your account.",
+    })
+  }
+
+  // Wishlist functions
+  const handleAddToCart = (product: any) => {
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      quantity: 1
+    })
+    
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart`,
     })
   }
 
@@ -350,32 +422,45 @@ export default function ProfilePage() {
                 <CardTitle>Order History</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {orderHistory.map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                          <Package className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <div className="font-medium">{order.id}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {new Date(order.date).toLocaleDateString()} • {order.items} items
+                {orderHistory.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No orders yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      When you place an order, it will appear here for you to track.
+                    </p>
+                    <Button asChild>
+                      <a href="/shop">Start Shopping</a>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {orderHistory.map((order) => (
+                      <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                            <Package className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <div className="font-medium">{order.id}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {new Date(order.date).toLocaleDateString()} • {order.items} items
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
-                        <div className="text-right">
-                          <div className="font-medium">{formatPrice(order.total)}</div>
+                        <div className="flex items-center gap-4">
+                          <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
+                          <div className="text-right">
+                            <div className="font-medium">{formatPrice(order.total)}</div>
+                          </div>
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={`/profile/orders/${order.id}`}>View Details</a>
+                          </Button>
                         </div>
-                        <Button variant="outline" size="sm">
-                          View Details
-                        </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -383,45 +468,83 @@ export default function ProfilePage() {
           {/* Wishlist Tab */}
           <TabsContent value="wishlist">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>My Wishlist</CardTitle>
+                <Link href="/wishlist">
+                  <Button variant="ghost" className="h-9 w-9 p-0" title="View full wishlist">
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                </Link>
               </CardHeader>
-              <CardContent>
-                {wishlist.length === 0 ? (
+              <CardContent className="grid gap-4">
+                {wishlistItems.length === 0 ? (
                   <div className="text-center py-8">
-                    <Heart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <h3 className="text-lg font-semibold mb-2">Your wishlist is empty</h3>
-                    <p className="text-muted-foreground mb-4">
+                    <p className="text-muted-foreground mb-6">
                       Save items you love to your wishlist for easy access later.
                     </p>
                     <Button asChild>
-                      <a href="/products">Browse Products</a>
+                      <Link href="/shop">Browse Products</Link>
                     </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {wishlist.map((item) => (
-                      <div key={item.id} className="border rounded-lg p-4">
-                        <div className="w-full h-32 bg-muted rounded-lg mb-3 flex items-center justify-center">
-                          <span className="text-4xl">📦</span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {wishlistItems.slice(0, 3).map((item) => (
+                      <div key={item.id} className="relative rounded-lg border p-3 flex flex-col h-full">
+                        <div className="absolute top-2 right-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() => removeFromWishlist(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <h3 className="font-medium mb-2">{item.name}</h3>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="font-semibold text-green-600">{formatPrice(item.price)}</span>
-                          <Badge variant={item.inStock ? "secondary" : "destructive"}>
-                            {item.inStock ? "In Stock" : "Out of Stock"}
-                          </Badge>
+                        <div className="flex items-center gap-3">
+                          <div className="h-16 w-16 relative rounded overflow-hidden bg-muted">
+                            <Image
+                              src={item.image}
+                              alt={item.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 space-y-1 min-w-0">
+                            <h4 className="font-medium text-sm truncate">{item.name}</h4>
+                            <p className="text-sm font-bold">{formatPrice(item.price)}</p>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" className="flex-1" disabled={!item.inStock}>
+                        <div className="mt-4 flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 h-8"
+                            onClick={() => handleAddToCart(item)}
+                            disabled={item.inStock === false}
+                          >
+                            <ShoppingCart className="h-3 w-3 mr-2" />
                             Add to Cart
                           </Button>
-                          <Button variant="outline" size="sm">
-                            Remove
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-8 p-0"
+                            onClick={() => removeFromWishlist(item.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
                       </div>
                     ))}
+                    {wishlistItems.length > 3 && (
+                      <Link href="/wishlist" className="border rounded-lg p-4 flex flex-col items-center justify-center h-full">
+                        <div className="text-xl font-semibold mb-2">
+                          +{wishlistItems.length - 3} more {wishlistItems.length - 3 === 1 ? 'item' : 'items'}
+                        </div>
+                        <Button variant="outline">View All</Button>
+                      </Link>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -433,41 +556,191 @@ export default function ProfilePage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Saved Addresses</CardTitle>
-                <Button>Add New Address</Button>
+                <Button onClick={openAddAddressDialog}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New Address
+                </Button>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {addresses.map((address) => (
-                    <div key={address.id} className="p-4 border rounded-lg">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="font-medium">{address.type}</span>
-                            {address.isDefault && <Badge variant="secondary">Default</Badge>}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            <div>{address.name}</div>
-                            <div>{address.address}</div>
-                            <div>
-                              {address.city}, {address.postalCode}
+                  {addresses.length === 0 ? (
+                    <div className="text-center py-8">
+                      <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No addresses saved</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Add a shipping address to make checkout faster.
+                      </p>
+                      <Button onClick={openAddAddressDialog}>Add Address</Button>
+                    </div>
+                  ) : (
+                    addresses.map((address) => (
+                      <div key={address.id} className="p-4 border rounded-lg">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="font-medium">{address.type}</span>
+                              {address.isDefault && <Badge variant="secondary">Default</Badge>}
                             </div>
-                            <div>{address.country}</div>
+                            <div className="text-sm text-muted-foreground">
+                              <div>{address.name}</div>
+                              <div>{address.address}</div>
+                              <div>
+                                {address.city}, {address.postalCode}
+                              </div>
+                              <div>{address.country}</div>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            Edit
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            Delete
-                          </Button>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            {!address.isDefault && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setAddressAsDefault(address.id)}
+                              >
+                                Set as Default
+                              </Button>
+                            )}
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openEditAddressDialog(address)}
+                            >
+                              Edit
+                            </Button>
+                            {!address.isDefault && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleDeleteAddress(address.id)}
+                              >
+                                Delete
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
+            
+            {/* Address Dialog */}
+            <Dialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen}>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>{currentAddress ? "Edit Address" : "Add New Address"}</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="addressType">Address Type</Label>
+                    <RadioGroup 
+                      id="addressType" 
+                      value={addressForm.type}
+                      onValueChange={(value) => handleAddressChange("type", value)}
+                      className="flex space-x-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Home" id="home" />
+                        <Label htmlFor="home" className="flex items-center">
+                          <Home className="h-4 w-4 mr-2" />
+                          Home
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Work" id="work" />
+                        <Label htmlFor="work" className="flex items-center">
+                          <Briefcase className="h-4 w-4 mr-2" />
+                          Work
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Other" id="other" />
+                        <Label htmlFor="other" className="flex items-center">
+                          <Building className="h-4 w-4 mr-2" />
+                          Other
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input 
+                      id="name"
+                      value={addressForm.name}
+                      onChange={(e) => handleAddressChange("name", e.target.value)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="address">Street Address</Label>
+                    <Input 
+                      id="address"
+                      value={addressForm.address}
+                      onChange={(e) => handleAddressChange("address", e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="city">City</Label>
+                      <Input 
+                        id="city"
+                        value={addressForm.city}
+                        onChange={(e) => handleAddressChange("city", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="postalCode">Postal Code</Label>
+                      <Input 
+                        id="postalCode"
+                        value={addressForm.postalCode}
+                        onChange={(e) => handleAddressChange("postalCode", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="country">Country</Label>
+                    <Select 
+                      value={addressForm.country}
+                      onValueChange={(value) => handleAddressChange("country", value)}
+                    >
+                      <SelectTrigger id="country">
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                        <SelectItem value="United States">United States</SelectItem>
+                        <SelectItem value="Canada">Canada</SelectItem>
+                        <SelectItem value="Australia">Australia</SelectItem>
+                        <SelectItem value="Nigeria">Nigeria</SelectItem>
+                        <SelectItem value="Ghana">Ghana</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="isDefault"
+                      checked={addressForm.isDefault}
+                      onCheckedChange={(checked) => handleAddressChange("isDefault", checked)}
+                      disabled={currentAddress?.isDefault} // Can't uncheck if it's already the default
+                    />
+                    <Label htmlFor="isDefault">Set as default address</Label>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setAddressDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSaveAddress}>
+                    {currentAddress ? "Update Address" : "Save Address"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           {/* Settings Tab */}

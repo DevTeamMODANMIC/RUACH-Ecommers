@@ -6,7 +6,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Pencil, Trash2, Plus, ArrowLeft, FileUp, Eye, CloudUpload, AlertTriangle } from "lucide-react"
+import { Pencil, Trash2, Plus, ArrowLeft, FileUp, Eye, CloudUpload, AlertTriangle, Database } from "lucide-react"
 import { 
   Table, 
   TableBody, 
@@ -40,6 +40,7 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null)
+  const [syncingToFirebase, setSyncingToFirebase] = useState(false)
 
   useEffect(() => {
     const checkAuth = onAuthStateChanged(auth, (user) => {
@@ -85,6 +86,84 @@ export default function AdminProducts() {
       })
     }
   }
+
+  const handlePushAllToFirebase = async () => {
+    if (!isAdmin || products.length === 0) return;
+    
+    setSyncingToFirebase(true);
+    
+    try {
+      // Get current user token for authorization
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error("You must be logged in to update products");
+      }
+
+      const idToken = await currentUser.getIdToken();
+      let successCount = 0;
+      let errorCount = 0;
+      
+      toast({
+        title: "Firebase Sync Started",
+        description: `Pushing ${products.length} products to Firebase...`,
+      });
+      
+      // Process products in batches to avoid overwhelming the system
+      const batchSize = 5;
+      const totalProducts = products.length;
+      
+      for (let i = 0; i < totalProducts; i += batchSize) {
+        const batch = products.slice(i, i + batchSize);
+        
+        // Process each product in the batch
+        await Promise.all(batch.map(async (product) => {
+          try {
+            // Call our API endpoint for updating products
+            const response = await fetch(`/api/products/update/${product.id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+              },
+              body: JSON.stringify(product)
+            });
+            
+            if (response.ok) {
+              successCount++;
+              console.log(`Successfully pushed product ${product.name} to Firebase`);
+            } else {
+              errorCount++;
+              console.error(`Failed to push product ${product.name} to Firebase:`, await response.text());
+            }
+          } catch (error) {
+            errorCount++;
+            console.error(`Error pushing product ${product.name} to Firebase:`, error);
+          }
+        }));
+        
+        // Update toast with progress
+        toast({
+          title: "Firebase Sync Progress",
+          description: `Processed ${Math.min(i + batchSize, totalProducts)} of ${totalProducts} products...`,
+        });
+      }
+      
+      toast({
+        title: "Firebase Sync Complete",
+        description: `Successfully pushed ${successCount} products to Firebase. Failed: ${errorCount}`,
+        variant: errorCount > 0 ? "destructive" : "default",
+      });
+    } catch (error: any) {
+      console.error("Error pushing products to Firebase:", error);
+      toast({
+        title: "Firebase Sync Failed",
+        description: error.message || "An error occurred while pushing products to Firebase.",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncingToFirebase(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -132,6 +211,15 @@ export default function AdminProducts() {
                 Missing Images
               </Link>
             </Button>
+            <Button 
+              variant="outline" 
+              className="shrink-0"
+              onClick={handlePushAllToFirebase}
+              disabled={syncingToFirebase || products.length === 0}
+            >
+              <Database className="mr-2 h-4 w-4" />
+              {syncingToFirebase ? "Syncing..." : "Push All to Firebase"}
+            </Button>
             <Button asChild className="shrink-0">
               <Link href="/admin/products/add">
                 <Plus className="mr-2 h-4 w-4" />
@@ -152,6 +240,7 @@ export default function AdminProducts() {
                   <TableHead>Category</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Stock</TableHead>
+                  <TableHead>Firebase Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -192,6 +281,32 @@ export default function AdminProducts() {
                               : `Low (${product.stockQuantity})`
                             : "Out of Stock"}
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          {product.updatedAt ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                              <Database className="mr-1 h-3 w-3" />
+                              {(() => {
+                                try {
+                                  // If it's a Firestore timestamp
+                                  if (product.updatedAt.toDate) {
+                                    return product.updatedAt.toDate().toLocaleDateString();
+                                  }
+                                  // If it's a regular date or timestamp
+                                  return new Date(product.updatedAt).toLocaleDateString();
+                                } catch (e) {
+                                  return "Synced";
+                                }
+                              })()}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
+                              <AlertTriangle className="mr-1 h-3 w-3" />
+                              Not Synced
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">

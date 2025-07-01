@@ -12,6 +12,7 @@ import {
 } from "firebase/auth"
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore"
 import { auth, db } from "./firebase"
+// Don't import firebase-admin in this client-side file
 
 export interface UserProfile {
   uid: string
@@ -34,6 +35,11 @@ export interface UserProfile {
   createdAt: Date
   updatedAt: Date
 }
+
+// Initialize Firebase Admin for server-side operations
+// This should only be used in server components or API routes
+// Moving this to a separate file to avoid client-side imports
+// export const getFirebaseAdminApp = () => { ... } - REMOVED
 
 // Authentication functions
 export const signUp = async (email: string, password: string, name: string) => {

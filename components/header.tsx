@@ -26,6 +26,7 @@ import { useCart } from "@/components/cart-provider";
 import { useSafeCurrency } from "@/hooks/use-safe-currency";
 import React from "react";
 import { useAuth } from "@/components/auth-provider";
+import { useWishlist } from "@/hooks/use-wishlist";
 
 // We'll use CSS classes instead of inline styles
 
@@ -77,7 +78,7 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { items, getTotalItems, getTotalPrice } = useCart();
   const { formatCurrency } = useSafeCurrency();
-  const [wishlistCount, setWishlistCount] = useState(0);
+  const { wishlistCount } = useWishlist();
   const [logoError, setLogoError] = useState(false);
   const { user, logout } = useAuth();
 

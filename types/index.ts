@@ -4,6 +4,7 @@ export type Product = {
   description: string
   price: number
   category: string
+  displayCategory?: string // Human-readable category name
   origin: string
   inStock: boolean
   images: string[]

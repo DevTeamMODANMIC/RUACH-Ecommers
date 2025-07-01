@@ -65,13 +65,13 @@ const categoryMapping: Record<string, string> = {
   "beverages": "drinks",
   "flour": "flour",
   "rice": "rice",
-  "pap-custard": "food",
+  "pap-custard": "pap-custard",
   "spices": "spices",
-  "dried-spices": "spices",
-  "oil": "food",
-  "provisions": "food",
-  "fresh-produce": "vegetables",
-  "fresh-vegetables": "vegetables",
+  "dried-spices": "dried-spices",
+  "oil": "oil",
+  "provisions": "provisions",
+  "fresh-produce": "fresh-produce",
+  "fresh-vegetables": "fresh-vegetables",
   "vegetables": "vegetables",
   "meat": "meat",
   "food": "food"
@@ -174,17 +174,52 @@ export default function ShopPage() {
           let filteredFirebaseProducts = [...baseProducts]
           if (categoryFilter) {
             console.log("Applying category filter client-side:", categoryFilter)
+            
+            // Debug: Log category values for the first few products
+            console.log("Sample product categories:", baseProducts.slice(0, 5).map(p => ({
+              name: p.name,
+              category: p.category,
+              displayCategory: (p as any).displayCategory
+            })));
+            
             filteredFirebaseProducts = filteredFirebaseProducts.filter((product) => {
+              // Get the category - could be either the new ID or the old string
               const productCategory = String(product.category || "").toLowerCase().trim()
               const categoryFilterLower = categoryFilter.toLowerCase().trim()
               
-              // More flexible matching for categories, including drinks/beverages synonym
+              // Get the displayCategory if available
+              const productDisplayCategory = String((product as any).displayCategory || "").toLowerCase().trim()
+              
+              // More precise matching for categories
+              const exactCategoryMatch = productCategory === categoryFilterLower;
+              const exactDisplayCategoryMatch = productDisplayCategory === categoryFilterLower;
+              
+              // Special cases for drinks/beverages
+              const isDrinksCategory = 
+                categoryFilterLower === "drinks" || 
+                categoryFilterLower === "beverages";
+              
+              const productIsDrinks = 
+                productCategory === "drinks" || 
+                productCategory === "beverages" ||
+                productDisplayCategory.includes("drinks") || 
+                productDisplayCategory.includes("beverages");
+              
               const matches = 
-                productCategory === categoryFilterLower || 
-                productCategory.includes(categoryFilterLower) ||
-                categoryFilterLower.includes(productCategory) ||
-                (categoryFilterLower === "drinks" && productCategory === "beverages") ||
-                (categoryFilterLower === "beverages" && productCategory === "drinks")
+                exactCategoryMatch || 
+                exactDisplayCategoryMatch ||
+                (isDrinksCategory && productIsDrinks);
+              
+              // Debug: Log detailed category matching for problematic products
+              if (
+                product.name.includes("Coca") || 
+                product.name.includes("Fanta") || 
+                product.name.includes("Rice") || 
+                productCategory === categoryFilterLower ||
+                productDisplayCategory === categoryFilterLower
+              ) {
+                console.log(`Product: ${product.name}, Category: ${productCategory}, DisplayCategory: ${productDisplayCategory}, Filter: ${categoryFilterLower}, Matches: ${matches}`);
+              }
               
               return matches
             })
@@ -237,15 +272,19 @@ export default function ShopPage() {
             if (selectedCategory !== "all") {
               const mappedCategory = categoryMapping[selectedCategory] || selectedCategory
               localProducts = localProducts.filter((product) => {
-                const productCategory = String(product.category || "").toLowerCase();
-                const mappedLower = mappedCategory.toLowerCase();
-                const selectedLower = selectedCategory.toLowerCase();
+                const productCategory = String(product.category || "").toLowerCase().trim();
+                // Use type assertion for displayCategory
+                const productDisplayCategory = String((product as any).displayCategory || "").toLowerCase().trim();
+                const mappedLower = mappedCategory.toLowerCase().trim();
+                const selectedLower = selectedCategory.toLowerCase().trim();
 
+                // Exact matches only
                 if (productCategory === mappedLower || productCategory === selectedLower) return true;
+                if (productDisplayCategory === mappedLower || productDisplayCategory === selectedLower) return true;
 
-                // Treat drinks/beverages as interchangeable
-                if ((mappedLower === "drinks" && productCategory === "beverages") ||
-                    (mappedLower === "beverages" && productCategory === "drinks")) {
+                // Special case for drinks/beverages which are used interchangeably
+                if ((mappedLower === "drinks" && (productCategory === "beverages" || productDisplayCategory === "beverages")) ||
+                    (mappedLower === "beverages" && (productCategory === "drinks" || productDisplayCategory === "drinks"))) {
                   return true;
                 }
 
@@ -262,7 +301,7 @@ export default function ShopPage() {
                 const productOrigin = String(product.origin || "").toLowerCase().trim();
                 const selectedOriginLower = selectedOrigin.toLowerCase().trim();
                 
-                // Use the same flexible matching logic as before
+                // Exact match
                 if (productOrigin === selectedOriginLower) return true;
                 
                 // Special case for international products
@@ -270,7 +309,6 @@ export default function ShopPage() {
                    (productOrigin === "international" || 
                     productOrigin === "uk" || 
                     productOrigin === "united kingdom" ||
-                    productOrigin.includes("international") ||
                     !["nigeria", "ghana", "kenya", "south-africa"].includes(productOrigin))) {
                   return true;
                 }
@@ -278,18 +316,7 @@ export default function ShopPage() {
                 // Special case for UK products
                 if (selectedOriginLower === "uk" &&
                    (productOrigin === "uk" ||
-                    productOrigin === "united kingdom" ||
-                    productOrigin.includes("uk") ||
-                    productOrigin.includes("united kingdom"))) {
-                  return true;
-                }
-                
-                // More flexible matching for other origins
-                if (productOrigin.includes(selectedOriginLower) || 
-                    selectedOriginLower.includes(productOrigin) ||
-                    productOrigin.startsWith(selectedOriginLower + " ") || 
-                    productOrigin.endsWith(" " + selectedOriginLower) || 
-                    productOrigin.includes(" " + selectedOriginLower + " ")) {
+                    productOrigin === "united kingdom")) {
                   return true;
                 }
                 
@@ -502,10 +529,10 @@ export default function ShopPage() {
             className={`h-4 w-4 text-gray-500 transition-transform ${expandedSections.categories ? 'rotate-180' : ''}`} 
           />
         </button>
-        
+         
         {expandedSections.categories && (
           <div className="p-3 border-t border-gray-200 space-y-2 max-h-40 overflow-y-auto">
-              {categories.map((category) => (
+            {categories.map((category) => (
               <div key={category.id} className="flex items-center">
                 <input
                   type="radio"
@@ -522,7 +549,7 @@ export default function ShopPage() {
                   {category.name}
                 </label>
               </div>
-              ))}
+            ))}
           </div>
         )}
       </div>
@@ -538,10 +565,10 @@ export default function ShopPage() {
             className={`h-4 w-4 text-gray-500 transition-transform ${expandedSections.priceRange ? 'rotate-180' : ''}`} 
           />
         </button>
-        
+         
         {expandedSections.priceRange && (
           <div className="p-3 border-t border-gray-200 space-y-2">
-              {priceRanges.map((range) => (
+            {priceRanges.map((range) => (
               <div key={range.id} className="flex items-center">
                 <input
                   type="radio"
@@ -574,7 +601,7 @@ export default function ShopPage() {
             className={`h-4 w-4 text-gray-500 transition-transform ${expandedSections.origin ? 'rotate-180' : ''}`} 
           />
         </button>
-        
+         
         {expandedSections.origin && (
           <div className="p-3 border-t border-gray-200 space-y-2">
             {origins.map((origin) => (
@@ -611,7 +638,7 @@ export default function ShopPage() {
               className={`h-4 w-4 text-gray-500 transition-transform ${expandedSections.sort ? 'rotate-180' : ''}`} 
             />
           </button>
-          
+           
           {expandedSections.sort && (
             <div className="p-3 border-t border-gray-200 space-y-2">
               {sortOptions.map((option) => (
@@ -696,7 +723,7 @@ export default function ShopPage() {
         </Button>
       )}
     </div>
-  )
+  );
   
   return (
     <div className="min-h-screen py-8 bg-gray-50">
@@ -832,5 +859,5 @@ export default function ShopPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -24,17 +24,22 @@ import { useToast } from "@/hooks/use-toast"
 import { useCurrency } from "@/hooks/use-currency"
 import CloudinaryUploadWidget from "@/components/cloudinary-upload-widget"
 
+// Match categories exactly with shop page
 const categories = [
-  "Vegetables & Fruits",
-  "Meat & Poultry",
-  "Spices & Seasonings",
-  "Grains & Rice",
-  "Sauces & Oils",
-  "Beverages",
-  "Snacks & Sweets",
-  "Frozen Foods",
-  "Canned & Preserved",
-  "Other"
+  { id: "drinks", name: "Drinks & Beverages" },
+  { id: "food", name: "Food" },
+  { id: "flour", name: "Flour" },
+  { id: "rice", name: "Rice" },
+  { id: "pap-custard", name: "Pap/Custard" },
+  { id: "spices", name: "Spices" },
+  { id: "dried-spices", name: "Dried Spices" },
+  { id: "oil", name: "Oil" },
+  { id: "provisions", name: "Provisions" },
+  { id: "fresh-produce", name: "Fresh Produce" },
+  { id: "fresh-vegetables", name: "Fresh Vegetables" },
+  { id: "vegetables", name: "Vegetables" },
+  { id: "meat", name: "Fish & Meat" },
+  { id: "other", name: "Other" }
 ]
 
 const countries = [
@@ -132,6 +137,20 @@ export default function AddProduct() {
     setImageUrls(newUrls)
   }
 
+  const handleCloudinaryUpload = (publicId: string, url: string, alt?: string) => {
+    setCloudinaryImages(prev => {
+      // Check if this image already exists in the array
+      if (prev.some(img => img.publicId === publicId)) {
+        return prev;
+      }
+      return [...prev, { publicId, url, alt: alt || formData.name }];
+    });
+  }
+
+  const handleRemoveCloudinaryImage = (publicId: string) => {
+    setCloudinaryImages(prev => prev.filter(img => img.publicId !== publicId));
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
@@ -150,14 +169,20 @@ export default function AddProduct() {
       // Use the collected image URLs
       let productImages = imageUrls.length > 0 ? imageUrls : ["/product_images/unknown-product.jpg"]
 
+      // Find display name for the selected category
+      const selectedCategory = categories.find(cat => cat.id === formData.category);
+      const displayCategory = selectedCategory ? selectedCategory.name : formData.category;
+
       // Prepare data for Firebase
       const productData = {
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
-        category: formData.category,
+        category: formData.category, // This is the category ID
+        displayCategory: displayCategory, // This is the human-readable category name
         images: productImages,
-        cloudinaryImages: cloudinaryImages.length > 0 ? cloudinaryImages : undefined,
+        cloudinaryImages,
+        cloudinaryMigrated: true, // Mark as already migrated
         inStock: formData.inStock,
         stockQuantity: parseInt(formData.stockQuantity),
         origin: formData.origin,
@@ -279,8 +304,8 @@ export default function AddProduct() {
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -331,109 +356,66 @@ export default function AddProduct() {
             </div>
           </div>
 
-          {/* Cloudinary Image Upload Section */}
-          <div className="space-y-4">
-            <Label>Product Images</Label>
-            
-            <div className="mb-6 border p-4 rounded-md bg-gray-50">
-              <h3 className="text-sm font-medium mb-3">Cloudinary Images (Recommended)</h3>
-              <CloudinaryUploadWidget
-                onUploadSuccess={(publicId, url) => {
-                  setCloudinaryImages([...cloudinaryImages, { publicId, url, alt: formData.name }]);
-                }}
-                buttonText="Upload Product Image"
+          <div className="space-y-2">
+            <Label>Product Images (via Cloudinary)</Label>
+            <p className="text-sm text-gray-500 mb-4">
+              Upload product images to Cloudinary for optimized delivery.
+              At least one image is required.
+            </p>
+            <CloudinaryUploadWidget
+              buttonText="Upload Product Images"
+              onUploadSuccess={handleCloudinaryUpload}
+              onRemove={handleRemoveCloudinaryImage}
+              currentImages={cloudinaryImages}
+              multiple={true}
+              onUploadError={(err) => {
+                toast({
+                  title: "Upload failed",
+                  description: err.message || "Failed to upload image to Cloudinary",
+                  variant: "destructive",
+                });
+              }}
+            />
+          </div>
+
+          {/* Fallback image URL section */}
+          <div className="space-y-2">
+            <Label htmlFor="imageUrl">Fallback Image URLs (Optional)</Label>
+            <p className="text-sm text-gray-500">
+              If you have direct image URLs, you can add them as fallback images.
+              Cloudinary images are preferred.
+            </p>
+            <div className="flex items-center space-x-2">
+              <Input
+                id="imageUrl"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg"
               />
-              
-              {cloudinaryImages.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
-                  {cloudinaryImages.map((image, index) => (
-                    <div key={index} className="relative">
-                      <div className="aspect-square rounded-md overflow-hidden border bg-white">
-                        <img 
-                          src={image.url} 
-                          alt={image.alt || `Product image ${index + 1}`}
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
+              <Button type="button" variant="outline" onClick={handleAddImageUrl}>
+                Add
+              </Button>
+            </div>
+            {imageUrls.length > 0 && (
+              <div className="mt-2 space-y-2">
+                <p className="text-sm font-medium">Added Image URLs:</p>
+                <div className="flex flex-wrap gap-2">
+                  {imageUrls.map((url, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 bg-gray-100 rounded-md px-3 py-2"
+                    >
+                      <span className="text-sm truncate max-w-[200px]">{url}</span>
                       <button
                         type="button"
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md"
-                        onClick={() => {
-                          const newImages = [...cloudinaryImages];
-                          newImages.splice(index, 1);
-                          setCloudinaryImages(newImages);
-                        }}
+                        onClick={() => handleRemoveImage(index)}
+                        className="text-red-500 hover:text-red-700"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-            
-            {/* Alternative URL Input Section */}
-            <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-sm font-medium mb-3">Alternative URL Method</h3>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Enter image URL"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                />
-                <Button 
-                  type="button" 
-                  onClick={handleAddImageUrl}
-                  disabled={!imageUrl}
-                  className="shrink-0"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Enter URLs to product images. You can use images from the public/product_images folder.
-                <br />
-                Example: /product_images/beverages/coke-50cl-250x250.jpg
-              </p>
-              <div className="mt-2 p-3 bg-gray-50 rounded-md text-xs text-gray-600">
-                <p className="font-medium mb-1">Available image directories:</p>
-                <ul className="list-disc pl-4 space-y-1">
-                  <li>/product_images/ - Main product images</li>
-                  <li>/product_images/beverages/ - Beverage images</li>
-                  <li>/public/a/ - Alternative images</li>
-                </ul>
-              </div>
-            </div>
-            
-            {/* Image URL Previews */}
-            {imageUrls.length > 0 && (
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {imageUrls.map((url, index) => (
-                  <div key={index} className="relative">
-                    <div className="aspect-square rounded-md overflow-hidden border">
-                      <Image
-                        src={url}
-                        alt={`Product image ${index + 1}`}
-                        width={100}
-                        height={100}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          // Fallback if image fails to load
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/product_images/unknown-product.jpg";
-                        }}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md"
-                      onClick={() => handleRemoveImage(index)}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
               </div>
             )}
           </div>
@@ -487,7 +469,7 @@ export default function AddProduct() {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-4 pt-4">
+          <div className="flex justify-end space-x-4">
             <Button
               type="button"
               variant="outline"
@@ -496,12 +478,15 @@ export default function AddProduct() {
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={submitting}
-            >
-              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {submitting ? "Saving..." : "Add Product"}
+            <Button type="submit" disabled={submitting}>
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Add Product"
+              )}
             </Button>
           </div>
         </form>

@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { AlertTriangle, RefreshCw, ArrowLeft, Loader2 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, CheckCircle, XCircle, Loader2, ExternalLink } from "lucide-react";
 import { auth } from "@/lib/firebase";
-import { listenToProducts, type Product } from "@/lib/firebase-products";
 import { onAuthStateChanged } from "firebase/auth";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { Product } from "@/types";
+import { getProducts } from "@/lib/firebase-products";
+import CloudinaryImage from "@/components/cloudinary-image";
 
 export default function CloudinaryReportPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);

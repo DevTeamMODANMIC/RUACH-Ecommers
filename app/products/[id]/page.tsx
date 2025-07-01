@@ -22,6 +22,7 @@ import { products } from "@/lib/product-data"
 import { useSafeCurrency } from "@/hooks/use-safe-currency"
 import CloudinaryImage from "@/components/cloudinary-image"
 import { getProduct as getFirebaseProduct } from "@/lib/firebase-products"
+import { useWishlist, type WishlistItem } from "@/hooks/use-wishlist"
 
 export default function ProductDetailPage() {
   const params = useParams()
@@ -29,7 +30,7 @@ export default function ProductDetailPage() {
   const productId = typeof params.id === 'string' ? decodeURIComponent(params.id) : ''
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
-  const [isWishlisted, setIsWishlisted] = useState(false)
+  const { isInWishlist, toggleWishlist } = useWishlist()
   const { formatPrice } = useSafeCurrency()
   const { trackProductView } = useRecommendations()
   const { addToCart } = useCart()
@@ -318,9 +319,20 @@ export default function ProductDetailPage() {
                 <Button 
                   variant="outline" 
                   size="icon"
-                  onClick={() => setIsWishlisted(!isWishlisted)}
+                  onClick={() => {
+                    const wishlistItem: WishlistItem = {
+                      id: product.id,
+                      name: product.name,
+                      price: product.discount ? product.price * (1 - product.discount / 100) : product.price,
+                      originalPrice: product.discount ? product.price : undefined,
+                      image: product.images?.[0] || "/placeholder.jpg",
+                      category: product.category || product.displayCategory,
+                      inStock: product.inStock !== false
+                    }
+                    toggleWishlist(wishlistItem)
+                  }}
                 >
-                  <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
+                  <Heart className={`h-5 w-5 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
                 </Button>
               </div>
             </div>

@@ -350,10 +350,50 @@ export const addProduct = async (product: Omit<Product, "id" | "createdAt" | "up
 export const updateProduct = async (id: string, updates: Partial<Product>) => {
   try {
     const productRef = doc(db, "products", id)
+    
+    // Log the update attempt
+    console.log(`Firebase: Updating product ${id} with:`, {
+      name: updates.name,
+      category: updates.category,
+      displayCategory: (updates as any).displayCategory,
+      hasImages: updates.images?.length > 0,
+      hasCloudinaryImages: updates.cloudinaryImages?.length > 0
+    })
+    
+    // Get the current product data for comparison
+    const beforeUpdate = await getDoc(productRef)
+    const beforeData = beforeUpdate.exists() ? beforeUpdate.data() : null
+    
+    if (beforeData) {
+      console.log(`Firebase: Current product data before update:`, {
+        name: beforeData.name,
+        category: beforeData.category,
+        displayCategory: beforeData.displayCategory,
+        updatedAt: beforeData.updatedAt?.toDate?.()
+      })
+    }
+    
+    // Perform the update
     await updateDoc(productRef, {
       ...updates,
       updatedAt: new Date(),
     })
+    
+    // Verify the update
+    const afterUpdate = await getDoc(productRef)
+    const afterData = afterUpdate.exists() ? afterUpdate.data() : null
+    
+    if (afterData) {
+      console.log(`Firebase: Product data after update:`, {
+        name: afterData.name,
+        category: afterData.category,
+        displayCategory: afterData.displayCategory,
+        updatedAt: afterData.updatedAt?.toDate?.()
+      })
+    } else {
+      console.log(`Firebase: Failed to verify product update - product not found after update`)
+    }
+    
     return id
   } catch (error: any) {
     console.error("Error updating product:", error)
