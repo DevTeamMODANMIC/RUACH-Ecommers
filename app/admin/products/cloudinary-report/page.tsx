@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle, XCircle, Loader2, ExternalLink } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, Loader2, ExternalLink, RefreshCw, AlertTriangle } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Product } from "@/types";
-import { getProducts } from "@/lib/firebase-products";
+import { getProducts, listenToProducts } from "@/lib/firebase-products";
 import CloudinaryImage from "@/components/cloudinary-image";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function CloudinaryReportPage() {
   const router = useRouter();
@@ -19,8 +20,6 @@ export default function CloudinaryReportPage() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [migratingId, setMigratingId] = useState<string | null>(null);
-
-  const router = useRouter();
   const { toast } = useToast();
 
   // Auth + realtime products
