@@ -205,6 +205,47 @@ export const listenToAllOrders = (callback: (orders: Order[]) => void, maxOrders
   }
 }
 
+export const listenToUserOrders = (callback: (orders: Order[]) => void, userId?: string) => {
+  try {
+    if (!userId) {
+      console.error("No userId provided to listenToUserOrders");
+      callback([]);
+      return () => {}; // Return empty unsubscribe function
+    }
+
+    const q = query(
+      collection(db, "orders"),
+      where("userId", "==", userId),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const orders: Order[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        orders.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt.toDate(),
+          updatedAt: data.updatedAt.toDate(),
+          estimatedDelivery: data.estimatedDelivery?.toDate(),
+        } as Order);
+      });
+      
+      callback(orders);
+    }, (error) => {
+      console.error("Error listening to user orders:", error);
+      callback([]);
+    });
+
+    return unsubscribe;
+  } catch (error: any) {
+    console.error("Error setting up user orders listener:", error);
+    throw new Error(error.message);
+  }
+};
+
 export const updateOrder = async (id: string, updates: Partial<Order>) => {
   try {
     const updateData = {

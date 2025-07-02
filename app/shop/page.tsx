@@ -103,11 +103,13 @@ export default function ShopPage() {
   
   // Get category from URL or default to "all"
   const categoryParam = searchParams.get("category") || "all"
+  // Get search term from URL
+  const searchParam = searchParams.get("search") || ""
   
   const [selectedCategory, setSelectedCategory] = useState(categoryParam)
   const [selectedPriceRange, setSelectedPriceRange] = useState("all")
   const [selectedSort, setSelectedSort] = useState("popularity")
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState(searchParam)
   const [isLoading, setIsLoading] = useState(false)
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(products)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
@@ -424,8 +426,14 @@ export default function ShopPage() {
       params.set("origin", selectedOrigin)
     }
     
+    if (searchTerm) {
+      params.set("search", searchTerm)
+    } else {
+      params.delete("search")
+    }
+    
     router.replace(`/shop?${params.toString()}`)
-  }, [selectedCategory, selectedOrigin, router, searchParams])
+  }, [selectedCategory, selectedOrigin, searchTerm, router, searchParams])
   
   // Handle category change
   const handleCategoryChange = (categoryId: string) => {
@@ -445,6 +453,8 @@ export default function ShopPage() {
   // Handle search
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
+    // The searchTerm state is already updated via the input onChange handler
+    // The URL will be updated via the useEffect that watches searchTerm
   }
 
   // Handle origin change

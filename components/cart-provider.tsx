@@ -39,6 +39,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setIsClient(true)
   }, [])
 
+  // Higher priority client detection to help with hydration
+  useEffect(() => {
+    // This runs immediately during hydration
+    if (typeof window !== 'undefined') {
+      setIsClient(true)
+    }
+  }, [])
+
   // Sync cart across tabs
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {

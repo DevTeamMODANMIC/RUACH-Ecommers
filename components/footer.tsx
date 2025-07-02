@@ -168,6 +168,7 @@ export default function Footer() {
                 href="https://wa.me/2348012345678"
                 target="_blank"
                 rel="noopener noreferrer"
+                suppressHydrationWarning
                 className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-full flex items-center transition-transform transform hover:scale-110 text-sm"
               >
                 <Phone className="h-4 w-4 mr-1" /> WhatsApp

@@ -175,6 +175,47 @@ export default function ProfilePage() {
     })
   }
 
+  const handleSaveAddress = () => {
+    // Validate form data
+    if (!addressForm.name || !addressForm.address || !addressForm.city || !addressForm.postalCode || !addressForm.country) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    // If this is an update
+    if (currentAddress) {
+      setAddresses(addresses.map(address => 
+        address.id === currentAddress.id ? addressForm : address
+      ))
+      toast({
+        title: "Address updated",
+        description: "Your address has been updated successfully."
+      })
+    } else {
+      // If setting as default, update other addresses
+      let newAddresses = [...addresses]
+      if (addressForm.isDefault) {
+        newAddresses = newAddresses.map(address => ({
+          ...address,
+          isDefault: false
+        }))
+      }
+      // Add the new address
+      setAddresses([...newAddresses, addressForm])
+      toast({
+        title: "Address added",
+        description: "Your new address has been saved successfully."
+      })
+    }
+    
+    // Close the dialog
+    setAddressDialogOpen(false)
+  }
+
   // Wishlist functions
   const handleAddToCart = (product: any) => {
     addToCart({

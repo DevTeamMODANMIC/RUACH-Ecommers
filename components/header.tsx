@@ -27,6 +27,7 @@ import { useSafeCurrency } from "@/hooks/use-safe-currency";
 import React from "react";
 import { useAuth } from "@/components/auth-provider";
 import { useWishlist } from "@/hooks/use-wishlist";
+import ClientOnly from "@/components/client-only";
 
 // We'll use CSS classes instead of inline styles
 
@@ -76,7 +77,7 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { items, getTotalItems, getTotalPrice } = useCart();
+  const { items, getTotalItems, getTotalPrice, isClient } = useCart();
   const { formatCurrency } = useSafeCurrency();
   const { wishlistCount } = useWishlist();
   const [logoError, setLogoError] = useState(false);
@@ -120,6 +121,14 @@ export default function Header() {
       setActiveDropdown(null);
     } catch (error) {
       console.error("Logout failed:", error);
+    }
+  };
+
+  // Handle search form submission
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      window.location.href = `/shop?search=${encodeURIComponent(searchQuery.trim())}`;
     }
   };
 
@@ -167,7 +176,7 @@ export default function Header() {
 
             {/* Search Bar - Desktop */}
             <div className="hidden md:flex flex-1 max-w-lg mx-6">
-              <div className="relative w-full flex">
+              <form onSubmit={handleSearch} className="relative w-full flex">
                 <Input
                   type="search"
                   placeholder="Search for products..."
@@ -176,13 +185,14 @@ export default function Header() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <Button
+                  type="submit"
                   size="icon"
                   className="h-10 bg-green-600 hover:bg-green-700 rounded-l-none rounded-r-md shadow-sm w-10"
                 >
                   <Search className="h-5 w-5" />
                   <span className="sr-only">Search</span>
                 </Button>
-              </div>
+              </form>
             </div>
 
             {/* Desktop Navigation */}
@@ -295,11 +305,13 @@ export default function Header() {
                   className="relative hover:text-green-600 p-2"
                 >
                   <Heart className="h-6 w-6 text-gray-700" />
-                  {wishlistCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {wishlistCount}
-                    </span>
-                  )}
+                  <ClientOnly>
+                    {wishlistCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </ClientOnly>
                 </Link>
 
                 <Link
@@ -307,20 +319,25 @@ export default function Header() {
                   className="relative hover:text-green-600 p-2 flex items-center"
                 >
                   <ShoppingCart className="h-6 w-6 text-gray-700" />
-                  {getTotalItems() > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {getTotalItems()}
+                  <ClientOnly>
+                    {getTotalItems() > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {getTotalItems()}
+                      </span>
+                    )}
+                  </ClientOnly>
+                  <ClientOnly>
+                    <span className="hidden lg:inline-block ml-1 text-gray-800 font-medium text-sm">
+                      {formatCurrency(getTotalPrice())}
                     </span>
-                  )}
-                  <span className="hidden lg:inline-block ml-1 text-gray-800 font-medium text-sm">
-                    {typeof window !== 'undefined' ? formatCurrency(getTotalPrice()) : "£0.00"}
-                  </span>
+                  </ClientOnly>
                 </Link>
 
                 <a
                   href="https://wa.me/2348012345678"
                   target="_blank"
                   rel="noopener noreferrer"
+                  suppressHydrationWarning
                   className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full transition-colors duration-200 shadow-sm"
                 >
                   <Phone className="h-5 w-5" />
@@ -418,26 +435,31 @@ export default function Header() {
                 className="relative hover:text-green-600 p-1"
               >
                 <Heart className="h-6 w-6 text-gray-700" />
-                {wishlistCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {wishlistCount}
-                  </span>
-                )}
+                <ClientOnly>
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </ClientOnly>
               </Link>
 
               <Link href="/cart" className="relative hover:text-green-600 p-1">
                 <ShoppingCart className="h-6 w-6 text-gray-700" />
-                {getTotalItems() > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {getTotalItems()}
-                  </span>
-                )}
+                <ClientOnly>
+                  {getTotalItems() > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {getTotalItems()}
+                    </span>
+                  )}
+                </ClientOnly>
               </Link>
               
               <a
                 href="https://wa.me/2348012345678"
                 target="_blank"
                 rel="noopener noreferrer"
+                suppressHydrationWarning
                 className="flex items-center p-2 bg-green-600 hover:bg-green-700 text-white rounded-full"
               >
                 <Phone className="h-5 w-5" />
@@ -594,6 +616,7 @@ export default function Header() {
                 href="https://wa.me/2348012345678"
                 target="_blank"
                 rel="noopener noreferrer"
+                suppressHydrationWarning
                 className="flex items-center py-2 space-x-2 text-white bg-green-600 rounded-full justify-center mb-2 px-4"
               >
                 <Phone className="h-4 w-4" />
@@ -698,6 +721,28 @@ export default function Header() {
                 >
                   Beverages
                 </Link>
+              </div>
+            </li>
+
+            {/* Mobile Search - Top of mobile menu */}
+            <li className="py-2">
+              <div className="font-medium text-gray-900 py-2">Search</div>
+              <div className="lg:hidden pt-4 px-4">
+                <form onSubmit={handleSearch} className="flex w-full">
+                  <Input
+                    type="search"
+                    placeholder="Search products..."
+                    className="rounded-r-none border-r-0"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <Button 
+                    type="submit"
+                    className="rounded-l-none bg-green-600 hover:bg-green-700"
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </form>
               </div>
             </li>
           </ul>

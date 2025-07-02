@@ -55,14 +55,14 @@ export default function OrdersPage() {
 
       try {
         // First get initial orders
-        const initialOrders = await getUserOrders()
+        const initialOrders = await getUserOrders(user.uid)
         setOrders(initialOrders)
         setLoading(false)
         
         // Then set up real-time listener
         unsubscribe = listenToUserOrders((updatedOrders) => {
           setOrders(updatedOrders)
-        })
+        }, user.uid)
       } catch (err: any) {
         console.error("Error loading orders:", err)
         setError(err.message || "Failed to load orders")
