@@ -145,6 +145,11 @@ export default function AddProduct() {
       }
       return [...prev, { publicId, url, alt: alt || formData.name }];
     });
+    
+    // Automatically add the Cloudinary URL to the Alternative URL Method
+    if (url && !imageUrls.includes(url)) {
+      setImageUrls(prev => [...prev, url]);
+    }
   }
 
   const handleRemoveCloudinaryImage = (publicId: string) => {

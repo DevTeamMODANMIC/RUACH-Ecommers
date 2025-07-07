@@ -580,6 +580,10 @@ export default function EditProduct({ params }: EditProductProps) {
               <CloudinaryUploadWidget
                 onUploadSuccess={(publicId, url) => {
                   setCloudinaryImages([...cloudinaryImages, { publicId, url, alt: formData.name }]);
+                  // Automatically add the Cloudinary URL to the Alternative URL Method
+                  if (url && !existingImages.includes(url)) {
+                    setExistingImages(prev => [...prev, url]);
+                  }
                 }}
                 buttonText="Upload Product Image"
               />
