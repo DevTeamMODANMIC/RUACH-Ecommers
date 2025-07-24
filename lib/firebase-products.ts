@@ -61,6 +61,7 @@ export interface Product {
   isNew?: boolean
   isBulk?: boolean
   discount?: number
+  vendorId?: string
 }
 
 export interface ProductFilters {

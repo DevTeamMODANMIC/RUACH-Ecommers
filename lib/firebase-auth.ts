@@ -31,7 +31,7 @@ export interface UserProfile {
     language: string
     notifications: boolean
   }
-  role?: "admin" | "user"
+  role?: "admin" | "user" | "vendor"
   createdAt: Date
   updatedAt: Date
 }
