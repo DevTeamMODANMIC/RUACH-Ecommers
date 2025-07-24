@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', // 👈 Add this line
+  // REMOVE THIS:
+  // output: 'export',
+
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -8,7 +10,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    serverActions: true, // ❌ WARNING: This is not compatible with `output: 'export'`
+    serverActions: true,
   },
   webpack: (config) => {
     config.resolve.fallback = {
