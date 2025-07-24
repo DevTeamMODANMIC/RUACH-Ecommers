@@ -116,6 +116,7 @@ export default function FeaturedProducts() {
     setProducts(featuredProducts as unknown as Product[])
     setLoading(false)
     console.log("Featured products loaded from /a directory")
+
   }, [])
   
   const handleAddToCart = (product: Product, e?: React.MouseEvent) => {

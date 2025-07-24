@@ -5,6 +5,10 @@ import { ProductRecommendations } from "@/components/product-recommendations"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 
 export function PersonalizedRecommendations() {
+  
+  // Original code below for reference
+  /*
+
   const [userCountry, setUserCountry] = useState("nigeria")
   const [recentlyViewed] = useLocalStorage<number[]>("recently-viewed", [])
   const [userPreferences] = useLocalStorage<{
@@ -45,4 +49,6 @@ export function PersonalizedRecommendations() {
       </div>
     </section>
   )
+
+  */
 }

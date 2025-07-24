@@ -118,7 +118,9 @@ export function ReviewForm({ productId, productName, availableCountries, onClose
         images: imagePreview, // In a real app, you'd upload to a service
         verifiedPurchase,
         purchasePrice: purchasePrice ? Number.parseFloat(purchasePrice) : null,
-        userName: user?.name || "Anonymous",
+
+        userName: user?.displayName || "Anonymous",
+
         userEmail: user?.email,
         date: new Date().toISOString(),
       }

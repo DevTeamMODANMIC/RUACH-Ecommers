@@ -151,25 +151,26 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center">
               {!logoError ? (
-                <div className="relative h-12 w-12 mr-2">
+                <div className="relative h-12 w-12 mr-2 rounded-full overflow-hidden bg-white flex items-center justify-center border border-gray-100 shadow-sm">
                   <Image
-                    src="/images/logo/borderlessbuy-logo.png"
-                    alt="Heritage of Skegness Logo"
+                    src="/logo/ruachi-logo.png"
+                    alt="Ruach Logo"
                     width={48}
                     height={48}
-                    className="object-contain"
+                    className="object-cover rounded-full"
                     priority
                     onError={() => setLogoError(true)}
                   />
                 </div>
               ) : (
                 <div className="bg-green-600 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg mr-2 shadow-md">
-                  B
+                  R
                 </div>
               )}
               <div className="flex flex-col">
                 <span className="text-lg font-bold text-gray-900 tracking-tight leading-tight">
-                  Heritage of Skegness
+
+                  RUACH PRODUCTION
                 </span>
               </div>
             </Link>

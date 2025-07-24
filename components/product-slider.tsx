@@ -16,33 +16,8 @@ interface SliderItem {
 
 export default function ProductSlider() {
   const [currentSlide, setCurrentSlide] = useState(0)
-  const [isLoading, setIsLoading] = useState<boolean[]>([true, true, true])
-  const [touchStart, setTouchStart] = useState(0)
-  const [touchEnd, setTouchEnd] = useState(0)
-  
-  const sliderItems: SliderItem[] = [
-    {
-      id: "slide1",
-      title: "African Beverages",
-      description: "Discover authentic drinks from across Africa",
-      image: "/product_images/beverages/Fanta-PET-Bottles-50cl.jpg",
-      link: "/shop?category=beverages"
-    },
-    {
-      id: "slide2",
-      title: "Traditional Foods",
-      description: "Experience the rich flavors of African cuisine",
-      image: "/product_images/food/bread-250x250.png",
-      link: "/shop?category=food"
-    },
-    {
-      id: "slide3",
-      title: "Premium Spices",
-      description: "Enhance your dishes with authentic flavors",
-      image: "/product_images/spices/Bawa-pepper-250x250.jpg",
-      link: "/shop?category=spices"
-    }
-  ]
+
+
   
   // Function to handle touch swipe
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -66,11 +41,13 @@ export default function ProductSlider() {
   }
   
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % sliderItems.length)
+
+    setCurrentSlide((prev) => (prev + 1) % (sliderItems.length || 1))
   }
   
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + sliderItems.length) % sliderItems.length)
+    setCurrentSlide((prev) => (prev - 1 + (sliderItems.length || 1)) % (sliderItems.length || 1))
+
   }
   
   const handleImageLoad = (index: number) => {
@@ -84,12 +61,32 @@ export default function ProductSlider() {
   // Auto-advance slides every 5 seconds
   useEffect(() => {
     const timer = setInterval(() => {
-      nextSlide()
+
+      if (sliderItems.length > 0) {
+        nextSlide()
+      }
+
     }, 5000)
     
     return () => clearInterval(timer)
   }, [])
   
+
+  // If no slider items, show placeholder
+  if (sliderItems.length === 0) {
+    return (
+      <section className="relative w-full h-[300px] overflow-hidden bg-white border-y border-gray-200 mt-4 mb-10">
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center text-gray-500">
+            <h3 className="text-xl font-medium mb-2">No featured products available</h3>
+            <p>Check back later for our product highlights</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+  
+
   return (
     <section 
       className="relative w-full h-[500px] sm:h-[550px] md:h-[600px] overflow-hidden bg-white border-y border-gray-200 mt-4 mb-10 shadow-md"
@@ -147,35 +144,43 @@ export default function ProductSlider() {
         ))}
       </div>
       
-      {/* Navigation buttons */}
-      <button 
-        onClick={prevSlide}
-        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white hover:bg-opacity-90 rounded-full p-3 backdrop-blur-sm text-gray-800 shadow-md border border-gray-200 z-10"
-        aria-label="Previous slide"
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </button>
-      <button 
-        onClick={nextSlide}
-        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white hover:bg-opacity-90 rounded-full p-3 backdrop-blur-sm text-gray-800 shadow-md border border-gray-200 z-10"
-        aria-label="Next slide"
-      >
-        <ChevronRight className="h-6 w-6" />
-      </button>
+
+      {/* Navigation buttons - only show if there are slides */}
+      {sliderItems.length > 1 && (
+        <>
+          <button 
+            onClick={prevSlide}
+            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white hover:bg-opacity-90 rounded-full p-3 backdrop-blur-sm text-gray-800 shadow-md border border-gray-200 z-10"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <button 
+            onClick={nextSlide}
+            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white hover:bg-opacity-90 rounded-full p-3 backdrop-blur-sm text-gray-800 shadow-md border border-gray-200 z-10"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        </>
+      )}
       
-      {/* Indicator dots */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3 z-10">
-        {sliderItems.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              currentSlide === index ? "bg-green-500 w-8" : "bg-white/60 hover:bg-white/80"
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
-      </div>
+      {/* Indicator dots - only show if multiple slides */}
+      {sliderItems.length > 1 && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3 z-10">
+          {sliderItems.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                currentSlide === index ? "bg-green-500 w-8" : "bg-white/60 hover:bg-white/80"
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
+
     </section>
   )
 } 
