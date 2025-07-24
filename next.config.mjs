@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export', // 👈 Add this line
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -7,10 +8,9 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    serverActions: true,
+    serverActions: true, // ❌ WARNING: This is not compatible with `output: 'export'`
   },
   webpack: (config) => {
-    // Handle the fs module which is used by the Cloudinary Node.js SDK
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
