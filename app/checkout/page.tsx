@@ -25,6 +25,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { createOrder } from "@/lib/firebase-orders"
+import Link from "next/link"
 
 // TEMPORARILY DISABLED: import StripeCheckout from "@/components/stripe-checkout"
 
@@ -107,6 +108,10 @@ export default function CheckoutPage() {
         if (paymentMethod === "card") {
           return paymentInfo.cardNumber && paymentInfo.expiryDate && paymentInfo.cvv && paymentInfo.nameOnCard
         }
+        if (paymentMethod === "external") {
+          // External payment method doesn't need validation
+          return true
+        }
         return true
       default:
         return false
@@ -180,29 +185,49 @@ export default function CheckoutPage() {
 
       // Process payment (this would be integrated with a payment provider)
       // For demo purposes, we're simulating a successful payment
-      const paymentResult = await simulatePaymentProcessing();
-      
-      if (paymentResult.success) {
-        // Add payment details to order
-        orderData.paymentStatus = "paid";
-        orderData.paymentId = paymentResult.paymentId;
+      // Handle different payment methods
+      if (paymentMethod === "external") {
+        // For external payment redirect, we create the order first as pending
+        orderData.paymentStatus = "pending";
         
         // Create the order in Firebase Realtime Database
         const orderId = await createOrder(orderData);
-
-        // Clear cart
-        clearCart();
         
-        // Show success message
-        toast({
-          title: "Order placed successfully",
-          description: "Your order has been placed and is being processed.",
-        });
-
-        // Redirect to confirmation page
-        router.push(`/order-confirmation?orderId=${orderId}`);
+        // For now, we redirect to the payment successful page for testing
+        // This will be replaced with the actual payment link later
+        router.push(`/payment-successful?orderId=${orderId}&amount=${total.toFixed(2)}&items=${items.length}&email=${shippingInfo.email}`);
+        
+        // Note: The above redirect will be replaced with your external payment link
+        // Example: router.push(`https://payment-provider.com?orderId=${orderId}&amount=${total}`);
+        
+        // Don't clear cart yet - this will be done after successful payment
+        
       } else {
-        throw new Error("Payment processing failed");
+        // Standard card payment processing
+        const paymentResult = await simulatePaymentProcessing();
+        
+        if (paymentResult.success) {
+          // Add payment details to order
+          orderData.paymentStatus = "paid";
+          orderData.paymentId = paymentResult.paymentId;
+          
+          // Create the order in Firebase Realtime Database
+          const orderId = await createOrder(orderData);
+  
+          // Clear cart
+          clearCart();
+          
+          // Show success message
+          toast({
+            title: "Order placed successfully",
+            description: "Your order has been placed and is being processed.",
+          });
+  
+                    // Redirect to payment successful page with order details
+          router.push(`/payment-successful?orderId=${orderId}&amount=${total.toFixed(2)}&items=${items.length}&email=${shippingInfo.email}`);
+        } else {
+          throw new Error("Payment processing failed");
+        }
       }
     } catch (error: any) {
       console.error("Error placing order:", error);
@@ -546,7 +571,34 @@ export default function CheckoutPage() {
                           </div>
                         </Label>
                       </div>
+                      <div className="flex items-center space-x-2 border p-3 rounded-lg mt-2">
+                        <RadioGroupItem value="external" id="external" />
+                        <Label htmlFor="external" className="flex-1 cursor-pointer">
+                          <div className="flex items-center gap-2">
+                            <Lock className="h-4 w-4" />
+                            <span>Secure Direct Payment</span>
+                          </div>
+                        </Label>
+                      </div>
                     </RadioGroup>
+                    
+                    <div className="mt-4 p-3 bg-muted rounded-lg">
+                                              <p className="text-sm mb-2">We also support additional secure payment options:</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8"
+                          onClick={() => setPaymentMethod("external")}
+                        >
+                          Secure Payment
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-8" disabled>
+                          {/* Additional payment links can be added here */}
+                          Coming Soon
+                        </Button>
+                      </div>
+                    </div>
                   </div>
 
                   {paymentMethod === "card" && (
@@ -593,6 +645,49 @@ export default function CheckoutPage() {
                         />
                       </div>
                     </>
+                  )}
+                  
+                  {paymentMethod === "external" && (
+                    <div className="p-4 border rounded-lg bg-gray-50">
+                      <h3 className="text-sm font-medium text-gray-800 mb-2">External Payment Redirect</h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        After placing your order, you'll be redirected to our external payment processor.
+                      </p>
+                      
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-md mb-4">
+                        <div className="flex gap-2 items-start">
+                          <div className="text-amber-500 mt-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                          </div>
+                          <div className="text-xs text-amber-800">
+                            <p className="font-medium">Payment link will be added later</p>
+                            <p>The system will currently redirect to the payment successful page for testing purposes.</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 border rounded-md bg-white">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-sm font-medium">Order Total:</span>
+                          <span className="text-sm font-bold">{formatPrice(total)}</span>
+                        </div>
+                        <Button 
+                          className="w-full bg-green-600 hover:bg-green-700 text-white" 
+                          asChild
+                        >
+                          {/* REPLACE THIS HREF WITH YOUR PAYMENT LINK LATER */}
+                          <Link href={`/payment-successful?orderId=ORDER-${Date.now()}&amount=${total.toFixed(2)}&items=${items.length}&email=${shippingInfo.email}`}>
+                            Proceed to Payment
+                          </Link>
+                        </Button>
+                      </div>
+                      
+                      <div className="mt-4 pt-3 border-t border-gray-200 text-center">
+                        <p className="text-xs text-gray-500">
+                          You'll be able to review your order before completing payment
+                        </p>
+                      </div>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -650,10 +745,17 @@ export default function CheckoutPage() {
                   <div>
                     <h3 className="font-semibold mb-2">Payment Method</h3>
                     <div className="p-3 bg-muted rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="h-4 w-4" />
-                        <span>Credit Card ending in {paymentInfo.cardNumber.slice(-4)}</span>
-                      </div>
+                      {paymentMethod === "card" ? (
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4" />
+                          <span>Credit Card ending in {paymentInfo.cardNumber.slice(-4)}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Lock className="h-4 w-4" />
+                          <span>Secure Direct Payment</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
