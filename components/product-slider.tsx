@@ -16,8 +16,12 @@ interface SliderItem {
 
 export default function ProductSlider() {
   const [currentSlide, setCurrentSlide] = useState(0)
-
-
+  const [isLoading, setIsLoading] = useState<boolean[]>([])
+  const [touchStart, setTouchStart] = useState(0)
+  const [touchEnd, setTouchEnd] = useState(0)
+  
+  // Empty slider items array
+  const sliderItems: SliderItem[] = []
   
   // Function to handle touch swipe
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -41,13 +45,11 @@ export default function ProductSlider() {
   }
   
   const nextSlide = () => {
-
     setCurrentSlide((prev) => (prev + 1) % (sliderItems.length || 1))
   }
   
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + (sliderItems.length || 1)) % (sliderItems.length || 1))
-
   }
   
   const handleImageLoad = (index: number) => {
@@ -61,17 +63,14 @@ export default function ProductSlider() {
   // Auto-advance slides every 5 seconds
   useEffect(() => {
     const timer = setInterval(() => {
-
       if (sliderItems.length > 0) {
         nextSlide()
       }
-
     }, 5000)
     
     return () => clearInterval(timer)
   }, [])
   
-
   // If no slider items, show placeholder
   if (sliderItems.length === 0) {
     return (
@@ -86,7 +85,6 @@ export default function ProductSlider() {
     )
   }
   
-
   return (
     <section 
       className="relative w-full h-[500px] sm:h-[550px] md:h-[600px] overflow-hidden bg-white border-y border-gray-200 mt-4 mb-10 shadow-md"
@@ -144,7 +142,6 @@ export default function ProductSlider() {
         ))}
       </div>
       
-
       {/* Navigation buttons - only show if there are slides */}
       {sliderItems.length > 1 && (
         <>
@@ -180,7 +177,6 @@ export default function ProductSlider() {
           ))}
         </div>
       )}
-
     </section>
   )
 } 

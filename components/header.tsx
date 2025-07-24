@@ -28,6 +28,7 @@ import React from "react";
 import { useAuth } from "@/components/auth-provider";
 import { useWishlist } from "@/hooks/use-wishlist";
 import ClientOnly from "@/components/client-only";
+import { useVendor } from "@/hooks/use-vendor";
 
 // We'll use CSS classes instead of inline styles
 
@@ -82,6 +83,7 @@ export default function Header() {
   const { wishlistCount } = useWishlist();
   const [logoError, setLogoError] = useState(false);
   const { user, logout } = useAuth();
+  const { isVendor } = useVendor();
 
   // Handle scroll effect
   useEffect(() => {
@@ -144,6 +146,9 @@ export default function Header() {
               <Phone className="h-3 w-3 mr-1.5" /> +44 123 456 7890
             </span>
             <span className="font-medium text-green-600">Free UK delivery on orders over £50</span>
+            <Link href="/vendor/register" className="hover:underline ml-4">
+              Sell with Us
+            </Link>
           </div>
           
           {/* Main Header */}
@@ -405,6 +410,18 @@ export default function Header() {
                               My Orders
                             </Link>
                           </li>
+                          {isVendor && (
+                            <li>
+                              <Link
+                                href="/vendor/dashboard"
+                                className="flex items-center px-3 py-1.5 text-gray-700 hover:bg-green-50 hover:text-green-700 text-xs"
+                                onClick={() => setActiveDropdown(null)}
+                              >
+                                <Package className="h-3 w-3 mr-1.5 text-gray-500" />
+                                Vendor Dashboard
+                              </Link>
+                            </li>
+                          )}
                           <li>
                             <button
                               onClick={handleLogout}
@@ -506,28 +523,7 @@ export default function Header() {
           </div>
         </div>
         
-        {/* Category Navigation */}
-        <div className="border-t border-gray-200 bg-gray-50 shadow-sm">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-center py-1">
-              <div className="overflow-x-auto scrollbar-hide max-w-full w-full">
-                <div className="flex space-x-6 md:space-x-8 px-4 md:justify-center min-w-max mx-auto">
-                  {categoryNavItems.map((item) => (
-                    <Link
-                      key={item.title}
-                      href={item.href}
-                      className={`text-gray-600 hover:text-green-600 text-xs md:text-sm font-medium whitespace-nowrap px-1 py-1 transition-colors duration-200 ${
-                        pathname.includes(item.href.split('?')[1]?.split('=')[1] || '') ? 'text-green-600 font-semibold' : ''
-                      }`}
-                    >
-                      {item.title}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Category Navigation removed – categories are now accessed via the "Shop" dropdown to create a cleaner header */}
       </header>
 
       {/* Mobile Menu */}
