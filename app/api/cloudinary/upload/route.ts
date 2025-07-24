@@ -1,26 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import cloudinary from '@/lib/cloudinary';
-import { verifyAuth } from '@/lib/firebase-admin';
+// import { verifyAuth } from '@/lib/firebase-admin';
 
 export const runtime = 'nodejs';
 
 // Create a server-side API endpoint for authenticated Cloudinary uploads
 export async function POST(request: NextRequest) {
   try {
-    // Verify Firebase auth token
+    // IMPORTANT: Authentication is temporarily bypassed for development.
+    // TODO: Before deploying to production, re-enable Firebase auth verification.
+    /*
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized: Missing token' }, { status: 401 });
     }
-
     const token = authHeader.split('Bearer ')[1];
     const authUser = await verifyAuth(token);
-    
     if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
     }
+    */
 
-    // Get image data from request
     const data = await request.json();
     const { file, options } = data;
 
@@ -28,9 +28,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing file data' }, { status: 400 });
     }
 
-    // Upload to Cloudinary using the server-side SDK
     const uploadOptions = {
-      folder: 'borderlessbuy_products',
+      folder: 'ruach_ecommerce_products', // Specific folder for this app
       ...options
     };
 

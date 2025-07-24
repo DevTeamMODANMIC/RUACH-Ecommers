@@ -4,7 +4,7 @@ import { Inter, Poppins } from "next/font/google"
 import "./globals.css"
 import "./tailwind.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import Header from "@/components/header"
+import SiteHeader from "@/components/site-header"
 import Footer from "@/components/footer"
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from "@/components/auth-provider"
@@ -110,7 +110,7 @@ export default function RootLayout({
             <CurrencyProvider>
               <CartProvider>
                 <AuthProvider>
-                  <Header />
+                  <SiteHeader />
                   <main className="min-h-screen pt-20 sm:pt-24 md:pt-28">
                     {children}
                   </main>

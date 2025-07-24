@@ -134,6 +134,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Upload className="h-5 w-5" />
             <span>Import Products</span>
           </Link>
+
+          <Link 
+            href="/admin/vendors" 
+            className={`flex items-center gap-3 px-3 py-2 rounded-md ${
+              isActive('/admin/vendors') 
+                ? 'bg-green-600 text-white font-medium' 
+                : 'text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <Upload className="h-5 w-5" />
+            <span>Vendors</span>
+          </Link>
         </nav>
         
         <div className="absolute bottom-8 inset-x-0 px-4">
