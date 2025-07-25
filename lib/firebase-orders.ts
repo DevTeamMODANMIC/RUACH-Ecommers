@@ -245,7 +245,9 @@ export const listenToUserOrders = (callback: (orders: Order[]) => void, userId?:
     throw new Error(error.message);
   }
 };
-
+export const listenToOrder = (orderId: string, callback: (orderData: any) => void) => {
+  // Your existing code...
+}
 export const updateOrder = async (id: string, updates: Partial<Order>) => {
   try {
     const updateData = {
