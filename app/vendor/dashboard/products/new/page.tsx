@@ -86,7 +86,7 @@ export default function VendorAddProductPage() {
       }
       
       const id = await addProduct(productData as any)
-      router.push(`/vendor/dashboard/products/${id}`)
+      router.push(`Visit /vendor/dashboard/products/vendor/dashboard/products/${id}`)
     } catch (err: any) {
       console.error(err)
       alert(err.message)
