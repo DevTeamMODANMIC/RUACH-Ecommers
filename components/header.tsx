@@ -34,6 +34,7 @@ import { useVendor } from "@/hooks/use-vendor";
 
 const mainNavItems = [
   { title: "Home", href: "/", icon: Home },
+  { title: "About us", href: "/about", icon: Info },
   {
     title: "Shop",
     href: "/shop",
@@ -52,7 +53,7 @@ const mainNavItems = [
       { title: "Fresh Vegetables", href: "/shop?category=fresh-vegetables" },
     ],
   },
-  { title: "About us", href: "/about", icon: Info },
+  
   { title: "Bulk Order", href: "/bulk-order", icon: Package },
   { title: "Contact us", href: "/contact", icon: MessageCircle },
 ];

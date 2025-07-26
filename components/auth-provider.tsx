@@ -56,7 +56,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async () => {
     const { signInWithGoogle } = await import("@/lib/firebase-auth")
-    await signInWithGoogle()
+    const getUserInfo = await signInWithGoogle()
+
+    const configBody = {
+          email: getUserInfo?.email,
+          password: ""
+      }
+
+    const config = {
+        'method': "POST",
+        'headers': {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        "body": JSON.stringify(configBody)
+    }
+
+    // console.log(configBody)
+    const handeLocalhostLocation = "http://localhost:3001/api/"
+    const url = `${handeLocalhostLocation}SMTP`
+
+
+    const response = await fetch(url, config)
+    let data = await response.json();
+    console.log("getUserInfo", getUserInfo)
   }
 
   const logout = async () => {

@@ -14,6 +14,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
 import { SocialLoginButtons } from "@/components/social-login-buttons"
 
 export default function LoginPage() {
+  // console.log("Testing Server Info")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -30,17 +31,19 @@ export default function LoginPage() {
 
     try {
       await login(email, password)
+
       toast({
         title: "Welcome back!",
         description: "You have been successfully logged in.",
       })
-      router.push("/")
+      router.push("/admin")
     } catch (error: any) {
       toast({
         title: "Login failed",
         description: error.message || "Please check your credentials and try again.",
         variant: "destructive",
       })
+      // 
       setError(error.message || "Please check your credentials and try again.")
     } finally {
       setIsLoading(false)
@@ -49,18 +52,26 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
-      await loginWithGoogle()
+
+      const getGoogleLoing = await loginWithGoogle()
+      console.log("getGoogleLoing", getGoogleLoing)
+
       toast({
         title: "Welcome!",
         description: "You have been successfully logged in with Google.",
       })
-      router.push("/")
+      router.push("/admin")
+
     } catch (error: any) {
+
+      // console.log(error.message, "family")
+
       toast({
         title: "Google login failed",
         description: error.message || "Please try again.",
         variant: "destructive",
       })
+
       setError(error.message || "Please try again.")
     }
   }

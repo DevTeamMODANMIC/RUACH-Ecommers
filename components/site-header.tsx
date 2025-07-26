@@ -54,8 +54,8 @@ const categories = [
 
 const primaryLinks = [
   { title: "Home", href: "/" },
-  { title: "Shop", href: "/shop" },
   { title: "About", href: "/about" },
+  { title: "Shop", href: "/shop" },
   { title: "Bulk Order", href: "/bulk-order" },
 ]
 
