@@ -102,17 +102,46 @@ export default function CloudinaryUploadWidget({
           })
         });
 
-        console.log("Testing Cload Dinery", response)
+        console.log("Cloudinary Upload Response:", {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries())
+        });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Upload failed');
+        let responseData;
+        try {
+          responseData = await response.json();
+          console.log("Response JSON:", responseData);
+        } catch (jsonError) {
+          console.error("Failed to parse response JSON:", jsonError);
+          responseData = await response.text();
+          console.log("Response Text:", responseData);
         }
 
-        const data = await response.json();
-        
-        if (data.success && data.result) {
-          const { public_id, secure_url, original_filename } = data.result;
+        if (!response.ok) {
+          // Extract error message from the detailed error response
+          const errorMessage = responseData?.error?.message || 
+            responseData?.error?.details || 
+            responseData?.error || 
+            responseData || 
+            'Upload failed with unknown error';
+
+          console.error("Upload Error Details:", {
+            status: response.status,
+            errorMessage: errorMessage,
+            fullResponse: responseData
+          });
+
+          // Try to parse and stringify the error to avoid [object Object]
+          const formattedError = typeof errorMessage === 'object' 
+            ? JSON.stringify(errorMessage) 
+            : errorMessage;
+
+          throw new Error(formattedError);
+        }
+
+        if (responseData.success && responseData.result) {
+          const { public_id, secure_url, original_filename } = responseData.result;
           const alt = original_filename || file.name || "Product image";
           
           // Add to previews if not already there
@@ -132,8 +161,19 @@ export default function CloudinaryUploadWidget({
       setSelectedFiles([]);
       
     } catch (error: any) {
-      console.error("Upload error:", error);
-      setError(error.message || "Failed to upload image");
+      console.error("Full Upload Error:", {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        errorObject: error
+      });
+      
+      // Ensure error is a string and not [object Object]
+      const errorMessage = error.message || 
+        (typeof error === 'object' ? JSON.stringify(error) : String(error));
+      
+      setError(errorMessage);
+      
       if (onUploadError) onUploadError(error);
     } finally {
       setIsUploading(false);
