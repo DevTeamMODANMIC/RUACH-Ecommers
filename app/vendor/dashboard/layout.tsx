@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { useVendor } from "@/hooks/use-vendor"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
-import { ShoppingBag, Package, BarChart3, Home } from "lucide-react"
+import { ShoppingBag, Package, BarChart3, Home, User } from "lucide-react"
 
 export default function VendorDashboardLayout({ children }: { children: React.ReactNode }) {
   const { isVendor, loading } = useVendor()
@@ -49,6 +49,12 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
             className={`flex items-center gap-3 px-3 py-2 rounded-md ${isActive("/vendor/dashboard") && pathname === "/vendor/dashboard" ? "bg-green-600 text-white" : "text-gray-700 hover:bg-gray-200"}`}
           >
             <Home className="h-5 w-5" /> Dashboard
+          </Link>
+          <Link
+            href="/vendor/dashboard/profile"
+            className={`flex items-center gap-3 px-3 py-2 rounded-md ${isActive("/vendor/dashboard/profile") ? "bg-green-600 text-white" : "text-gray-700 hover:bg-gray-200"}`}
+          >
+            <User className="h-5 w-5" /> Profile
           </Link>
           <Link
             href="/vendor/dashboard/products"

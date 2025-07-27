@@ -87,9 +87,9 @@ export default function HeaderImproved() {
           </span>
           <span>🚚 Free UK delivery on orders over £50</span>
         </div>
-        <Link href="/vendor/register" className="text-green-700 hover:underline">
+        {/*<Link href="/vendor/register" className="text-green-700 hover:underline">
           Sell with Us
-        </Link>
+        </Link>*/}
       </div>
 
       {/* Main Header */}
