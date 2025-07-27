@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useVendor } from "@/hooks/use-vendor"
 import { addProduct } from "@/lib/firebase-products"
@@ -8,19 +8,42 @@ import CloudinaryUploadWidget from "@/components/cloudinary-upload-widget"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { Loader2, X } from "lucide-react"
+import { Loader2, X, Plus } from "lucide-react"
 import Image from "next/image"
-import { createCategory, getCategories } from "@/lib/firebase-categories"
+
+// Popular category examples - vendors can use these or create their own
+const categoryExamples = [
+  "African Foods",
+  "Traditional Spices", 
+  "Fresh Vegetables",
+  "Beverages & Drinks",
+  "Grains & Rice",
+  "Flour & Baking",
+  "Meat & Fish",
+  "Snacks & Sweets",
+  "Health & Beauty",
+  "Home & Kitchen",
+  "Baby Products",
+  "Traditional Medicine",
+  "Clothing & Fashion",
+  "Electronics",
+  "Books & Education",
+  "Toys & Games",
+  "Sports & Fitness",
+  "Arts & Crafts",
+  "Automotive",
+  "Garden & Outdoor"
+]
 
 export default function VendorAddProductPage() {
   const { vendor } = useVendor()
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [cloudinaryImages, setCloudinaryImages] = useState<Array<{ publicId: string; url: string; alt?: string }>>([])
-  const [categories, setCategories] = useState<Array<{id:string,name:string}>>([])
-  const [newCategory, setNewCategory] = useState('')
-
+  const [categoryInput, setCategoryInput] = useState("")
+  const [showExamples, setShowExamples] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -29,33 +52,6 @@ export default function VendorAddProductPage() {
     inStock: true,
     stockQuantity: "100",
   })
-
-  useEffect(() => {
-    const fetchCats = async () => {
-      const list = await getCategories()
-      setCategories(list)
-    }
-    fetchCats()
-  }, [])
-
-  const handleCreateCategory = async () => {
-    if (!newCategory.trim()) return
-
-    try {
-      const createdCategory = await createCategory({
-        name: newCategory.trim(),
-        vendorId: vendor?.uid
-      })
-
-      // Update categories list and select the new category
-      setCategories(prev => [...prev, createdCategory])
-      setFormData(prev => ({ ...prev, category: createdCategory.id }))
-      setNewCategory('')
-    } catch (error) {
-      console.error("Failed to create category:", error)
-      alert("Could not create category. Please try again.")
-    }
-  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -72,36 +68,51 @@ export default function VendorAddProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!vendor) return
+    
     if (cloudinaryImages.length === 0) {
       alert("Please upload at least one product image.")
       return
     }
     
+    // Validate category input
+    if (!categoryInput.trim()) {
+      alert("Please enter a category for your product.")
+      return
+    }
+    
     setSubmitting(true)
     try {
+      // Use the category input directly
+      const finalCategory = categoryInput.trim().toLowerCase().replace(/\s+/g, '-')
+      const finalDisplayCategory = categoryInput.trim()
+      
       const productData = {
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
-        category: formData.category,
-        displayCategory: categories.find(c => c.id === formData.category)?.name || formData.category,
+        category: finalCategory,
+        displayCategory: finalDisplayCategory,
         images: cloudinaryImages.map(img => img.url),
         cloudinaryImages,
         cloudinaryMigrated: true,
         inStock: formData.inStock,
         stockQuantity: parseInt(formData.stockQuantity),
-        origin: "",
+        origin: "Nigeria",
         availableCountries: ["Nigeria"],
         tags: [],
         reviews: { average: 0, count: 0 },
         vendorId: vendor.uid,
       }
       
+      console.log("Creating product with data:", productData)
       const id = await addProduct(productData as any)
-      router.push(`/vendor/dashboard/products/${id}`)
+      console.log("Product created with ID:", id)
+      
+      alert("Product added successfully!")
+      router.push("/vendor/dashboard/products")
     } catch (err: any) {
-      console.error(err)
-      alert(err.message)
+      console.error("Error creating product:", err)
+      alert(`Error: ${err.message}`)
     } finally {
       setSubmitting(false)
     }
@@ -124,45 +135,84 @@ export default function VendorAddProductPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label htmlFor="price">Price (₦)</Label>
-            <Input id="price" type="number" step="0.01" name="price" value={formData.price} onChange={handleChange} required />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₦</span>
+              <Input 
+                id="price" 
+                type="number" 
+                step="0.01" 
+                name="price" 
+                value={formData.price} 
+                onChange={handleChange} 
+                className="pl-8"
+                placeholder="0.00"
+                required 
+              />
+            </div>
           </div>
           <div>
-            <Label htmlFor="category">Category</Label>
-            <div className="flex items-center space-x-2">
-              <select
-                id="category"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="flex-grow border rounded p-2"
-                required
-              >
-                <option value="">Select a category</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+            <Label htmlFor="category">Product Category *</Label>
+            <div className="space-y-3">
               <div className="relative">
-                <Input 
-                  type="text" 
-                  placeholder="New category" 
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
+                <Input
+                  id="category"
+                  placeholder="Enter your product category (e.g., Traditional African Spices, Fresh Vegetables, Handmade Crafts)"
+                  value={categoryInput}
+                  onChange={(e) => {
+                    setCategoryInput(e.target.value)
+                    console.log("Category input:", e.target.value)
+                  }}
                   className="w-full"
+                  required
                 />
-                {newCategory.trim() && (
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleCreateCategory}
-                    className="absolute right-0 top-0 mt-1 mr-1"
-                  >
-                    Add
-                  </Button>
-                )}
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowExamples(!showExamples)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-700"
+                >
+                  {showExamples ? "Hide" : "Show"} Examples
+                </Button>
               </div>
+              
+              {showExamples && (
+                <div className="bg-gray-50 rounded-lg p-4 border">
+                  <p className="text-sm font-medium text-gray-700 mb-3">Popular category examples (click to use):</p>
+                  <div className="flex flex-wrap gap-2">
+                    {categoryExamples.map((example, index) => (
+                      <Button
+                        key={index}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setCategoryInput(example)
+                          setShowExamples(false)
+                          console.log("Selected example category:", example)
+                        }}
+                        className="text-xs h-7 px-2 hover:bg-green-50 hover:border-green-300"
+                      >
+                        {example}
+                      </Button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-3">
+                    💡 Tip: Create categories that best describe your products. This helps customers find what they're looking for!
+                  </p>
+                </div>
+              )}
+              
+              {categoryInput.trim() && (
+                <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    <strong>Your category:</strong> {categoryInput.trim()}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    This will help customers find your product when browsing or searching.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

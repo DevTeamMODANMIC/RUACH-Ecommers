@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import cloudinary from '@/lib/cloudinary';
-// import { verifyAuth } from '@/lib/firebase-admin';
 
 export const runtime = 'nodejs';
 
@@ -137,4 +136,4 @@ export async function POST(request: NextRequest) {
       }
     }, { status: 500 });
   }
-} 
+}

@@ -8,10 +8,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: number, currency: string = 'GBP', locale: string = 'en-GB') {
+export function formatCurrency(amount: number, currency: string = 'NGN', locale: string = 'en-NG') {
   // During SSR, return a placeholder value
   if (typeof window === 'undefined') {
-    return `£${amount.toFixed(2)}`;
+    return `₦${amount.toFixed(2)}`;
   }
   
   // In the browser, use Intl.NumberFormat

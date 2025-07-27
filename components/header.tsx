@@ -157,13 +157,13 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center">
               {!logoError ? (
-                <div className="relative h-12 w-12 mr-2 rounded-full overflow-hidden bg-white flex items-center justify-center border border-gray-100 shadow-sm">
+                <div className="mr-2 flex items-center">
                   <Image
-                    src="/logo/ruachi-logo.png"
+                    src="/logo/logo.png"
                     alt="Ruach Logo"
-                    width={48}
-                    height={48}
-                    className="object-cover rounded-full"
+                    width={120}
+                    height={40}
+                    className="h-10 w-auto"
                     priority
                     onError={() => setLogoError(true)}
                   />

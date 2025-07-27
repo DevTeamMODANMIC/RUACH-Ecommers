@@ -21,102 +21,27 @@ export default function FeaturedProducts() {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   
-  // Hardcoded featured products with images from /a directory
-  const featuredProducts = [
-    {
-      id: "coca-cola-50cl",
-      name: "Coca-Cola 50cl",
-      description: "Refreshing Coca-Cola soft drink in a 50cl bottle. Perfect for quenching your thirst.",
-      price: 1.20,
-      images: ["/product_images/beverages/coke-50cl-250x250.jpg"],
-      rating: 4.8,
-      reviewCount: 245,
-      bestseller: true,
-      category: "Beverages"
-    },
-    {
-      id: "fanta-50cl",
-      name: "Fanta Orange 50cl",
-      description: "Vibrant orange-flavored Fanta soft drink in a 50cl bottle. Sweet, fizzy, and refreshing.",
-      price: 1.20,
-      images: ["/product_images/beverages/Fanta-PET-Bottles-50cl.jpg"],
-      rating: 4.6,
-      reviewCount: 189,
-      new: true,
-      category: "Beverages",
-      discount: 10
-    },
-    {
-      id: "aani-basmati-rice",
-      name: "Aani Basmati Rice",
-      description: "Premium Aani Basmati Rice - 10kg. Aromatic long grain rice perfect for special meals.",
-      price: 19.99,
-      images: ["/product_images/rice/Aani-Basmatic-rice-10kg-4-250x250.jpg"],
-      rating: 4.9,
-      reviewCount: 31,
-      category: "Rice & Grains"
-    },
-    {
-      id: "ayoola-pounded-yam",
-      name: "Ayoola Pounded Yam Flour",
-      description: "Authentic Ayoola Pounded Yam Flour. Easy to prepare, smooth texture with authentic taste.",
-      price: 8.99,
-      images: ["/product_images/flour/Ayoola-pounded-yam-250x250.jpg"],
-      rating: 4.8,
-      reviewCount: 26,
-      popular: true,
-      category: "Flour"
-    },
-    {
-      id: "cat-fish",
-      name: "Cat Fish",
-      description: "Fresh Cat Fish. Perfect for traditional Nigerian fish stews and soups.",
-      price: 9.99,
-      images: ["/product_images/meat/Cat-fish-250x250.jpg"],
-      rating: 4.8,
-      reviewCount: 17,
-      category: "Meat & Fish"
-    },
-    {
-      id: "everyday-seasoning",
-      name: "Everyday Seasoning",
-      description: "All-purpose Everyday Seasoning blend. Perfect for enhancing the flavor of any dish.",
-      price: 4.50,
-      images: ["/product_images/spices/Everyday-seasoning-250x250.jpg"],
-      rating: 4.8,
-      reviewCount: 28,
-      bestseller: true,
-      category: "Spices & Seasonings"
-    },
-    {
-      id: "cerelac-honey-wheat",
-      name: "Cerelac Honey and Wheat",
-      description: "Cerelac Honey and Wheat baby food - 1kg. Nutritious baby cereal with honey and wheat.",
-      price: 8.99,
-      images: ["/product_images/food/Cerelac-Honey-and-wheat-1kg-1-250x250.jpg"],
-      rating: 4.8,
-      reviewCount: 24,
-      category: "Food"
-    },
-    {
-      id: "bitter-leaf",
-      name: "Bitter Leaf",
-      description: "Fresh Bitter Leaf. Essential ingredient for traditional Nigerian soups and stews.",
-      price: 3.50,
-      images: ["/product_images/vegetables/Bitter-leaf-250x250.jpg"],
-      rating: 4.6,
-      reviewCount: 12,
-      new: true,
-      category: "Vegetables & Fruits"
-    }
-  ]
-  
   useEffect(() => {
-    // Use hardcoded products instead of fetching
-    setProducts(featuredProducts as unknown as Product[])
-    setLoading(false)
-    console.log("Featured products loaded from /a directory")
-
+    const loadFeaturedProducts = async () => {
+      try {
+        setLoading(true)
+        // Get products from Firebase
+        const { products: allProducts } = await getProducts({}, 20)
+        
+        // Filter for featured products or just take the first few
+        const featured = allProducts.filter(p => p.inStock).slice(0, 8)
+        
+        setProducts(featured)
+        console.log("Featured products loaded:", featured.length)
+      } catch (error) {
+        console.error("Error loading featured products:", error)
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadFeaturedProducts()
   }, [])
   
   const handleAddToCart = (product: Product, e?: React.MouseEvent) => {

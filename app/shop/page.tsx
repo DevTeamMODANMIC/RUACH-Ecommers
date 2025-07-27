@@ -53,10 +53,10 @@ const categories = [
 // Define price ranges
 const priceRanges = [
   { id: "all", name: "All Prices" },
-  { id: "under10", name: "Under £10", min: 0, max: 10 },
-  { id: "10to20", name: "£10 - £20", min: 10, max: 20 },
-  { id: "20to30", name: "£20 - £30", min: 20, max: 30 },
-  { id: "over30", name: "Over £30", min: 30, max: Infinity }
+  { id: "under1000", name: "Under ₦1,000", min: 0, max: 1000 },
+  { id: "1000to5000", name: "₦1,000 - ₦5,000", min: 1000, max: 5000 },
+  { id: "5000to10000", name: "₦5,000 - ₦10,000", min: 5000, max: 10000 },
+  { id: "over10000", name: "Over ₦10,000", min: 10000, max: Infinity }
 ];
 
 // Map URL category parameters to actual product categories
@@ -130,8 +130,9 @@ export default function ShopPage() {
     { id: "ghana", name: "Ghana" },
     { id: "kenya", name: "Kenya" },
     { id: "south-africa", name: "South Africa" },
-    { id: "international", name: "International" },
-    { id: "uk", name: "UK" }
+    { id: "cameroon", name: "Cameroon" },
+    { id: "senegal", name: "Senegal" },
+    { id: "international", name: "International" }
   ];
   
   // Calculate active filters count

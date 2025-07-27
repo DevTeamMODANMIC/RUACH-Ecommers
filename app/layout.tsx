@@ -11,6 +11,8 @@ import { AuthProvider } from "@/components/auth-provider"
 import { CurrencyProvider } from "@/components/currency-provider"
 import { CartProvider } from "@/components/cart-provider"
 import { CountryProvider } from "@/components/country-provider"
+import KeyboardNavigation from "@/components/keyboard-navigation"
+import KeyboardShortcutsHelp from "@/components/keyboard-shortcuts-help"
 import { Button } from "@/components/ui/button"
 import { User } from "lucide-react"
 import Link from "next/link"
@@ -43,7 +45,7 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     images: [
       {
-        url: "/images/logo/borderlessbuy-logo.png",
+        url: "/logo/logo.png",
         width: 800,
         height: 800,
         alt: "Heritage of Skegness"
@@ -56,7 +58,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${SITE_NAME} - Heritage of Skegness`,
     description: "Discover authentic African and international foods, spices, and beverages.",
-    images: ["/images/logo/borderlessbuy-logo.png"],
+    images: ["/logo/logo.png"],
   },
   generator: SITE_NAME
 }
@@ -69,8 +71,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${poppins.variable}`}>
       <head>
-        <link rel="icon" href="/images/logo/borderlessbuy-logo.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/images/logo/borderlessbuy-logo.png" />
+        <link rel="icon" href="/logo/logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logo/logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <script dangerouslySetInnerHTML={{
@@ -110,11 +112,13 @@ export default function RootLayout({
             <CurrencyProvider>
               <CartProvider>
                 <AuthProvider>
+                  <KeyboardNavigation />
                   <SiteHeader />
                   <main className="min-h-screen pt-20 sm:pt-24 md:pt-28">
                     {children}
                   </main>
                   <Footer />
+                  <KeyboardShortcutsHelp />
                   <Toaster />
                   <div className="fixed bottom-4 right-4 z-50 hidden md:block">
                     <Button 

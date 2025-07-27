@@ -2,51 +2,136 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { approveVendor, rejectVendor } from "@/lib/firebase-vendors"
+import { db, auth } from "@/lib/firebase"
+import { approveVendor, rejectVendor, getApprovedVendors } from "@/lib/firebase-vendors"
 import { Button } from "@/components/ui/button"
-import { Loader2, Check, X, RefreshCw } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Loader2, Check, X, RefreshCw, Store, Calendar, Eye, Users, ShoppingBag } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 
 interface VendorApp {
   uid: string
   shopName: string
   bio: string
   logoUrl: string
+  createdAt?: any
+  approved?: boolean
 }
 
 export default function AdminVendorsPage() {
   const [loading, setLoading] = useState(true)
   const [pendingVendors, setPendingVendors] = useState<VendorApp[]>([])
+  const [approvedVendors, setApprovedVendors] = useState<VendorApp[]>([])
   const [actionUid, setActionUid] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState("pending")
 
   const fetchVendors = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const q = query(
-        collection(db, "vendors"),
-        where("approved", "==", false),
-        orderBy("createdAt", "desc")
-      )
-      const querySnapshot = await getDocs(q)
-      const fetchedVendors = querySnapshot.docs.map((doc) => ({
-        uid: doc.id,
-        ...doc.data(),
-      } as VendorApp))
-      setPendingVendors(fetchedVendors)
-      console.log("Fetched pending vendors:", fetchedVendors)
+      console.log("Fetching vendors...")
+      
+      // Try to fetch pending vendors first
+      try {
+        const pendingQuery = query(
+          collection(db, "vendors"),
+          where("approved", "==", false),
+          orderBy("createdAt", "desc")
+        )
+        const pendingSnapshot = await getDocs(pendingQuery)
+        const fetchedPendingVendors = pendingSnapshot.docs.map((doc) => ({
+          uid: doc.id,
+          ...doc.data(),
+        } as VendorApp))
+        setPendingVendors(fetchedPendingVendors)
+        console.log("Fetched pending vendors:", fetchedPendingVendors)
+      } catch (pendingError: any) {
+        console.error("Error fetching pending vendors:", pendingError)
+        // Try without orderBy in case the index doesn't exist
+        try {
+          const simplePendingQuery = query(
+            collection(db, "vendors"),
+            where("approved", "==", false)
+          )
+          const simplePendingSnapshot = await getDocs(simplePendingQuery)
+          const fetchedPendingVendors = simplePendingSnapshot.docs.map((doc) => ({
+            uid: doc.id,
+            ...doc.data(),
+          } as VendorApp))
+          setPendingVendors(fetchedPendingVendors)
+          console.log("Fetched pending vendors (simple query):", fetchedPendingVendors)
+        } catch (simpleError: any) {
+          console.error("Error with simple pending query:", simpleError)
+          setPendingVendors([])
+        }
+      }
+
+      // Try to fetch approved vendors
+      try {
+        const approvedVendorsList = await getApprovedVendors()
+        setApprovedVendors(approvedVendorsList)
+        console.log("Fetched approved vendors:", approvedVendorsList)
+      } catch (approvedError: any) {
+        console.error("Error fetching approved vendors:", approvedError)
+        // Try direct query as fallback
+        try {
+          const approvedQuery = query(
+            collection(db, "vendors"),
+            where("approved", "==", true)
+          )
+          const approvedSnapshot = await getDocs(approvedQuery)
+          const fetchedApprovedVendors = approvedSnapshot.docs.map((doc) => ({
+            uid: doc.id,
+            ...doc.data(),
+          } as VendorApp))
+          setApprovedVendors(fetchedApprovedVendors)
+          console.log("Fetched approved vendors (direct query):", fetchedApprovedVendors)
+        } catch (directError: any) {
+          console.error("Error with direct approved query:", directError)
+          setApprovedVendors([])
+        }
+      }
+
     } catch (err: any) {
-      console.error("Firebase Error:", err)
-      setError("Failed to fetch vendors. Check Firestore security rules and console for details.")
+      console.error("General Firebase Error:", err)
+      setError(`Failed to fetch vendors: ${err.message}. This might be due to Firestore security rules or missing indexes.`)
     } finally {
       setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    fetchVendors()
+    // Check admin access first
+    const checkAdminAccess = async () => {
+      if (auth.currentUser) {
+        console.log("Current user:", auth.currentUser.uid)
+        console.log("User email:", auth.currentUser.email)
+        
+        // Try to get user profile to check role
+        try {
+          const userDoc = await getDocs(query(collection(db, "users"), where("uid", "==", auth.currentUser.uid)))
+          if (!userDoc.empty) {
+            const userData = userDoc.docs[0].data()
+            console.log("User role:", userData.role)
+            if (userData.role !== "admin") {
+              setError("Access denied: Admin role required")
+              setLoading(false)
+              return
+            }
+          }
+        } catch (roleError) {
+          console.log("Could not check user role:", roleError)
+        }
+      }
+      
+      fetchVendors()
+    }
+    
+    checkAdminAccess()
   }, [fetchVendors])
 
   const handleAction = async (uid: string, action: 'approve' | 'reject') => {
@@ -54,10 +139,15 @@ export default function AdminVendorsPage() {
     try {
       if (action === 'approve') {
         await approveVendor(uid)
+        // Move vendor from pending to approved
+        const vendor = pendingVendors.find(v => v.uid === uid)
+        if (vendor) {
+          setApprovedVendors(prev => [...prev, { ...vendor, approved: true }])
+        }
       } else {
         await rejectVendor(uid)
       }
-      // Refresh the list after action
+      // Remove from pending list
       setPendingVendors(prev => prev.filter(v => v.uid !== uid))
     } catch (err: any) {
       console.error(`Failed to ${action} vendor:`, err)
@@ -67,85 +157,259 @@ export default function AdminVendorsPage() {
     }
   }
 
+  const formatDate = (timestamp: any) => {
+    if (!timestamp) return "Unknown"
+    try {
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
+      return date.toLocaleDateString()
+    } catch {
+      return "Unknown"
+    }
+  }
+
+  const VendorCard = ({ vendor, isPending = false }: { vendor: VendorApp, isPending?: boolean }) => (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0">
+            {vendor.logoUrl ? (
+              <Image 
+                src={vendor.logoUrl} 
+                alt={vendor.shopName} 
+                width={60} 
+                height={60} 
+                className="rounded-full object-cover border-2 border-gray-200" 
+              />
+            ) : (
+              <div className="w-15 h-15 bg-gray-200 rounded-full flex items-center justify-center">
+                <Store className="h-8 w-8 text-gray-400" />
+              </div>
+            )}
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="font-semibold text-lg truncate">{vendor.shopName}</h3>
+              {!isPending && (
+                <Badge className="bg-green-100 text-green-800">
+                  Approved
+                </Badge>
+              )}
+            </div>
+            
+            <p className="text-gray-600 text-sm mb-3 line-clamp-2">{vendor.bio}</p>
+            
+            <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                <span>Joined {formatDate(vendor.createdAt)}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                <span>ID: {vendor.uid.slice(0, 8)}...</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {!isPending ? (
+                <>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/vendor/${vendor.uid}`}>
+                      <Eye className="h-4 w-4 mr-1" />
+                      View Store
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <ShoppingBag className="h-4 w-4 mr-1" />
+                    Products
+                  </Button>
+                </>
+              ) : (
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 hover:bg-red-50 border-red-200"
+                    onClick={() => handleAction(vendor.uid, 'reject')}
+                    disabled={actionUid === vendor.uid}
+                  >
+                    {actionUid === vendor.uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4 mr-1" />}
+                    Reject
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => handleAction(vendor.uid, 'approve')}
+                    disabled={actionUid === vendor.uid}
+                  >
+                    {actionUid === vendor.uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
+                    Approve
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Vendor Applications</h1>
-        <Button variant="outline" size="sm" onClick={fetchVendors} disabled={loading}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
-
-      {loading && (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="animate-spin h-8 w-8 text-gray-400" />
-        </div>
-      )}
-
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Error: </strong>
-          <span className="block sm:inline">{error}</span>
-        </div>
-      )}
-
-      {!loading && !error && pendingVendors.length === 0 && (
-        <div className="text-center py-10 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-800">No Pending Applications</h3>
-          <p className="text-sm text-gray-500 mt-1">
-            When a new user registers as a vendor, their application will appear here for approval.
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Vendor Management</h1>
+          <p className="text-gray-600 mt-1">
+            Manage vendor applications and approved vendor accounts
           </p>
         </div>
-      )}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={fetchVendors} disabled={loading}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              console.log("Testing Firestore connection...")
+              console.log("Current user:", auth.currentUser)
+              console.log("Database instance:", db)
+            }}
+          >
+            Debug Info
+          </Button>
+        </div>
+      </div>
 
-      {!loading && !error && pendingVendors.length > 0 && (
-        <div className="border rounded-lg overflow-hidden">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="p-3 text-left">Shop Name</th>
-                <th className="p-3 text-left">Bio</th>
-                <th className="p-3 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {pendingVendors.map((v) => (
-                <tr key={v.uid}>
-                  <td className="p-3 flex items-center gap-3">
-                    <Image src={v.logoUrl} alt={v.shopName} width={40} height={40} className="rounded-full bg-gray-200" />
-                    <span className="font-medium">{v.shopName}</span>
-                  </td>
-                  <td className="p-3 max-w-sm truncate">{v.bio}</td>
-                  <td className="p-3 text-center">
-                    <div className="flex justify-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-red-600 hover:bg-red-100 hover:text-red-700"
-                        onClick={() => handleAction(v.uid, 'reject')}
-                        disabled={actionUid === v.uid}
-                      >
-                        {actionUid === v.uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4 mr-1" />}
-                        Reject
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="bg-green-600 hover:bg-green-700 text-white"
-                        onClick={() => handleAction(v.uid, 'approve')}
-                        disabled={actionUid === v.uid}
-                      >
-                        {actionUid === v.uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
-                        Approve
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-600">Pending Applications</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{pendingVendors.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Awaiting approval</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-600">Approved Vendors</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{approvedVendors.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Active vendors</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-600">Total Vendors</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{pendingVendors.length + approvedVendors.length}</div>
+            <p className="text-xs text-gray-500 mt-1">All time</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="flex items-start gap-2">
+            <div className="flex-shrink-0">
+              <X className="h-5 w-5 text-red-500 mt-0.5" />
+            </div>
+            <div className="flex-1">
+              <strong className="font-medium">Error: </strong>
+              <span>{error}</span>
+              
+              <div className="mt-3 text-sm">
+                <p className="font-medium mb-2">Possible solutions:</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li>Check if you have admin permissions in your user profile</li>
+                  <li>Ensure Firestore security rules allow admin access to the vendors collection</li>
+                  <li>Verify that the vendors collection exists in your Firestore database</li>
+                  <li>Check if composite indexes are created for the vendors collection</li>
+                </ul>
+                
+                <div className="mt-3 p-2 bg-red-100 rounded text-xs">
+                  <p className="font-medium">Required Firestore Security Rule:</p>
+                  <code className="block mt-1 font-mono">
+                    {`// Allow admin users to read/write vendors
+match /vendors/{vendorId} {
+  allow read, write: if request.auth != null && 
+    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+}`}
+                  </code>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Vendor Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="pending">
+            Pending Applications ({pendingVendors.length})
+          </TabsTrigger>
+          <TabsTrigger value="approved">
+            Approved Vendors ({approvedVendors.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pending" className="mt-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="animate-spin h-8 w-8 text-gray-400" />
+            </div>
+          ) : pendingVendors.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Store className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Applications</h3>
+                <p className="text-gray-600">
+                  When users apply to become vendors, their applications will appear here for review.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {pendingVendors.map((vendor) => (
+                <VendorCard key={vendor.uid} vendor={vendor} isPending={true} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="approved" className="mt-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="animate-spin h-8 w-8 text-gray-400" />
+            </div>
+          ) : approvedVendors.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Approved Vendors</h3>
+                <p className="text-gray-600">
+                  Approved vendors will appear here once you approve their applications.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {approvedVendors.map((vendor) => (
+                <VendorCard key={vendor.uid} vendor={vendor} isPending={false} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 } 

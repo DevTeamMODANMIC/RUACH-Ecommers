@@ -135,7 +135,7 @@ export default function HeaderImproved() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <Image src="/logo/ruachi-logo.png" alt="RUACH Logo" width={40} height={40} className="rounded-full" />
+          <Image src="/logo/logo.png" alt="RUACH Logo" width={120} height={40} className="h-10 w-auto" />
           <span className="font-bold tracking-tight text-gray-900 hidden sm:inline">
             RUACH PRODUCTION
           </span>
