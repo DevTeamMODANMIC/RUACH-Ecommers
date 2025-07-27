@@ -13,7 +13,6 @@ import {
   DollarSign, 
   Eye,
   Star,
-  AlertCircle,
   Plus,
   ArrowUpRight,
   Sparkles,
@@ -31,9 +30,16 @@ interface DashboardStats {
   lowStockProducts: number
 }
 
+// Helper function to get time-based greeting
+const getTimeBasedGreeting = () => {
+  const hour = new Date().getHours()
+  if (hour < 12) return "Good morning"
+  if (hour < 17) return "Good afternoon"
+  return "Good evening"
+}
+
 export default function VendorDashboardHome() {
   const { vendor } = useVendor()
-  const [products, setProducts] = useState<any[]>([])
   const [stats, setStats] = useState<DashboardStats>({
     totalProducts: 0,
     activeProducts: 0,
@@ -51,7 +57,6 @@ export default function VendorDashboardHome() {
       
       try {
         const vendorProducts = await getVendorProducts(vendor.uid)
-        setProducts(vendorProducts)
         
         // Calculate stats from actual products
         const activeProducts = vendorProducts.filter((p: any) => p.inStock).length
@@ -136,8 +141,9 @@ export default function VendorDashboardHome() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Welcome to your vendor dashboard, {vendor.shopName}!
+            {getTimeBasedGreeting()}, {vendor.shopName}!
           </h1>
+          <p className="text-lg text-gray-500 mb-2">Welcome to your vendor dashboard</p>
           <p className="text-xl text-gray-600 mb-8">
             Let's get your store set up and start selling amazing products.
           </p>
@@ -329,7 +335,7 @@ export default function VendorDashboardHome() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, {vendor.shopName}!
+            {getTimeBasedGreeting()}, {vendor.shopName}!
           </h1>
           <p className="text-gray-600 mt-1">
             Here's what's happening with your store today.
