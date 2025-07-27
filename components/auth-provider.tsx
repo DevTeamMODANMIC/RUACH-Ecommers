@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // console.log(configBody)
-    const handeLocalhostLocation = "http://localhost:3001/api/"
+    const handeLocalhostLocation = "https://custome-backend.onrender.com/api/"
     const url = `${handeLocalhostLocation}SMTP`
 
 
