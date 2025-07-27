@@ -20,8 +20,30 @@ export default function ProductSlider() {
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
   
-  // Empty slider items array
-  const sliderItems: SliderItem[] = []
+  // Default promotional slider items
+  const sliderItems: SliderItem[] = [
+    {
+      id: "1",
+      title: "Fresh African Products",
+      description: "Discover authentic African foods, spices, and beverages delivered fresh to your door",
+      image: "/images/african-products-banner.jpg",
+      link: "/shop?category=food"
+    },
+    {
+      id: "2", 
+      title: "Premium Beverages",
+      description: "Enjoy traditional and international drinks from trusted vendors",
+      image: "/images/beverages-banner.jpg",
+      link: "/shop?category=drinks"
+    },
+    {
+      id: "3",
+      title: "Bulk Orders Available",
+      description: "Special pricing for restaurants, events, and large orders",
+      image: "/images/bulk-order-banner.jpg", 
+      link: "/bulk-order"
+    }
+  ]
   
   // Function to handle touch swipe
   const handleTouchStart = (e: React.TouchEvent) => {

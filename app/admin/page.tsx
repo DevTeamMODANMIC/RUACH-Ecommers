@@ -43,6 +43,9 @@ export default function AdminDashboard() {
               <Link href="/admin/orders" className="bg-slate-100 text-slate-800 hover:bg-slate-200 px-3 py-2 rounded-md font-medium">
                 Orders
               </Link>
+              <Link href="/admin/vendors" className="bg-slate-100 text-slate-800 hover:bg-slate-200 px-3 py-2 rounded-md font-medium">
+                Vendors
+              </Link>
               <Link href="/admin/products/cloudinary-migration" className="bg-slate-100 text-slate-800 hover:bg-slate-200 px-3 py-2 rounded-md font-medium">
                 Cloudinary Migration
               </Link>
@@ -127,6 +130,29 @@ export default function AdminDashboard() {
               <Button asChild className="w-full sm:w-auto">
                 <Link href="/admin/orders">
                   Manage Orders
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+
+          {/* Vendor Management Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                <span>Vendors</span>
+              </CardTitle>
+              <CardDescription>
+                Approve vendor applications and manage vendor accounts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">Review vendor applications, approve new vendors, and manage existing vendor accounts.</p>
+            </CardContent>
+            <CardFooter className="flex flex-col sm:flex-row">
+              <Button asChild className="w-full sm:w-auto">
+                <Link href="/admin/vendors">
+                  Manage Vendors
                 </Link>
               </Button>
             </CardFooter>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -29,18 +29,44 @@ export default function ProductShowcase({
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
-  // Empty product data object
-  const productData = {
-    "Beverages": [],
-    "Food": [],
-    "Spices": [],
-    "Flour": [],
-    "Vegetables & Fruits": [],
-    "Meat & Fish": []
-  }
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Get products for the selected category, or default to empty array
-  const products = productData[category as keyof typeof productData] || [];
+  // Load products for the category
+  useEffect(() => {
+    const loadCategoryProducts = async () => {
+      try {
+        setLoading(true)
+        // Import the getProducts function
+        const { getProducts } = await import("@/lib/firebase-products")
+        
+        // Map showcase categories to database categories
+        const categoryMap: Record<string, string> = {
+          "Beverages": "drinks",
+          "Food": "food", 
+          "Spices": "spices",
+          "Flour": "flour",
+          "Vegetables & Fruits": "vegetables",
+          "Meat & Fish": "meat"
+        }
+        
+        const dbCategory = categoryMap[category] || category.toLowerCase()
+        
+        // Get products from Firebase
+        const { products: allProducts } = await getProducts({ category: dbCategory }, 8)
+        
+        setProducts(allProducts.filter(p => p.inStock))
+        console.log(`${category} products loaded:`, allProducts.length)
+      } catch (error) {
+        console.error(`Error loading ${category} products:`, error)
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadCategoryProducts()
+  }, [category])
 
   // Get a URL-friendly category name for the "View All" link
   const mapCategoryToShopCategory = (showcaseCategory: string): string => {
@@ -106,7 +132,19 @@ export default function ProductShowcase({
       </div>
 
       {/* Product Grid */}
-      {products.length > 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <div className="aspect-square bg-gray-200" />
+              <CardContent className="p-4">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : products.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.map(product => (
             <Card 
@@ -115,7 +153,104 @@ export default function ProductShowcase({
               onMouseEnter={() => setHoveredProductId(product.id)}
               onMouseLeave={() => setHoveredProductId(null)}
             >
-              {/* Card content */}
+              <div className="relative aspect-square overflow-hidden bg-gray-100">
+                <Link href={`/products/${product.id}`}>
+                  <Image
+                    src={product.images?.[0] || "/placeholder.jpg"}
+                    alt={product.name}
+                    fill
+                    className="object-contain p-4 group-hover:scale-105 transition-transform"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                    onError={handleImageError}
+                  />
+                </Link>
+                
+                {product.discount && (
+                  <div className="absolute top-2 left-2">
+                    <Badge className="bg-red-500 hover:bg-red-600">
+                      -{product.discount}% OFF
+                    </Badge>
+                  </div>
+                )}
+                
+                {/* Wishlist button */}
+                <div className="absolute top-2 right-2">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-full bg-white/80 hover:bg-gray-100 text-gray-500 hover:text-rose-500"
+                    onClick={(e) => handleToggleWishlist(product, e)}
+                  >
+                    <Heart 
+                      className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-rose-500 text-rose-500' : ''}`}
+                    />
+                  </Button>
+                </div>
+                
+                {/* Hover actions */}
+                <div className={`absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center gap-2 transition-opacity duration-300 ${hoveredProductId === product.id ? 'opacity-100' : 'opacity-0'}`}>
+                  <button 
+                    onClick={(e) => handleQuickView(product, e)}
+                    className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-green-500 hover:text-white transition-colors"
+                  >
+                    <Eye className="h-5 w-5" />
+                  </button>
+                  <button 
+                    onClick={(e) => handleAddToCart(product, e)}
+                    className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-green-500 hover:text-white transition-colors"
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+              
+              <CardContent className="p-4">
+                <Link href={`/products/${product.id}`}>
+                  <h3 className="font-medium text-lg hover:text-green-600 transition-colors line-clamp-2">
+                    {product.name}
+                  </h3>
+                </Link>
+                <p className="text-sm text-gray-500 mt-1">
+                  {product.displayCategory || product.category}
+                </p>
+                
+                {product.rating && (
+                  <div className="flex items-center mt-2">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className={`h-3 w-3 ${
+                            i < Math.floor(product.rating) 
+                              ? "text-amber-400 fill-amber-400" 
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-gray-600 ml-1">
+                      ({product.reviewCount || 0})
+                    </span>
+                  </div>
+                )}
+                
+                <div className="mt-2">
+                  {product.discount ? (
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-green-600">
+                        {formatCurrency(product.price * (1 - product.discount / 100))}
+                      </span>
+                      <span className="text-sm text-gray-500 line-through">
+                        {formatCurrency(product.price)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="font-bold">
+                      {formatCurrency(product.price)}
+                    </span>
+                  )}
+                </div>
+              </CardContent>
             </Card>
           ))}
         </div>

@@ -11,6 +11,8 @@ import { AuthProvider } from "@/components/auth-provider"
 import { CurrencyProvider } from "@/components/currency-provider"
 import { CartProvider } from "@/components/cart-provider"
 import { CountryProvider } from "@/components/country-provider"
+import KeyboardNavigation from "@/components/keyboard-navigation"
+import KeyboardShortcutsHelp from "@/components/keyboard-shortcuts-help"
 import { Button } from "@/components/ui/button"
 import { User } from "lucide-react"
 import Link from "next/link"
@@ -110,11 +112,13 @@ export default function RootLayout({
             <CurrencyProvider>
               <CartProvider>
                 <AuthProvider>
+                  <KeyboardNavigation />
                   <SiteHeader />
                   <main className="min-h-screen pt-20 sm:pt-24 md:pt-28">
                     {children}
                   </main>
                   <Footer />
+                  <KeyboardShortcutsHelp />
                   <Toaster />
                   <div className="fixed bottom-4 right-4 z-50 hidden md:block">
                     <Button 

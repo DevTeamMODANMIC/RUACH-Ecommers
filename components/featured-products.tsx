@@ -21,14 +21,27 @@ export default function FeaturedProducts() {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   
-  // Empty featured products array
-  const featuredProducts: any[] = []
-  
   useEffect(() => {
-    // Use empty products array
-    setProducts([])
-    setLoading(false)
-    console.log("Featured products loaded - empty array")
+    const loadFeaturedProducts = async () => {
+      try {
+        setLoading(true)
+        // Get products from Firebase
+        const { products: allProducts } = await getProducts({}, 20)
+        
+        // Filter for featured products or just take the first few
+        const featured = allProducts.filter(p => p.inStock).slice(0, 8)
+        
+        setProducts(featured)
+        console.log("Featured products loaded:", featured.length)
+      } catch (error) {
+        console.error("Error loading featured products:", error)
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadFeaturedProducts()
   }, [])
   
   const handleAddToCart = (product: Product, e?: React.MouseEvent) => {
