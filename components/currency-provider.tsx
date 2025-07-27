@@ -16,8 +16,8 @@ interface CurrencyContextType {
 export const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined)
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
-  const [currency, setCurrencyState] = useState("GBP")
-  const [symbol, setSymbol] = useState("£")
+  const [currency, setCurrencyState] = useState("NGN")
+  const [symbol, setSymbol] = useState("₦")
   const [exchangeRate, setExchangeRate] = useState(1)
 
   const setCurrency = (newCurrency: string, newSymbol: string, newRate: number) => {

@@ -37,7 +37,7 @@ export default async function VendorStorefront({ params }: Props) {
                 <Image src={p.cloudinaryImages?.[0]?.url || p.images?.[0] || ""} alt={p.name} width={300} height={300} className="object-cover w-full h-48" />
                 <div className="p-2">
                   <h3 className="font-medium text-sm mb-1 truncate">{p.name}</h3>
-                  <span className="text-green-700 font-semibold">£{p.price?.toFixed(2)}</span>
+                  <span className="text-green-700 font-semibold">₦{p.price?.toLocaleString()}</span>
                 </div>
               </div>
             </Link>

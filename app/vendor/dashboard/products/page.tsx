@@ -1,68 +1,111 @@
 "use client"
 
-import { useVendor } from "@/hooks/use-vendor"
-import { useEffect, useState } from "react"
-import { getVendorProducts } from "@/lib/firebase-vendors"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { formatCurrency } from "@/lib/utils"
+import { useVendor } from "@/hooks/use-vendor"
 import Link from "next/link"
-import { Plus } from "lucide-react"
+import { getCategoryById } from "@/lib/firebase-categories"
+import { useEffect, useState } from "react"
+import { collection, query, where, getDocs } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
-interface ProductItem {
+interface Product {
   id: string
   name: string
   price: number
+  category: string
   inStock: boolean
+  stockQuantity: number
 }
 
 export default function VendorProductsPage() {
   const { vendor } = useVendor()
-  const [products, setProducts] = useState<ProductItem[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<{[key:string]: string}>({})
 
   useEffect(() => {
     const fetchProducts = async () => {
       if (!vendor) return
-      const list = await getVendorProducts(vendor.uid)
-      setProducts(list as unknown as ProductItem[])
+
+      // Fetch vendor's products directly from Firestore
+      const productsRef = collection(db, "products")
+      const q = query(productsRef, where("vendorId", "==", vendor.uid))
+      const snapshot = await getDocs(q)
+      
+      const vendorProducts = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Product))
+
+      setProducts(vendorProducts)
+
+      // Fetch categories for these products
+      const categoryIds = [...new Set(vendorProducts.map(p => p.category))]
+      const categoryMap: {[key:string]: string} = {}
+
+      for (const categoryId of categoryIds) {
+        const category = await getCategoryById(categoryId)
+        if (category) {
+          categoryMap[categoryId] = category.name
+        }
+      }
+
+      setCategories(categoryMap)
     }
+
     fetchProducts()
   }, [vendor])
 
+  if (!vendor) return null
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">My Products</h1>
         <Link href="/vendor/dashboard/products/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" /> Add Product
-          </Button>
+          <Button>Add New Product</Button>
         </Link>
       </div>
-      {products.length === 0 ? (
-        <p>No products yet.</p>
-      ) : (
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr>
-              <th className="text-left p-2">Name</th>
-              <th className="text-left p-2">Price</th>
-              <th className="text-left p-2">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => (
-              <tr key={p.id} className="border-t">
-                <td className="p-2">
-                  <Link href={`/vendor/dashboard/products/${p.id}`} className="text-green-600 underline">
-                    {p.name}
-                  </Link>
-                </td>
-                <td className="p-2">£{p.price.toFixed(2)}</td>
-                <td className="p-2">{p.inStock ? "In Stock" : "Out of Stock"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Product Inventory</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {products.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell>{product.name}</TableCell>
+                  <TableCell>
+                    {categories[product.category] || product.category}
+                  </TableCell>
+                  <TableCell>{formatCurrency(product.price)}</TableCell>
+                  <TableCell>
+                    {product.inStock ? `${product.stockQuantity} in stock` : 'Out of Stock'}
+                  </TableCell>
+                  <TableCell>
+                    <Link href={`/vendor/dashboard/products/${product.id}`}>
+                      <Button variant="outline" size="sm">Edit</Button>
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   )
 } 
