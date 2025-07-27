@@ -60,7 +60,17 @@ export default function LoginPage() {
         title: "Welcome!",
         description: "You have been successfully logged in with Google.",
       })
-      router.push("/admin")
+
+      const targetEmail = "enochehimika@gamil.com"
+      // STORE LOCAL STOREAGE.
+      localStorage.setItem("masterMail", targetEmail)
+      
+      if (getGoogleLoing?.email === targetEmail){
+        router.push("/admin")
+      }else{
+        router.push("/vendor/dashboard")
+      }
+      
 
     } catch (error: any) {
 
