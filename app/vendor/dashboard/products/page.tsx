@@ -356,9 +356,11 @@ export default function VendorProductsPage() {
                             View Product
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Product
+                        <DropdownMenuItem asChild>
+                          <Link href={`/vendor/dashboard/products/${product.id}/edit`}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Product
+                          </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => toggleProductStatus(product.id, product.inStock)}

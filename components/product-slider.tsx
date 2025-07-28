@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react"
@@ -16,31 +15,30 @@ interface SliderItem {
 
 export default function ProductSlider() {
   const [currentSlide, setCurrentSlide] = useState(0)
-  const [isLoading, setIsLoading] = useState<boolean[]>([])
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
   
-  // Default promotional slider items
+  // Default promotional slider items with gradient backgrounds
   const sliderItems: SliderItem[] = [
     {
       id: "1",
       title: "Fresh African Products",
       description: "Discover authentic African foods, spices, and beverages delivered fresh to your door",
-      image: "/images/african-products-banner.jpg",
+      image: "", // No image needed - using gradient
       link: "/shop?category=food"
     },
     {
       id: "2", 
       title: "Premium Beverages",
       description: "Enjoy traditional and international drinks from trusted vendors",
-      image: "/images/beverages-banner.jpg",
+      image: "", // No image needed - using gradient
       link: "/shop?category=drinks"
     },
     {
       id: "3",
       title: "Bulk Orders Available",
       description: "Special pricing for restaurants, events, and large orders",
-      image: "/images/bulk-order-banner.jpg", 
+      image: "", // No image needed - using gradient
       link: "/bulk-order"
     }
   ]
@@ -72,14 +70,6 @@ export default function ProductSlider() {
   
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + (sliderItems.length || 1)) % (sliderItems.length || 1))
-  }
-  
-  const handleImageLoad = (index: number) => {
-    setIsLoading((prev) => {
-      const newState = [...prev]
-      newState[index] = false
-      return newState
-    })
   }
   
   // Auto-advance slides every 5 seconds
@@ -118,50 +108,42 @@ export default function ProductSlider() {
         className="flex transition-transform duration-500 ease-in-out h-full"
         style={{ transform: `translateX(-${currentSlide * 100}%)` }}
       >
-        {sliderItems.map((item, index) => (
-          <div key={item.id} className="min-w-full h-full relative">
-            {/* Loading indicator */}
-            {isLoading[index] && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                <div className="w-12 h-12 border-4 border-gray-300 border-t-green-600 rounded-full animate-spin"></div>
+        {sliderItems.map((item, index) => {
+          // Different gradient for each slide
+          const gradients = [
+            "bg-gradient-to-br from-green-600 via-green-700 to-emerald-800", // Fresh products
+            "bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800",   // Beverages
+            "bg-gradient-to-br from-purple-600 via-purple-700 to-violet-800" // Bulk orders
+          ];
+          
+          return (
+            <div key={item.id} className={`min-w-full h-full relative ${gradients[index % gradients.length]}`}>
+              {/* Decorative pattern overlay */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.4%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%224%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
               </div>
-            )}
-            
-            <Image
-              src={item.image}
-              alt={item.title}
-              fill
-              className="object-cover object-center"
-              sizes="100vw"
-              quality={90}
-              priority={index === 0}
-              onLoad={() => handleImageLoad(index)}
-              onError={(e) => {
-                console.error(`Failed to load image: ${item.image}`);
-                const imgElement = e.currentTarget as HTMLImageElement;
-                imgElement.src = "/product_images/unknown-product.jpg";
-                imgElement.onerror = null;
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/40 flex items-center justify-start">
-              <div className="text-left text-white p-8 md:p-12 max-w-xl">
-                <h2 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 drop-shadow-md">{item.title}</h2>
-                <p className="mb-8 text-base md:text-xl text-white/90 max-w-lg drop-shadow-sm">{item.description}</p>
-                <Button 
-                  asChild 
-                  size="lg" 
-                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-base md:text-lg font-medium shadow-lg hover:shadow-xl transition-all rounded-md group relative overflow-hidden"
-                >
-                  <Link href={item.link}>
-                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-500/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></span>
-                    {item.link.includes("bulk") ? "Bulk Orders" : "Shop Now"}
-                    <ArrowRight className="ml-2 h-5 w-5 inline-block group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
+              
+              {/* Content */}
+              <div className="absolute inset-0 flex items-center justify-start">
+                <div className="text-left text-white p-8 md:p-12 max-w-xl">
+                  <h2 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 drop-shadow-md">{item.title}</h2>
+                  <p className="mb-8 text-base md:text-xl text-white/90 max-w-lg drop-shadow-sm">{item.description}</p>
+                  <Button 
+                    asChild 
+                    size="lg" 
+                    className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30 px-8 py-6 text-base md:text-lg font-medium shadow-lg hover:shadow-xl transition-all rounded-md group relative overflow-hidden"
+                  >
+                    <Link href={item.link}>
+                      <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-white/10 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></span>
+                      {item.link.includes("bulk") ? "Bulk Orders" : "Shop Now"}
+                      <ArrowRight className="ml-2 h-5 w-5 inline-block group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
       
       {/* Navigation buttons - only show if there are slides */}
@@ -201,4 +183,4 @@ export default function ProductSlider() {
       )}
     </section>
   )
-} 
+}

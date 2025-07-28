@@ -70,7 +70,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar Navigation */}
       <div className="relative w-64 bg-gray-100 text-gray-800 border-r border-gray-200 min-h-screen p-4 hidden md:block">
         <div className="mb-8">
-          <h2 className="text-xl font-bold">Heritage of Skegness</h2>
+          <h2 className="text-xl font-bold">RUACH PRODUCTION</h2>
           <p className="text-sm text-gray-500">Admin Dashboard</p>
         </div>
         

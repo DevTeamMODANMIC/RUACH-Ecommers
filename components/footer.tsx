@@ -41,7 +41,7 @@ export default function Footer() {
           <div className="flex flex-wrap gap-8 justify-between">
             {/* About */}
             <div className="w-full sm:w-1/2 lg:w-1/4 text-center sm:text-left">
-              <h3 className="text-lg font-semibold text-white mb-4">Heritage of Skegness</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">RUACH PRODUCTION</h3>
               <p className="text-sm leading-relaxed mb-6">
                 Your trusted source for authentic African and international foods – freshly delivered with care and quality assurance.
               </p>
@@ -70,6 +70,8 @@ export default function Footer() {
                 {[
                   { href: "/about", label: "About Us" },
                   { href: "/shop", label: "Shop" },
+                  { href: "/stores", label: "Browse Stores" },
+                  { href: "/vendor/register", label: "Become a Vendor" },
                   { href: "/contact", label: "Contact" },
                   { href: "/bulk-order", label: "Bulk Orders" },
                 ].map(({ href, label }) => (
@@ -158,7 +160,7 @@ export default function Footer() {
 
           {/* Bottom bar */}
           <div className="flex flex-col md:flex-row justify-between items-center border-t border-gray-700 pt-6 mt-10 text-sm text-gray-400 gap-4">
-            <p className="mb-4 md:mb-0">© {currentYear} Heritage of Skegness. All rights reserved.</p>
+            <p className="mb-4 md:mb-0">© {currentYear} RUACH PRODUCTION. All rights reserved.</p>
             <div className="flex items-center flex-wrap justify-center md:justify-start gap-4">
               <span>We Accept</span>
               <img src="/visa.svg" alt="Visa" className="h-6 w-auto" />

@@ -56,6 +56,8 @@ const primaryLinks = [
   { title: "Home", href: "/" },
   { title: "About", href: "/about" },
   { title: "Shop", href: "/shop" },
+  { title: "Stores", href: "/stores" },
+  { title: "Become a Vendor", href: "/vendor/register" },
   { title: "Bulk Order", href: "/bulk-order" },
 ]
 
@@ -129,6 +131,17 @@ export default function HeaderImproved() {
                   </Link>
                 ))}
               </div>
+
+              {/* Mobile Vendor CTA */}
+              <div className="pt-4 border-t">
+                <Link
+                  href="/vendor/register"
+                  onClick={() => setMobileOpen(false)}
+                  className="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded font-medium"
+                >
+                  Become a Vendor
+                </Link>
+              </div>
             </nav>
           </SheetContent>
         </Sheet>
@@ -177,6 +190,14 @@ export default function HeaderImproved() {
                 {getTotalItems()}
               </span>
             )}
+          </Link>
+
+          {/* Sell on RUACH Button */}
+          <Link
+            href="/vendor/register"
+            className="hidden lg:inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-medium mr-2"
+          >
+            Sell on RUACH
           </Link>
 
           {/* WhatsApp Floating Icon */}

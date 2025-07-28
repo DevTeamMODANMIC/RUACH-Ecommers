@@ -60,6 +60,12 @@ export const getApprovedVendors = async (): Promise<Vendor[]> => {
   return sn.docs.map((d) => d.data() as Vendor)
 }
 
+export const getAllVendors = async (): Promise<Vendor[]> => {
+  const q = query(collection(db, "vendors"))
+  const sn = await getDocs(q)
+  return sn.docs.map((d) => ({ id: d.id, ...d.data() } as Vendor & { id: string }))
+}
+
 export const getVendorProducts = async (vendorId: string) => {
   const q = query(collection(db, "products"), where("vendorId", "==", vendorId))
   const sn = await getDocs(q)

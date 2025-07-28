@@ -29,26 +29,26 @@ const poppins = Poppins({
 })
 
 // Site name should be consistent across all environments
-const SITE_NAME = "Heritage of Skegness";
+const SITE_NAME = "RUACH PRODUCTION";
 
 export const metadata: Metadata = {
   title: `${SITE_NAME} - Premium African & International Foods`,
   description:
     "Discover authentic African and international foods, spices, and beverages. Fresh produce, quality ingredients, and traditional flavors delivered to your door.",
-  keywords: "African food, international cuisine, spices, beverages, fresh produce, online grocery, Heritage of Skegness",
+  keywords: "African food, international cuisine, spices, beverages, fresh produce, online grocery, RUACH PRODUCTION",
   authors: [{ name: SITE_NAME }],
-  metadataBase: new URL("https://heritageofskegness.co.uk"),
+  metadataBase: new URL("https://ruachproduction.com"),
   openGraph: {
-    title: `${SITE_NAME} - Heritage of Skegness`,
+    title: `${SITE_NAME} - RUACH PRODUCTION`,
     description: "Discover authentic African and international foods, spices, and beverages.",
-    url: "https://heritageofskegness.co.uk",
+    url: "https://ruachproduction.com",
     siteName: SITE_NAME,
     images: [
       {
         url: "/logo/logo.png",
         width: 800,
         height: 800,
-        alt: "Heritage of Skegness"
+        alt: "RUACH PRODUCTION"
       },
     ],
     locale: "en_GB",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} - Heritage of Skegness`,
+    title: `${SITE_NAME} - RUACH PRODUCTION`,
     description: "Discover authentic African and international foods, spices, and beverages.",
     images: ["/logo/logo.png"],
   },

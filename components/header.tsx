@@ -16,6 +16,7 @@ import {
   ChevronDown,
   Home,
   ShoppingBag,
+  Store,
   Info,
   Package,
   MessageCircle,
@@ -53,7 +54,8 @@ const mainNavItems = [
       { title: "Fresh Vegetables", href: "/shop?category=fresh-vegetables" },
     ],
   },
-  
+  { title: "Stores", href: "/stores", icon: Store },
+  { title: "Become a Vendor", href: "/vendor/register", icon: User },
   { title: "Bulk Order", href: "/bulk-order", icon: Package },
   { title: "Contact us", href: "/contact", icon: MessageCircle },
 ];
@@ -205,7 +207,7 @@ export default function Header() {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center">
               <ul className="flex items-center">
-                {mainNavItems.slice(0, 4).map((item, index) => (
+                {mainNavItems.map((item, index) => (
                   <li key={item.title} className="relative">
                     <div
                       onClick={(e) => {
@@ -338,6 +340,14 @@ export default function Header() {
                       {formatCurrency(getTotalPrice())}
                     </span>
                   </ClientOnly>
+                </Link>
+
+                <Link
+                  href="/vendor/register"
+                  className="hidden lg:flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors duration-200 shadow-sm text-sm font-medium"
+                >
+                  <Store className="h-4 w-4 mr-1" />
+                  Sell on RUACH
                 </Link>
 
                 <a
@@ -610,6 +620,15 @@ export default function Header() {
             ))}
             <li className="py-2">
               {/* WhatsApp Button for Mobile */}
+              <Link
+                href="/vendor/register"
+                className="flex items-center py-2 space-x-2 text-white bg-blue-600 rounded-full justify-center mb-2 px-4"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Store className="h-4 w-4" />
+                <span>Become a Vendor</span>
+              </Link>
+              
               <a
                 href="https://wa.me/2348012345678"
                 target="_blank"

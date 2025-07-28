@@ -5,9 +5,12 @@ import { BulkOrderCTA } from "@/components/bulk-order-cta"
 
 // Lazy load components that are below the fold
 const FeaturedProducts = lazy(() => import("@/components/featured-products"))
-const ProductShowcase = lazy(() => import("@/components/product-showcase"))
-const ProductSlider = lazy(() => import("@/components/product-slider"))
-const PersonalizedRecommendations = lazy(() => import("@/components/personalized-recommendations").then(mod => ({ default: mod.PersonalizedRecommendations })))
+const TrendingProducts = lazy(() => import("@/components/trending-products"))
+const FeaturedStores = lazy(() => import("@/components/featured-stores"))
+const PersonalizedRecommendations = lazy(async () => {
+  const mod = await import("@/components/personalized-recommendations")
+  return { default: mod.PersonalizedRecommendations }
+})
 
 export default function HomePage() {
   return (
@@ -19,29 +22,11 @@ export default function HomePage() {
         <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading featured products...</div>}>
           <FeaturedProducts />
         </Suspense>
-        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading product slider...</div>}>
-          <ProductSlider />
+        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading trending products...</div>}>
+          <TrendingProducts />
         </Suspense>
-        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading beverages showcase...</div>}>
-          <ProductShowcase 
-            category="Beverages" 
-            title="Popular Beverages" 
-            subtitle="Authentic drinks from around the world" 
-          />
-        </Suspense>
-        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading food showcase...</div>}>
-          <ProductShowcase 
-            category="Food" 
-            title="Traditional Foods" 
-            subtitle="Authentic African culinary delights" 
-          />
-        </Suspense>
-        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading spices showcase...</div>}>
-          <ProductShowcase 
-            category="Spices" 
-            title="Premium Spices" 
-            subtitle="Enhance your dishes with authentic flavors" 
-          />
+        <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading featured stores...</div>}>
+          <FeaturedStores />
         </Suspense>
         <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading recommendations...</div>}>
           <PersonalizedRecommendations />
