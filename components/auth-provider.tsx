@@ -43,6 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe()
   }, [])
 
+  const adminEmail = ""
+
   const login = async (email: string, password: string) => {
     const { signIn } = await import("@/lib/firebase-auth")
     await signIn(email, password)
@@ -80,6 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const response = await fetch(url, config)
     let data = await response.json();
     console.log("getUserInfo", getUserInfo)
+    
+    return getUserInfo
   }
 
   const logout = async () => {
