@@ -66,6 +66,7 @@ export default function LoginPage() {
       localStorage.setItem("masterMail", targetEmail)
       
       if (getGoogleLoing?.email === targetEmail){
+        console.log("getGoogleLoing", getGoogleLoing)
         router.push("/admin")
       }else{
         router.push("/vendor/dashboard")

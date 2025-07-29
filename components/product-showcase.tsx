@@ -6,12 +6,13 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, ShoppingCart, Plus, ChevronRight, Eye, X, Heart } from "lucide-react"
+import { Star, ShoppingCart, Plus, ChevronRight, Eye, X, Heart, Store } from "lucide-react"
 import { getRandomCategoryImage } from "@/lib/utils"
 import { useCart } from "@/components/cart-provider"
 import { formatCurrency } from "@/lib/utils"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog"
 import { useWishlist, type WishlistItem } from "@/hooks/use-wishlist"
+import { getVendor, type Vendor } from "@/lib/firebase-vendors"
 
 interface ProductShowcaseProps {
   category?: string;
@@ -26,6 +27,7 @@ export default function ProductShowcase({
 }: ProductShowcaseProps) {
   const [hoveredProductId, setHoveredProductId] = useState<string | null>(null);
   const [quickViewProduct, setQuickViewProduct] = useState<any | null>(null);
+  const [vendors, setVendors] = useState<Record<string, Vendor>>({});
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
@@ -67,6 +69,37 @@ export default function ProductShowcase({
     
     loadCategoryProducts()
   }, [category])
+
+  // Fetch vendor information for products
+  useEffect(() => {
+    const fetchVendors = async () => {
+      const vendorIds = [...new Set(products.filter(p => p.vendorId).map(p => p.vendorId!))]
+      const vendorPromises = vendorIds.map(async (vendorId) => {
+        try {
+          const vendor = await getVendor(vendorId)
+          return { vendorId, vendor }
+        } catch (error) {
+          console.error(`Error fetching vendor ${vendorId}:`, error)
+          return { vendorId, vendor: null }
+        }
+      })
+      
+      const vendorResults = await Promise.all(vendorPromises)
+      const vendorMap: Record<string, Vendor> = {}
+      
+      vendorResults.forEach(({ vendorId, vendor }) => {
+        if (vendor) {
+          vendorMap[vendorId] = vendor
+        }
+      })
+      
+      setVendors(vendorMap)
+    }
+
+    if (products.length > 0) {
+      fetchVendors()
+    }
+  }, [products])
 
   // Get a URL-friendly category name for the "View All" link
   const mapCategoryToShopCategory = (showcaseCategory: string): string => {
@@ -213,6 +246,35 @@ export default function ProductShowcase({
                 <p className="text-sm text-gray-500 mt-1">
                   {product.displayCategory || product.category}
                 </p>
+                
+                {/* Vendor Information */}
+                {product.vendorId && vendors[product.vendorId] && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                      {vendors[product.vendorId].logoUrl ? (
+                        <Image
+                          src={vendors[product.vendorId].logoUrl}
+                          alt={vendors[product.vendorId].shopName}
+                          width={16}
+                          height={16}
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        <Store className="h-4 w-4 text-gray-400" />
+                      )}
+                      <Link 
+                        href={`/vendor/${product.vendorId}`}
+                        className="text-xs text-gray-600 hover:text-green-600 transition-colors font-medium"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {vendors[product.vendorId].shopName}
+                      </Link>
+                    </div>
+                    <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+                      Vendor
+                    </Badge>
+                  </div>
+                )}
                 
                 {product.rating && (
                   <div className="flex items-center mt-2">

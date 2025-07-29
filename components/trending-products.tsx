@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { TrendingUp, Star, ShoppingCart, Eye, Flame, Store, CheckCircle } from "lucide-react"
 import { products } from "@/lib/product-data"
 import { getProducts } from "@/lib/firebase-products"
+import { getVendor, type Vendor } from "@/lib/firebase-vendors"
 
 // Get trending products from Firebase - only show real products
 const getTrendingProducts = async () => {
@@ -42,6 +43,7 @@ const getTrendingProducts = async () => {
 
 export default function TrendingProducts() {
   const [trendingProducts, setTrendingProducts] = useState<any[]>([])
+  const [vendors, setVendors] = useState<Record<string, Vendor>>({})
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -60,6 +62,37 @@ export default function TrendingProducts() {
 
     loadTrendingProducts()
   }, [])
+
+  // Fetch vendor information for products
+  useEffect(() => {
+    const fetchVendors = async () => {
+      const vendorIds = [...new Set(trendingProducts.filter(p => p.vendorId).map(p => p.vendorId!))]
+      const vendorPromises = vendorIds.map(async (vendorId) => {
+        try {
+          const vendor = await getVendor(vendorId)
+          return { vendorId, vendor }
+        } catch (error) {
+          console.error(`Error fetching vendor ${vendorId}:`, error)
+          return { vendorId, vendor: null }
+        }
+      })
+      
+      const vendorResults = await Promise.all(vendorPromises)
+      const vendorMap: Record<string, Vendor> = {}
+      
+      vendorResults.forEach(({ vendorId, vendor }) => {
+        if (vendor) {
+          vendorMap[vendorId] = vendor
+        }
+      })
+      
+      setVendors(vendorMap)
+    }
+
+    if (trendingProducts.length > 0) {
+      fetchVendors()
+    }
+  }, [trendingProducts])
 
   if (isLoading) {
     return (
@@ -189,14 +222,24 @@ export default function TrendingProducts() {
                 </p>
 
                 {/* Vendor Info */}
-                {product.vendorId && (
+                {product.vendorId && vendors[product.vendorId] && (
                   <div className="mb-2">
                     <Link 
                       href={`/vendor/${product.vendorId}`}
                       className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
                     >
-                      <Store className="h-3 w-3" />
-                      <span>{product.vendorName || "Vendor Store"}</span>
+                      {vendors[product.vendorId].logoUrl ? (
+                        <Image
+                          src={vendors[product.vendorId].logoUrl}
+                          alt={vendors[product.vendorId].shopName}
+                          width={12}
+                          height={12}
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        <Store className="h-3 w-3" />
+                      )}
+                      <span>{vendors[product.vendorId].shopName}</span>
                       <CheckCircle className="h-3 w-3 text-green-500" />
                     </Link>
                   </div>
@@ -244,40 +287,45 @@ export default function TrendingProducts() {
         </div>
 
         {/* Trending Vendors Section - Only show if we have vendor data */}
-        {trendingProducts.some(p => p.vendorId) && (
+        {Object.keys(vendors).length > 0 && (
           <div className="bg-white rounded-lg p-6 mb-8 shadow-sm">
             <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Store className="h-5 w-5 text-orange-500" />
               Top Trending Vendors
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Array.from(new Set(trendingProducts.map(p => p.vendorId).filter(Boolean)))
+              {Object.entries(vendors)
                 .slice(0, 4)
-                .map((vendorId, index) => {
-                  const product = trendingProducts.find(p => p.vendorId === vendorId)
-                  if (!product) return null
-                  
-                  return (
-                    <Link 
-                      key={vendorId}
-                      href={`/vendor/${vendorId}`}
-                      className="flex items-center gap-2 p-3 rounded-lg border hover:border-orange-200 hover:bg-orange-50 transition-colors group"
-                    >
-                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                .map(([vendorId, vendor], index) => (
+                  <Link 
+                    key={vendorId}
+                    href={`/vendor/${vendorId}`}
+                    className="flex items-center gap-2 p-3 rounded-lg border hover:border-orange-200 hover:bg-orange-50 transition-colors group"
+                  >
+                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center overflow-hidden">
+                      {vendor.logoUrl ? (
+                        <Image
+                          src={vendor.logoUrl}
+                          alt={vendor.shopName}
+                          width={32}
+                          height={32}
+                          className="object-cover"
+                        />
+                      ) : (
                         <Store className="h-4 w-4 text-orange-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate group-hover:text-orange-600">
+                        {vendor.shopName}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3 text-green-500" />
+                        <span className="text-xs text-gray-500">Verified</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate group-hover:text-orange-600">
-                          {product.vendorName || "Vendor Store"}
-                        </p>
-                        <div className="flex items-center gap-1">
-                          <CheckCircle className="h-3 w-3 text-green-500" />
-                          <span className="text-xs text-gray-500">Verified</span>
-                        </div>
-                      </div>
-                    </Link>
-                  )
-                })}
+                    </div>
+                  </Link>
+                ))}
             </div>
           </div>
         )}
