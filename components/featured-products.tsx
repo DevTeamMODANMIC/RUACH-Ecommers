@@ -104,7 +104,7 @@ export default function FeaturedProducts() {
       price: product.discount ? product.price * (1 - product.discount / 100) : product.price,
       originalPrice: product.discount ? product.price : undefined,
       image: product.images?.[0] || "/placeholder.jpg",
-      category: product.category || product.displayCategory,
+      category: product.category,
       inStock: product.inStock !== false // Default to true if not specified
     };
     
@@ -306,9 +306,9 @@ export default function FeaturedProducts() {
                           <Star 
                             key={i} 
                             className={`h-3.5 w-3.5 ${
-                              i < Math.floor(product.rating) 
+                              product.rating && i < Math.floor(product.rating) 
                                 ? "text-amber-400 fill-amber-400" 
-                                : i < product.rating 
+                                : product.rating && i < product.rating 
                                   ? "text-amber-400 fill-amber-400" 
                                   : "text-gray-300"
                             }`}
@@ -316,7 +316,7 @@ export default function FeaturedProducts() {
                         ))}
                       </div>
                       <span className="text-xs text-gray-600 ml-1">
-                        ({product.reviewCount})
+                        ({product.reviewCount || 0})
                       </span>
                     </div>
                   )}
@@ -431,9 +431,9 @@ export default function FeaturedProducts() {
                         <Star 
                           key={i} 
                           className={`h-4 w-4 ${
-                            i < Math.floor(quickViewProduct.rating) 
+                            quickViewProduct.rating && i < Math.floor(quickViewProduct.rating) 
                               ? "text-amber-400 fill-amber-400" 
-                              : i < quickViewProduct.rating 
+                              : quickViewProduct.rating && i < quickViewProduct.rating 
                                 ? "text-amber-400 fill-amber-400" 
                                 : "text-gray-300"
                           }`}
@@ -441,7 +441,7 @@ export default function FeaturedProducts() {
                       ))}
                     </div>
                     <span className="text-sm text-gray-600 ml-2">
-                      {quickViewProduct.rating} ({quickViewProduct.reviewCount} reviews)
+                      {quickViewProduct.rating} ({quickViewProduct.reviewCount || 0} reviews)
                     </span>
                   </div>
                 )}

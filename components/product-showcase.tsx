@@ -6,11 +6,10 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, ShoppingCart, Plus, ChevronRight, Eye, X, Heart, Store } from "lucide-react"
-import { getRandomCategoryImage } from "@/lib/utils"
+import { Star, ShoppingCart, ChevronRight, Eye, Heart, Store } from "lucide-react"
 import { useCart } from "@/components/cart-provider"
 import { formatCurrency } from "@/lib/utils"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog"
+import { Dialog } from "@/components/ui/dialog"
 import { useWishlist, type WishlistItem } from "@/hooks/use-wishlist"
 import { getVendor, type Vendor } from "@/lib/firebase-vendors"
 
@@ -244,7 +243,7 @@ export default function ProductShowcase({
                   </h3>
                 </Link>
                 <p className="text-sm text-gray-500 mt-1">
-                  {product.displayCategory || product.category}
+                  {product.category}
                 </p>
                 
                 {/* Vendor Information */}

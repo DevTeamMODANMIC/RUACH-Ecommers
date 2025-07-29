@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { TrendingUp, Star, ShoppingCart, Eye, Flame, Store, CheckCircle } from "lucide-react"
-import { products } from "@/lib/product-data"
+
 import { getProducts } from "@/lib/firebase-products"
 import { getVendor, type Vendor } from "@/lib/firebase-vendors"
 
