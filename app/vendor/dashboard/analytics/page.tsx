@@ -46,7 +46,7 @@ interface AnalyticsData {
 }
 
 export default function VendorAnalyticsPage() {
-  const { vendor } = useVendor()
+  const { vendor, activeStore } = useVendor()
   const [timeRange, setTimeRange] = useState("30d")
   const [hasData, setHasData] = useState(false)
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({

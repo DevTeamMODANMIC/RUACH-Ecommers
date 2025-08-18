@@ -5,7 +5,7 @@ import { SubmitHandler, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useRouter } from "next/navigation"
-import { submitVendorApplication } from "@/lib/firebase-vendors"
+import { useVendor } from "@/hooks/use-vendor"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -21,8 +21,9 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-export default function VendoreProfilePage(){
+export default function VendorProfilePage(){
 	const { user } = useAuth()
+  const { activeStore, refreshStores } = useVendor()
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -34,24 +35,24 @@ export default function VendoreProfilePage(){
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      shopName: "",
-      bio: "",
-      logoUrl: "",
+      shopName: activeStore?.shopName || "",
+      bio: activeStore?.bio || "",
+      logoUrl: activeStore?.logoUrl || "",
     },
   })
 
   const onSubmit: SubmitHandler<FormValues> = async (values) => {
-    if (!user) {
-      alert("You must be logged in to register as a vendor")
+    if (!user || !activeStore) {
+      alert("You must have an active store to update profile")
       return
     }
     setIsSubmitting(true)
     try {
-      await submitVendorApplication(user.uid, values)
-      alert(
-        "Your vendor application has been submitted! We will notify you once it has been reviewed.",
-      )
-      router.push("/")
+      const { updateVendorStore } = await import("@/lib/firebase-vendors")
+      await updateVendorStore(activeStore.id, values)
+      await refreshStores()
+      alert("Store profile updated successfully!")
+      router.push("/vendor/dashboard")
     } catch (err: any) {
       console.error(err)
       alert(err.message)
@@ -64,7 +65,8 @@ export default function VendoreProfilePage(){
     <div className="container mx-auto pt-20 pb-40 max-w-xl">
       <Card>
         <CardHeader>
-          <CardTitle>Vendor Application</CardTitle>
+          <CardTitle>Edit Store Profile</CardTitle>
+          <p className="text-gray-600">Update your store information</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -93,7 +95,7 @@ export default function VendoreProfilePage(){
               )}
             </div>
             <Button type="submit" disabled={isSubmitting} className="w-full">
-              {isSubmitting ? "Submitting..." : "Submit Application"}
+              {isSubmitting ? "Updating..." : "Update Profile"}
             </Button>
           </form>
         </CardContent>

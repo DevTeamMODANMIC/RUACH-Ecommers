@@ -22,17 +22,17 @@ export default function FeaturedProducts() {
   const [vendors, setVendors] = useState<Record<string, Vendor>>({});
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  
+
   useEffect(() => {
     const loadFeaturedProducts = async () => {
       try {
         setLoading(true)
         // Get products from Firebase
         const { products: allProducts } = await getProducts({}, 20)
-        
+
         // Filter for featured products or just take the first few
         const featured = allProducts.filter(p => p.inStock).slice(0, 8)
-        
+
         setProducts(featured)
         console.log("Featured products loaded:", featured.length)
       } catch (error) {
@@ -42,7 +42,7 @@ export default function FeaturedProducts() {
         setLoading(false)
       }
     }
-    
+
     loadFeaturedProducts()
   }, [])
 
@@ -59,16 +59,16 @@ export default function FeaturedProducts() {
           return { vendorId, vendor: null }
         }
       })
-      
+
       const vendorResults = await Promise.all(vendorPromises)
       const vendorMap: Record<string, Vendor> = {}
-      
+
       vendorResults.forEach(({ vendorId, vendor }) => {
         if (vendor) {
           vendorMap[vendorId] = vendor
         }
       })
-      
+
       setVendors(vendorMap)
     }
 
@@ -76,14 +76,14 @@ export default function FeaturedProducts() {
       fetchVendors()
     }
   }, [products])
-  
+
   const handleAddToCart = (product: Product, e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     addToCart({
       productId: product.id,
       name: product.name,
-      price: product.discount ? 
-        product.price * (1 - product.discount / 100) : 
+      price: product.discount ?
+        product.price * (1 - product.discount / 100) :
         product.price,
       image: product.images?.[0] || "/placeholder.jpg",
       quantity: 1
@@ -97,7 +97,7 @@ export default function FeaturedProducts() {
 
   const handleToggleWishlist = (product: Product, e?: React.MouseEvent) => {
     if (e) e.preventDefault();
-    
+
     const wishlistItem: WishlistItem = {
       id: product.id,
       name: product.name,
@@ -107,10 +107,10 @@ export default function FeaturedProducts() {
       category: product.category,
       inStock: product.inStock !== false // Default to true if not specified
     };
-    
+
     toggleWishlist(wishlistItem);
   };
-  
+
   if (loading) {
     return (
       <section className="py-16 bg-white">
@@ -151,25 +151,25 @@ export default function FeaturedProducts() {
             Discover our curated selection of premium African and international products, from beverages and food to spices and fresh produce.
           </p>
         </div>
-        
+
         {products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             {products.map((product) => (
-              <Card 
-                key={product.id} 
+              <Card
+                key={product.id}
                 className="group relative overflow-hidden border border-gray-200 hover:border-green-500 hover:shadow-lg transition-all duration-200 rounded-xl bg-white"
                 onMouseEnter={() => setHoveredProductId(product.id)}
                 onMouseLeave={() => setHoveredProductId(null)}
               >
                 <div className="absolute right-3 top-3 z-20">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="h-8 w-8 rounded-full bg-white/80 hover:bg-gray-100 text-gray-500 hover:text-rose-500 backdrop-blur-sm shadow-sm"
                     onClick={(e) => handleToggleWishlist(product, e)}
                   >
-                    <Heart 
-                      className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-rose-500 text-rose-500' : ''}`} 
+                    <Heart
+                      className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-rose-500 text-rose-500' : ''}`}
                     />
                     <span className="sr-only">Add to wishlist</span>
                   </Button>
@@ -184,7 +184,7 @@ export default function FeaturedProducts() {
                         </Badge>
                       </div>
                     )}
-                    
+
                     {product.discount && (
                       <div className="absolute top-12 left-0 z-10 bg-red-500 text-white text-xs font-bold px-3 py-0.5 rounded-r-lg shadow-md">
                         -{product.discount}% OFF
@@ -196,7 +196,7 @@ export default function FeaturedProducts() {
                         SAVE £{(product.originalPrice - product.price).toFixed(2)}
                       </div>
                     )}
-                    
+
                     {product.bestseller && (
                       <div className="absolute bottom-3 left-3 z-10">
                         <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-sm flex items-center gap-1">
@@ -205,7 +205,7 @@ export default function FeaturedProducts() {
                         </Badge>
                       </div>
                     )}
-                    
+
                     {product.new && (
                       <div className="absolute bottom-3 left-3 z-10">
                         <Badge className="bg-blue-500 hover:bg-blue-600 text-white border-0 shadow-sm">
@@ -213,7 +213,7 @@ export default function FeaturedProducts() {
                         </Badge>
                       </div>
                     )}
-                    
+
                     {product.popular && (
                       <div className="absolute bottom-3 left-3 z-10">
                         <Badge className="bg-purple-500 hover:bg-purple-600 text-white border-0 shadow-sm flex items-center gap-1">
@@ -222,9 +222,9 @@ export default function FeaturedProducts() {
                         </Badge>
                       </div>
                     )}
-                    
+
                     <div className="absolute inset-0 bg-gradient-to-t from-gray-100/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-0" />
-                    
+
                     <Image
                       src={product.images?.[0] || "/placeholder.jpg"}
                       alt={product.name}
@@ -238,17 +238,17 @@ export default function FeaturedProducts() {
                         imgElement.onerror = null;
                       }}
                     />
-                    
+
                     {/* Hover action buttons */}
                     <div className={`absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center gap-2 transition-opacity duration-300 ${hoveredProductId === product.id ? 'opacity-100' : 'opacity-0'}`}>
-                      <button 
+                      <button
                         onClick={(e) => handleQuickView(product, e)}
                         className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-green-500 hover:text-white transition-colors"
                         aria-label="Quick view"
                       >
                         <Eye className="h-5 w-5" />
                       </button>
-                      <button 
+                      <button
                         onClick={(e) => handleAddToCart(product, e)}
                         className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-green-500 hover:text-white transition-colors"
                         aria-label="Add to cart"
@@ -258,7 +258,7 @@ export default function FeaturedProducts() {
                     </div>
                   </div>
                 </Link>
-                
+
                 <CardContent className="pt-4">
                   <Link href={`/products/${encodeURIComponent(product.id)}`} className="block">
                     <h3 className="font-semibold text-lg truncate group-hover:text-green-600 transition-colors">
@@ -268,7 +268,7 @@ export default function FeaturedProducts() {
                   <p className="text-gray-600 text-sm mt-1 line-clamp-2 h-10">
                     {product.description}
                   </p>
-                  
+
                   {/* Vendor Information */}
                   {product.vendorId && vendors[product.vendorId] && (
                     <div className="mt-2 flex items-center gap-2">
@@ -284,7 +284,7 @@ export default function FeaturedProducts() {
                         ) : (
                           <Store className="h-4 w-4 text-gray-400" />
                         )}
-                        <Link 
+                        <Link
                           href={`/vendor/${product.vendorId}`}
                           className="text-xs text-gray-600 hover:text-green-600 transition-colors font-medium"
                           onClick={(e) => e.stopPropagation()}
@@ -297,21 +297,20 @@ export default function FeaturedProducts() {
                       </Badge>
                     </div>
                   )}
-                  
+
                   {/* Rating */}
                   {product.rating && (
                     <div className="flex items-center mt-2">
                       <div className="flex">
                         {[...Array(5)].map((_, i) => (
-                          <Star 
-                            key={i} 
-                            className={`h-3.5 w-3.5 ${
-                              product.rating && i < Math.floor(product.rating) 
-                                ? "text-amber-400 fill-amber-400" 
-                                : product.rating && i < product.rating 
-                                  ? "text-amber-400 fill-amber-400" 
-                                  : "text-gray-300"
-                            }`}
+                          <Star
+                            key={i}
+                            className={`h-3.5 w-3.5 ${product.rating && i < Math.floor(product.rating)
+                              ? "text-amber-400 fill-amber-400"
+                              : product.rating && i < product.rating
+                                ? "text-amber-400 fill-amber-400"
+                                : "text-gray-300"
+                              }`}
                           />
                         ))}
                       </div>
@@ -347,10 +346,10 @@ export default function FeaturedProducts() {
             No featured products available at the moment.
           </div>
         )}
-        
+
         <div className="flex justify-center mt-12">
-          <Link 
-            href="/shop" 
+          <Link
+            href="/shop"
             className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-colors"
           >
             Browse All Products
@@ -383,7 +382,7 @@ export default function FeaturedProducts() {
                     target.src = "/placeholder.jpg";
                   }}
                 />
-                
+
                 {/* Product tags */}
                 <div className="absolute top-3 left-3 z-10">
                   {quickViewProduct.category && (
@@ -391,20 +390,20 @@ export default function FeaturedProducts() {
                       {quickViewProduct.category}
                     </Badge>
                   )}
-                  
+
                   {quickViewProduct.bestseller && (
                     <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-sm flex items-center gap-1 mb-2 block w-fit">
                       <TrendingUp className="h-3 w-3" />
                       Bestseller
                     </Badge>
                   )}
-                  
+
                   {quickViewProduct.new && (
                     <Badge className="bg-blue-500 hover:bg-blue-600 text-white border-0 shadow-sm mb-2 block w-fit">
                       New Arrival
                     </Badge>
                   )}
-                  
+
                   {quickViewProduct.popular && (
                     <Badge className="bg-purple-500 hover:bg-purple-600 text-white border-0 shadow-sm flex items-center gap-1 mb-2 block w-fit">
                       <Award className="h-3 w-3" />
@@ -412,31 +411,30 @@ export default function FeaturedProducts() {
                     </Badge>
                   )}
                 </div>
-                
+
                 {quickViewProduct.discount && (
                   <div className="absolute top-3 right-3 z-10 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-md">
                     -{quickViewProduct.discount}% OFF
                   </div>
                 )}
               </div>
-              
+
               <div className="flex flex-col">
                 <h2 className="text-2xl font-bold">{quickViewProduct.name}</h2>
-                
+
                 {/* Rating */}
                 {quickViewProduct.rating && (
                   <div className="flex items-center mt-2 mb-4">
                     <div className="flex">
                       {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          className={`h-4 w-4 ${
-                            quickViewProduct.rating && i < Math.floor(quickViewProduct.rating) 
-                              ? "text-amber-400 fill-amber-400" 
-                              : quickViewProduct.rating && i < quickViewProduct.rating 
-                                ? "text-amber-400 fill-amber-400" 
-                                : "text-gray-300"
-                          }`}
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${quickViewProduct.rating && i < Math.floor(quickViewProduct.rating)
+                            ? "text-amber-400 fill-amber-400"
+                            : quickViewProduct.rating && i < quickViewProduct.rating
+                              ? "text-amber-400 fill-amber-400"
+                              : "text-gray-300"
+                            }`}
                         />
                       ))}
                     </div>
@@ -445,7 +443,7 @@ export default function FeaturedProducts() {
                     </span>
                   </div>
                 )}
-                
+
                 <div className="mb-4">
                   {quickViewProduct.discount ? (
                     <div className="flex items-center gap-2">
@@ -462,34 +460,34 @@ export default function FeaturedProducts() {
                     </span>
                   )}
                 </div>
-                
+
                 {quickViewProduct.description && (
                   <div className="mb-6">
                     <h3 className="text-sm font-medium mb-2">Description</h3>
                     <p className="text-gray-600">{quickViewProduct.description}</p>
                   </div>
                 )}
-                
+
                 <div className="mt-auto flex flex-col sm:flex-row gap-3">
-                  <button 
+                  <button
                     onClick={() => handleAddToCart(quickViewProduct)}
                     className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
                   >
                     <ShoppingCart className="h-4 w-4" />
                     Add to Cart
                   </button>
-                  
+
                   <button
                     onClick={() => handleToggleWishlist(quickViewProduct)}
                     className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 border rounded-lg 
-                    ${isInWishlist(quickViewProduct.id) 
-                      ? 'border-rose-200 bg-rose-50 text-rose-500 hover:bg-rose-100' 
-                      : 'border-gray-300 hover:bg-gray-50'}`}
+                    ${isInWishlist(quickViewProduct.id)
+                        ? 'border-rose-200 bg-rose-50 text-rose-500 hover:bg-rose-100'
+                        : 'border-gray-300 hover:bg-gray-50'}`}
                   >
                     <Heart className={`h-4 w-4 ${isInWishlist(quickViewProduct.id) ? 'fill-rose-500' : ''}`} />
                     {isInWishlist(quickViewProduct.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
                   </button>
-                  
+
                   <Link
                     href={`/products/${encodeURIComponent(quickViewProduct.id)}`}
                     className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"

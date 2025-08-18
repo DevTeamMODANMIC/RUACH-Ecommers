@@ -62,7 +62,7 @@ export default function Newsletter() {
               <span>Join 5,000+ subscribers</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-bold mb-4 leading-tight max-w-3xl mx-auto text-gray-800">
-              Stay Updated with RUACH PRODUCTION
+              Stay Updated with RUACH E-STORE
             </h2>
             <div className="w-24 h-1 bg-green-500 rounded mx-auto mb-4"></div>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -129,7 +129,7 @@ export default function Newsletter() {
                   <div className="bg-green-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Mail className="h-7 w-7 text-green-600" />
                   </div>
-                  <h3 className="text-gray-800 text-2xl font-bold">Get RUACH PRODUCTION Updates</h3>
+                  <h3 className="text-gray-800 text-2xl font-bold">Get RUACH E-STORE Updates</h3>
                   <p className="text-gray-600 mt-2">Sign up for our newsletter and never miss out</p>
                 </div>
                 

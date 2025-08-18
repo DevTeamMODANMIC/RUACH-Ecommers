@@ -39,7 +39,7 @@ const getTimeBasedGreeting = () => {
 }
 
 export default function VendorDashboardHome() {
-  const { vendor } = useVendor()
+  const { vendor, activeStore, allStores } = useVendor()
   const [stats, setStats] = useState<DashboardStats>({
     totalProducts: 0,
     activeProducts: 0,
@@ -53,10 +53,10 @@ export default function VendorDashboardHome() {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (!vendor) return
+      if (!activeStore) return
       
       try {
-        const vendorProducts = await getVendorProducts(vendor.uid)
+        const vendorProducts = await getVendorProducts(activeStore.id)
         
         // Calculate stats from actual products
         const activeProducts = vendorProducts.filter((p: any) => p.inStock).length
@@ -79,9 +79,9 @@ export default function VendorDashboardHome() {
     }
     
     fetchDashboardData()
-  }, [vendor])
+  }, [activeStore])
 
-  if (!vendor || loading) {
+  if (!activeStore || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -141,7 +141,7 @@ export default function VendorDashboardHome() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            {getTimeBasedGreeting()}, {vendor.shopName}!
+            {getTimeBasedGreeting()}, {activeStore.shopName}!
           </h1>
           <p className="text-lg text-gray-500 mb-2">Welcome to your vendor dashboard</p>
           <p className="text-xl text-gray-600 mb-8">
@@ -257,7 +257,7 @@ export default function VendorDashboardHome() {
               </Button>
               
               <Button asChild variant="outline" className="h-auto p-6 justify-start">
-                <Link href={`/vendor/${vendor.uid}`}>
+                <Link href={`/vendor/${activeStore.id}`}>
                   <div className="text-left">
                     <Eye className="h-5 w-5 mb-2 text-blue-600" />
                     <div className="font-medium">Preview Store</div>
@@ -335,7 +335,7 @@ export default function VendorDashboardHome() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            {getTimeBasedGreeting()}, {vendor.shopName}!
+            {getTimeBasedGreeting()}, {activeStore.shopName}!
           </h1>
           <p className="text-gray-600 mt-1">
             Here's what's happening with your store today.
@@ -412,7 +412,7 @@ export default function VendorDashboardHome() {
               </Link>
             </Button>
             <Button asChild variant="outline" className="h-auto p-4 justify-start">
-              <Link href={`/vendor/${vendor.uid}`}>
+              <Link href={`/vendor/${activeStore.id}`}>
                 <div className="text-left">
                   <div className="font-medium">View Storefront</div>
                   <div className="text-sm text-gray-500">See your public store</div>

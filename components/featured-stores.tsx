@@ -12,7 +12,7 @@ import { Store, ArrowRight, Users, Package } from "lucide-react"
 // Using Vendor type from firebase-vendors
 
 export default function FeaturedStores() {
-    const [vendors, setVendors] = useState<(Vendor & { uid: string })[]>([])
+    const [vendors, setVendors] = useState<Vendor[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
@@ -81,7 +81,7 @@ export default function FeaturedStores() {
                 {/* Stores Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                     {vendors.map((vendor) => (
-                        <Card key={vendor.uid} className="group hover:shadow-lg transition-all duration-200 hover:-translate-y-1 bg-white">
+                        <Card key={vendor.id} className="group hover:shadow-lg transition-all duration-200 hover:-translate-y-1 bg-white">
                             <CardContent className="p-6 text-center">
                                 {/* Store Logo */}
                                 <div className="flex items-center justify-center mb-4">
@@ -114,7 +114,7 @@ export default function FeaturedStores() {
                                 </Badge>
 
                                 {/* Visit Store Button */}
-                                <Link href={`/vendor/${vendor.uid}`}>
+                                <Link href={`/vendor/${vendor.id}`}>
                                     <Button
                                         variant="outline"
                                         size="sm"

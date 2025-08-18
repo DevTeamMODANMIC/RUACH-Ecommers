@@ -16,11 +16,9 @@ export default function KeyboardNavigation() {
       if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'A') {
         event.preventDefault()
         
-        if (user && isVendor) {
+        if (user) {
+          // Allow any logged-in user to access vendor dashboard
           router.push('/vendor/dashboard')
-        } else if (user) {
-          // Show notification that user needs to be a vendor
-          alert('You need to be a registered vendor to access the vendor dashboard.')
         } else {
           // Redirect to login
           router.push('/login?redirect=/vendor/dashboard')

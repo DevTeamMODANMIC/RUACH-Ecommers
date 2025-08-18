@@ -178,7 +178,7 @@ export default function Header() {
               <div className="flex flex-col">
                 <span className="text-lg font-bold text-gray-900 tracking-tight leading-tight">
 
-                  RUACH PRODUCTION
+                  RUACH E-STORE
                 </span>
               </div>
             </Link>

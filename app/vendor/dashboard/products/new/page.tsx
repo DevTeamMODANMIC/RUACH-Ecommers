@@ -38,7 +38,7 @@ const categoryExamples = [
 ]
 
 export default function VendorAddProductPage() {
-  const { vendor } = useVendor()
+  const { vendor, activeStore } = useVendor()
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [cloudinaryImages, setCloudinaryImages] = useState<Array<{ publicId: string; url: string; alt?: string }>>([])
@@ -67,7 +67,7 @@ export default function VendorAddProductPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!vendor) return
+    if (!activeStore) return
     
     if (cloudinaryImages.length === 0) {
       alert("Please upload at least one product image.")
@@ -101,7 +101,7 @@ export default function VendorAddProductPage() {
         availableCountries: ["Nigeria"],
         tags: [],
         reviews: { average: 0, count: 0 },
-        vendorId: vendor.uid,
+        vendorId: activeStore.id,
       }
       
       console.log("Creating product with data:", productData)
@@ -118,7 +118,7 @@ export default function VendorAddProductPage() {
     }
   }
 
-  if (!vendor) return <div>Loading vendor information...</div>
+  if (!activeStore) return <div>Loading store information...</div>
 
   return (
     <div className="max-w-2xl mx-auto">

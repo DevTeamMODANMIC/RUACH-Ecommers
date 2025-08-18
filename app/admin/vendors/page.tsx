@@ -13,12 +13,14 @@ import Image from "next/image"
 import Link from "next/link"
 
 interface VendorApp {
-  uid: string
+  id: string
+  ownerId: string
   shopName: string
   bio: string
   logoUrl: string
   createdAt?: any
   approved?: boolean
+  isActive?: boolean
 }
 
 export default function AdminVendorsPage() {
@@ -43,10 +45,19 @@ export default function AdminVendorsPage() {
           orderBy("createdAt", "desc")
         )
         const pendingSnapshot = await getDocs(pendingQuery)
-        const fetchedPendingVendors = pendingSnapshot.docs.map((doc) => ({
-          uid: doc.id,
-          ...doc.data(),
-        } as VendorApp))
+        const fetchedPendingVendors = pendingSnapshot.docs.map((doc) => {
+          const data = doc.data()
+          return {
+            id: doc.id,
+            ownerId: data.ownerId || data.uid || '', // Fallback for old data structure
+            shopName: data.shopName || '',
+            bio: data.bio || '',
+            logoUrl: data.logoUrl || '',
+            createdAt: data.createdAt,
+            approved: data.approved || false,
+            isActive: data.isActive !== undefined ? data.isActive : true,
+          } as VendorApp
+        })
         setPendingVendors(fetchedPendingVendors)
         console.log("Fetched pending vendors:", fetchedPendingVendors)
       } catch (pendingError: any) {
@@ -58,10 +69,19 @@ export default function AdminVendorsPage() {
             where("approved", "==", false)
           )
           const simplePendingSnapshot = await getDocs(simplePendingQuery)
-          const fetchedPendingVendors = simplePendingSnapshot.docs.map((doc) => ({
-            uid: doc.id,
-            ...doc.data(),
-          } as VendorApp))
+          const fetchedPendingVendors = simplePendingSnapshot.docs.map((doc) => {
+            const data = doc.data()
+            return {
+              id: doc.id,
+              ownerId: data.ownerId || data.uid || '', // Fallback for old data structure
+              shopName: data.shopName || '',
+              bio: data.bio || '',
+              logoUrl: data.logoUrl || '',
+              createdAt: data.createdAt,
+              approved: data.approved || false,
+              isActive: data.isActive !== undefined ? data.isActive : true,
+            } as VendorApp
+          })
           setPendingVendors(fetchedPendingVendors)
           console.log("Fetched pending vendors (simple query):", fetchedPendingVendors)
         } catch (simpleError: any) {
@@ -73,8 +93,19 @@ export default function AdminVendorsPage() {
       // Try to fetch approved vendors
       try {
         const approvedVendorsList = await getApprovedVendors()
-        setApprovedVendors(approvedVendorsList)
-        console.log("Fetched approved vendors:", approvedVendorsList)
+        // Ensure proper data structure for approved vendors
+        const formattedApprovedVendors = approvedVendorsList.map(vendor => ({
+          id: vendor.id,
+          ownerId: vendor.ownerId || '', // Ensure ownerId exists
+          shopName: vendor.shopName || '',
+          bio: vendor.bio || '',
+          logoUrl: vendor.logoUrl || '',
+          createdAt: vendor.createdAt,
+          approved: vendor.approved || false,
+          isActive: vendor.isActive !== undefined ? vendor.isActive : true,
+        } as VendorApp))
+        setApprovedVendors(formattedApprovedVendors)
+        console.log("Fetched approved vendors:", formattedApprovedVendors)
       } catch (approvedError: any) {
         console.error("Error fetching approved vendors:", approvedError)
         // Try direct query as fallback
@@ -84,10 +115,19 @@ export default function AdminVendorsPage() {
             where("approved", "==", true)
           )
           const approvedSnapshot = await getDocs(approvedQuery)
-          const fetchedApprovedVendors = approvedSnapshot.docs.map((doc) => ({
-            uid: doc.id,
-            ...doc.data(),
-          } as VendorApp))
+          const fetchedApprovedVendors = approvedSnapshot.docs.map((doc) => {
+            const data = doc.data()
+            return {
+              id: doc.id,
+              ownerId: data.ownerId || data.uid || '', // Fallback for old data structure
+              shopName: data.shopName || '',
+              bio: data.bio || '',
+              logoUrl: data.logoUrl || '',
+              createdAt: data.createdAt,
+              approved: data.approved || false,
+              isActive: data.isActive !== undefined ? data.isActive : true,
+            } as VendorApp
+          })
           setApprovedVendors(fetchedApprovedVendors)
           console.log("Fetched approved vendors (direct query):", fetchedApprovedVendors)
         } catch (directError: any) {
@@ -134,21 +174,21 @@ export default function AdminVendorsPage() {
     checkAdminAccess()
   }, [fetchVendors])
 
-  const handleAction = async (uid: string, action: 'approve' | 'reject') => {
-    setActionUid(uid)
+  const handleAction = async (storeId: string, action: 'approve' | 'reject') => {
+    setActionUid(storeId)
     try {
       if (action === 'approve') {
-        await approveVendor(uid)
+        await approveVendor(storeId)
         // Move vendor from pending to approved
-        const vendor = pendingVendors.find(v => v.uid === uid)
+        const vendor = pendingVendors.find(v => v.id === storeId)
         if (vendor) {
           setApprovedVendors(prev => [...prev, { ...vendor, approved: true }])
         }
       } else {
-        await rejectVendor(uid)
+        await rejectVendor(storeId)
       }
       // Remove from pending list
-      setPendingVendors(prev => prev.filter(v => v.uid !== uid))
+      setPendingVendors(prev => prev.filter(v => v.id !== storeId))
     } catch (err: any) {
       console.error(`Failed to ${action} vendor:`, err)
       setError(`Could not ${action} the vendor. Please try again.`)
@@ -167,9 +207,24 @@ export default function AdminVendorsPage() {
     }
   }
 
-  const VendorCard = ({ vendor, isPending = false }: { vendor: VendorApp, isPending?: boolean }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
+  const VendorCard = ({ vendor, isPending = false }: { vendor: VendorApp, isPending?: boolean }) => {
+    // Safety check for vendor data
+    if (!vendor || !vendor.id) {
+      return (
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="text-center text-gray-500">
+              <Store className="h-8 w-8 mx-auto mb-2" />
+              <p>Invalid vendor data</p>
+            </div>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    return (
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0">
             {vendor.logoUrl ? (
@@ -206,15 +261,21 @@ export default function AdminVendorsPage() {
               </div>
               <div className="flex items-center gap-1">
                 <Users className="h-3 w-3" />
-                <span>ID: {vendor.uid.slice(0, 8)}...</span>
+                <span>Store ID: {vendor.id?.slice(0, 8) || 'N/A'}...</span>
               </div>
+              {vendor.ownerId && (
+                <div className="flex items-center gap-1">
+                  <Users className="h-3 w-3" />
+                  <span>Owner: {vendor.ownerId.slice(0, 8)}...</span>
+                </div>
+              )}
             </div>
             
             <div className="flex items-center gap-2">
               {!isPending ? (
                 <>
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/vendor/${vendor.uid}`}>
+                    <Link href={`/vendor/${vendor.id}`}>
                       <Eye className="h-4 w-4 mr-1" />
                       View Store
                     </Link>
@@ -230,19 +291,19 @@ export default function AdminVendorsPage() {
                     size="sm"
                     variant="outline"
                     className="text-red-600 hover:bg-red-50 border-red-200"
-                    onClick={() => handleAction(vendor.uid, 'reject')}
-                    disabled={actionUid === vendor.uid}
+                    onClick={() => handleAction(vendor.id, 'reject')}
+                    disabled={actionUid === vendor.id}
                   >
-                    {actionUid === vendor.uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4 mr-1" />}
+                    {actionUid === vendor.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4 mr-1" />}
                     Reject
                   </Button>
                   <Button
                     size="sm"
                     className="bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => handleAction(vendor.uid, 'approve')}
-                    disabled={actionUid === vendor.uid}
+                    onClick={() => handleAction(vendor.id, 'approve')}
+                    disabled={actionUid === vendor.id}
                   >
-                    {actionUid === vendor.uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
+                    {actionUid === vendor.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
                     Approve
                   </Button>
                 </div>
@@ -252,7 +313,8 @@ export default function AdminVendorsPage() {
         </div>
       </CardContent>
     </Card>
-  )
+    )
+  }
 
   return (
     <div className="space-y-6">

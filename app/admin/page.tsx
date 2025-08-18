@@ -49,6 +49,9 @@ export default function AdminDashboard() {
               <Link href="/admin/products/cloudinary-migration" className="bg-slate-100 text-slate-800 hover:bg-slate-200 px-3 py-2 rounded-md font-medium">
                 Cloudinary Migration
               </Link>
+              <Link href="/admin/migration" className="bg-slate-100 text-slate-800 hover:bg-slate-200 px-3 py-2 rounded-md font-medium">
+                Vendor Migration
+              </Link>
               <Link href="/admin/products/import" className="bg-slate-100 text-slate-800 hover:bg-slate-200 px-3 py-2 rounded-md font-medium">
                 Import Products
               </Link>
@@ -153,6 +156,29 @@ export default function AdminDashboard() {
               <Button asChild className="w-full sm:w-auto">
                 <Link href="/admin/vendors">
                   Manage Vendors
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+
+          {/* Vendor Migration Card */}
+          <Card className="border-amber-200 bg-amber-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-amber-800">
+                <Package className="h-5 w-5" />
+                <span>Data Migration</span>
+              </CardTitle>
+              <CardDescription className="text-amber-700">
+                Migrate vendor data to multi-store structure
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-amber-700">Convert existing single-store vendor data to support multiple stores per user.</p>
+            </CardContent>
+            <CardFooter className="flex flex-col sm:flex-row">
+              <Button asChild className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700">
+                <Link href="/admin/migration">
+                  Run Migration
                 </Link>
               </Button>
             </CardFooter>

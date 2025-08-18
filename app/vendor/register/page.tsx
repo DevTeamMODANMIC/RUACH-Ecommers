@@ -5,7 +5,8 @@ import { SubmitHandler, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useRouter } from "next/navigation"
-import { submitVendorApplication } from "@/lib/firebase-vendors"
+import { createVendorStore } from "@/lib/firebase-vendors"
+import { useVendor } from "@/hooks/use-vendor"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -23,6 +24,7 @@ type FormValues = z.infer<typeof schema>
 
 export default function VendorRegisterPage() {
   const { user } = useAuth()
+  const { allStores, canCreateMoreStores, refreshStores } = useVendor()
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -45,13 +47,22 @@ export default function VendorRegisterPage() {
       alert("You must be logged in to register as a vendor")
       return
     }
+    
+    if (!canCreateMoreStores) {
+      alert("You have reached the maximum limit of 3 stores per account")
+      return
+    }
+    
     setIsSubmitting(true)
     try {
-      await submitVendorApplication(user.uid, values)
+      const storeId = await createVendorStore(user.uid, values)
+      await refreshStores()
+      
+      const storeNumber = allStores.length + 1
       alert(
-        "Your vendor application has been submitted! We will notify you once it has been reviewed.",
+        `Your ${storeNumber === 1 ? 'first' : storeNumber === 2 ? 'second' : 'third'} store application has been submitted! We will notify you once it has been reviewed.`,
       )
-      router.push("/")
+      router.push("/vendor/dashboard")
     } catch (err: any) {
       console.error(err)
       alert(err.message)

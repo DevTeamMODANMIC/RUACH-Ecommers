@@ -88,7 +88,7 @@ export default function StoresPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-green-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading stores...</p>
+          <p className="text-gray-800">Loading stores...</p>
         </div>
       </div>
     )
@@ -101,7 +101,7 @@ export default function StoresPage() {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Browse All Stores</h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-800 max-w-2xl mx-auto">
               Discover authentic African products from verified vendors across Nigeria and beyond
             </p>
           </div>
@@ -121,7 +121,7 @@ export default function StoresPage() {
             </form>
 
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Sort by:</span>
+              <span className="text-sm text-gray-800">Sort by:</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -136,7 +136,7 @@ export default function StoresPage() {
           </div>
 
           {/* Results Count */}
-          <div className="mt-4 text-sm text-gray-600">
+          <div className="mt-4 text-sm text-gray-800">
             Showing {filteredVendors.length} of {vendors.length} stores
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function StoresPage() {
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 {searchTerm ? "No stores found" : "No stores available"}
               </h3>
-              <p className="text-gray-600">
+              <p className="text-gray-800">
                 {searchTerm 
                   ? "Try adjusting your search terms or browse all stores." 
                   : "Check back later for new vendor stores!"
@@ -171,7 +171,7 @@ export default function StoresPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredVendors.map((vendor) => (
-              <Card key={vendor.uid} className="group hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
+              <Card key={vendor.id} className="group hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
                 <CardContent className="p-6">
                   {/* Store Logo */}
                   <div className="flex items-center justify-center mb-4">
@@ -196,7 +196,7 @@ export default function StoresPage() {
                       {vendor.shopName}
                     </h3>
                     
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                    <p className="text-sm text-gray-800 line-clamp-2 mb-3">
                       {vendor.bio || "Quality African products and authentic flavors"}
                     </p>
 
@@ -208,7 +208,7 @@ export default function StoresPage() {
                   </div>
 
                   {/* Store Stats */}
-                  <div className="space-y-2 mb-4 text-xs text-gray-500">
+                  <div className="space-y-2 mb-4 text-xs text-gray-700">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <Package className="h-3 w-3" />
@@ -245,7 +245,7 @@ export default function StoresPage() {
                   </div>
 
                   {/* Visit Store Button */}
-                  <Link href={`/vendor/${vendor.uid}`}>
+                  <Link href={`/vendor/${vendor.id}`}>
                     <Button className="w-full bg-green-600 hover:bg-green-700 text-white group-hover:bg-green-700 transition-colors border-0">
                       <Store className="h-4 w-4 mr-2 text-white" />
                       <span className="text-white">Visit Store</span>
@@ -262,7 +262,7 @@ export default function StoresPage() {
       <div className="bg-green-50 border-t">
         <div className="container mx-auto px-4 py-12 text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Want to Start Your Own Store?</h2>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+          <p className="text-gray-800 mb-6 max-w-2xl mx-auto">
             Join our marketplace and reach thousands of customers looking for authentic African products. 
             It's easy to get started!
           </p>

@@ -27,9 +27,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/components/auth-provider"
+import { StoreSwitcher } from "@/components/store-switcher"
 
 export default function VendorDashboardLayout({ children }: { children: React.ReactNode }) {
-  const { vendor, isVendor, loading } = useVendor()
+  const { vendor, activeStore, allStores, isVendor, loading } = useVendor()
   const { user, logout } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
@@ -45,7 +46,8 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
     */
   }, [isVendor, loading, router])
 
-  if (loading) {
+  // Only show loading for authentication, not vendor data
+  if (loading && !user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
@@ -76,8 +78,14 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
       badge: null
     },
     {
+      href: "/vendor/stores",
+      label: "My Stores",
+      icon: Store,
+      badge: allStores.length > 1 ? allStores.length.toString() : null
+    },
+    {
       href: "/vendor/dashboard/products",
-      label: "My Products",
+      label: "Products",
       icon: ShoppingBag,
       badge: null
     },
@@ -118,20 +126,21 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
       <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-gray-200">
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <div className="flex items-center gap-3">
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-green-100 rounded-lg">
                 <Store className="h-5 w-5 text-green-600" />
               </div>
               <div>
                 <h2 className="font-semibold text-gray-900">Vendor Portal</h2>
-                {vendor && (
-                  <p className="text-xs text-gray-600 truncate max-w-[140px]">
-                    {vendor.shopName}
-                  </p>
-                )}
+                <p className="text-xs text-gray-600">
+                  {allStores.length} store{allStores.length !== 1 ? 's' : ''}
+                </p>
               </div>
             </div>
+            
+            {/* Store Switcher */}
+            <StoreSwitcher />
           </div>
 
           {/* Navigation */}
@@ -148,8 +157,8 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
                     className={`
                       flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors
                       ${active 
-                        ? "bg-green-100 text-green-700 border border-green-200" 
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-green-100 text-green-800 border border-green-200" 
+                        : "text-gray-900 hover:bg-gray-100"
                       }
                     `}
                   >
@@ -183,7 +192,7 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="flex-1" asChild>
-                <Link href={vendor ? `/vendor/${vendor.uid}` : "#"}>
+                <Link href={activeStore ? `/vendor/${activeStore.id}` : "#"}>
                   <Store className="h-4 w-4 mr-1" />
                   View Store
                 </Link>
@@ -201,27 +210,30 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
         <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 md:hidden">
           <div className="flex flex-col h-full">
             {/* Sidebar Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Store className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <h2 className="font-semibold text-gray-900">Vendor Portal</h2>
-                  {vendor && (
-                    <p className="text-xs text-gray-600 truncate max-w-[140px]">
-                      {vendor.shopName}
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <Store className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h2 className="font-semibold text-gray-900">Vendor Portal</h2>
+                    <p className="text-xs text-gray-600">
+                      {allStores.length} store{allStores.length !== 1 ? 's' : ''}
                     </p>
-                  )}
+                  </div>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              
+              {/* Store Switcher */}
+              <StoreSwitcher />
             </div>
 
             {/* Navigation */}
@@ -239,8 +251,8 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
                       className={`
                         flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors
                         ${active 
-                          ? "bg-green-100 text-green-700 border border-green-200" 
-                          : "text-gray-700 hover:bg-gray-100"
+                          ? "bg-green-100 text-green-800 border border-green-200" 
+                          : "text-gray-900 hover:bg-gray-100"
                         }
                       `}
                     >
@@ -274,7 +286,7 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="flex-1" asChild>
-                  <Link href={vendor ? `/vendor/${vendor.uid}` : "#"}>
+                  <Link href={activeStore ? `/vendor/${activeStore.id}` : "#"}>
                     <Store className="h-4 w-4 mr-1" />
                     View Store
                   </Link>

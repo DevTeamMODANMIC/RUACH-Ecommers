@@ -29,26 +29,26 @@ const poppins = Poppins({
 })
 
 // Site name should be consistent across all environments
-const SITE_NAME = "RUACH PRODUCTION";
+const SITE_NAME = "RUACH E-STORE";
 
 export const metadata: Metadata = {
   title: `${SITE_NAME} - Premium African & International Foods`,
   description:
     "Discover authentic African and international foods, spices, and beverages. Fresh produce, quality ingredients, and traditional flavors delivered to your door.",
-  keywords: "African food, international cuisine, spices, beverages, fresh produce, online grocery, RUACH PRODUCTION",
+  keywords: "African food, international cuisine, spices, beverages, fresh produce, online grocery, RUACH E-STORE",
   authors: [{ name: SITE_NAME }],
-  metadataBase: new URL("https://ruachproduction.com"),
+  metadataBase: new URL("https://ruachestore.com"),
   openGraph: {
-    title: `${SITE_NAME} - RUACH PRODUCTION`,
+    title: `${SITE_NAME} - RUACH E-STORE`,
     description: "Discover authentic African and international foods, spices, and beverages.",
-    url: "https://ruachproduction.com",
+    url: "https://ruachestore.com",
     siteName: SITE_NAME,
     images: [
       {
         url: "/logo/logo.png",
         width: 800,
         height: 800,
-        alt: "RUACH PRODUCTION"
+        alt: "RUACH E-STORE"
       },
     ],
     locale: "en_GB",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} - RUACH PRODUCTION`,
+    title: `${SITE_NAME} - RUACH E-STORE`,
     description: "Discover authentic African and international foods, spices, and beverages.",
     images: ["/logo/logo.png"],
   },

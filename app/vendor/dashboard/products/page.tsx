@@ -63,7 +63,7 @@ interface ProductItem {
 }
 
 export default function VendorProductsPage() {
-  const { vendor } = useVendor()
+  const { vendor, activeStore } = useVendor()
   const [products, setProducts] = useState<ProductItem[]>([])
   const [filteredProducts, setFilteredProducts] = useState<ProductItem[]>([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -73,11 +73,11 @@ export default function VendorProductsPage() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      if (!vendor) return
+      if (!activeStore) return
       
       try {
         setLoading(true)
-        const list = await getVendorProducts(vendor.uid)
+        const list = await getVendorProducts(activeStore.id)
         setProducts(list as ProductItem[])
         setFilteredProducts(list as ProductItem[])
       } catch (error) {
@@ -88,7 +88,7 @@ export default function VendorProductsPage() {
     }
     
     fetchProducts()
-  }, [vendor])
+  }, [activeStore])
 
   // Filter products based on search and filters
   useEffect(() => {

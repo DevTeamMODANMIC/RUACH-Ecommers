@@ -325,7 +325,7 @@ export function ReviewForm({ productId, productName, availableCountries, onClose
                   onCheckedChange={(checked) => setVerifiedPurchase(checked as boolean)}
                 />
                 <Label htmlFor="verified" className="text-sm">
-                  I purchased this product from RUACH PRODUCTION
+                  I purchased this product from RUACH E-STORE
                 </Label>
               </div>
 

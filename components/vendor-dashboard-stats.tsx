@@ -13,7 +13,7 @@ interface VendorStats {
   totalSales: number
 }
 
-export function VendorDashboardStats({ vendorId }: { vendorId: string }) {
+export function VendorDashboardStats({ storeId }: { storeId: string }) {
   const [stats, setStats] = useState<VendorStats>({
     totalProducts: 0,
     totalOrders: 0,
@@ -26,7 +26,7 @@ export function VendorDashboardStats({ vendorId }: { vendorId: string }) {
         // Fetch total products
         const productsQuery = query(
           collection(db, "products"), 
-          where("vendorId", "==", vendorId)
+          where("vendorId", "==", storeId)
         )
         const productsSnapshot = await getDocs(productsQuery)
         const totalProducts = productsSnapshot.size
@@ -34,7 +34,7 @@ export function VendorDashboardStats({ vendorId }: { vendorId: string }) {
         // Fetch total orders and sales
         const ordersQuery = query(
           collection(db, "orders"), 
-          where("vendorId", "==", vendorId),
+          where("vendorId", "==", storeId),
           orderBy("createdAt", "desc")
         )
         const ordersSnapshot = await getDocs(ordersQuery)
@@ -55,10 +55,10 @@ export function VendorDashboardStats({ vendorId }: { vendorId: string }) {
       }
     }
 
-    if (vendorId) {
+    if (storeId) {
       fetchStats()
     }
-  }, [vendorId])
+  }, [storeId])
 
   const statCards = [
     {

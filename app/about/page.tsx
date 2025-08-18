@@ -2,20 +2,20 @@ import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 
 export const metadata = {
-  title: "About RUACH PRODUCTION - Our Story & Mission",
-  description: "Learn about RUACH PRODUCTION's journey, our commitment to authentic African and international foods, and our vision for bringing diverse flavors to your table.",
+  title: "About RUACH E-STORE - Our Story & Mission",
+  description: "Learn about RUACH E-STORE's journey, our commitment to authentic African and international foods, and our vision for bringing diverse flavors to your table.",
 }
 
 export default function AboutPage() {
   return (
     <div className="container mx-auto px-4 py-8 sm:py-12">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-center">About RUACH PRODUCTION</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-center">About RUACH E-STORE</h1>
         
         <div className="relative h-[200px] sm:h-[250px] md:h-[300px] lg:h-[400px] mb-6 sm:mb-8 rounded-lg overflow-hidden">
           <Image 
             src="/placeholder.svg?height=600&width=1200" 
-            alt="RUACH PRODUCTION Store" 
+            alt="RUACH E-STORE Store" 
             fill
             className="object-cover"
           />
@@ -24,15 +24,15 @@ export default function AboutPage() {
         <div className="prose prose-sm sm:prose-base lg:prose-lg max-w-none mb-8 sm:mb-12">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">Our Story</h2>
           <p className="mb-3 sm:mb-4 text-sm sm:text-base">
-            RUACH PRODUCTION was founded with a simple mission: to bring authentic African and international foods to customers around the world. What started as a vision to connect people with their cultural heritage through food has grown into a thriving online marketplace serving communities globally.
+            RUACH E-STORE was founded with a simple mission: to bring authentic African and international foods to customers around the world. What started as a vision to connect people with their cultural heritage through food has grown into a thriving online marketplace serving communities globally.
           </p>
           <p className="mb-4 sm:mb-6 text-sm sm:text-base">
-            Our founder recognized the challenge many people faced in finding authentic ingredients from their home countries. This personal experience inspired the creation of RUACH PRODUCTION, a place where everyone could access traditional ingredients and discover new flavors from diverse cultures.
+            Our founder recognized the challenge many people faced in finding authentic ingredients from their home countries. This personal experience inspired the creation of RUACH E-STORE, a place where everyone could access traditional ingredients and discover new flavors from diverse cultures.
           </p>
 
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">Our Mission</h2>
           <p className="mb-4 sm:mb-6 text-sm sm:text-base">
-            At RUACH PRODUCTION, we believe food is a powerful connection to culture and community. Our mission is to make authentic international ingredients accessible, promote cultural exchange through culinary experiences, and support ethical food practices that respect both people and planet.
+            At RUACH E-STORE, we believe food is a powerful connection to culture and community. Our mission is to make authentic international ingredients accessible, promote cultural exchange through culinary experiences, and support ethical food practices that respect both people and planet.
           </p>
 
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">Our Values</h2>
@@ -72,9 +72,9 @@ export default function AboutPage() {
         <div className="bg-muted rounded-lg p-4 sm:p-8 mb-8 sm:mb-12">
           <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Contact Us</h2>
           <p className="mb-3 sm:mb-4 text-sm sm:text-base">
-            Have questions about our products or want to learn more about RUACH PRODUCTION? We'd love to hear from you!
+            Have questions about our products or want to learn more about RUACH E-STORE? We'd love to hear from you!
           </p>
-          <p className="mb-2 text-sm sm:text-base"><strong>Email:</strong> info@ruachproduction.com</p>
+          <p className="mb-2 text-sm sm:text-base"><strong>Email:</strong> info@ruachestore.com</p>
           <p className="mb-2 text-sm sm:text-base"><strong>Phone:</strong> +44 (0)20 1234 5678</p>
           <p className="mb-2 text-sm sm:text-base"><strong>Address:</strong> 123 High Street, Skegness, UK</p>
         </div>

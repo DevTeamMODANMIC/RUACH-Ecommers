@@ -9,65 +9,172 @@ import {
   where,
   Timestamp,
   serverTimestamp,
+  addDoc,
 } from "firebase/firestore"
 import { db } from "./firebase"
 
 export interface Vendor {
-  uid: string // Firebase UID (also document id)
+  id: string // Document ID (unique store identifier)
+  ownerId: string // Firebase UID of the owner
   shopName: string
   bio: string
   logoUrl: string
   approved: boolean
   createdAt: Timestamp
+  isActive: boolean // Whether this store is currently active
 }
 
-// Submit a vendor application — status set to approved: false initially
-export const submitVendorApplication = async (
-  uid: string,
-  data: Omit<Vendor, "uid" | "approved" | "createdAt">,
-) => {
-  const vendorRef = doc(db, "vendors", uid)
+export interface VendorOwner {
+  uid: string // Firebase UID
+  stores: string[] // Array of store IDs owned by this user
+  activeStoreId: string | null // Currently selected store
+  maxStores: number // Maximum stores allowed (default 3)
+}
 
-  await setDoc(vendorRef, {
-    uid,
+// Create a new vendor store for a user
+export const createVendorStore = async (
+  ownerId: string,
+  data: Omit<Vendor, "id" | "ownerId" | "approved" | "createdAt" | "isActive">,
+): Promise<string> => {
+  // Check if user already has maximum stores
+  const ownerStores = await getUserStores(ownerId)
+  if (ownerStores.length >= 3) {
+    throw new Error("Maximum of 3 stores allowed per user")
+  }
+
+  // Create the vendor store
+  const vendorRef = await addDoc(collection(db, "vendors"), {
+    ownerId,
     ...data,
     approved: false,
+    isActive: true,
     createdAt: serverTimestamp(),
   })
+
+  // Update or create vendor owner record
+  const ownerRef = doc(db, "vendorOwners", ownerId)
+  const ownerDoc = await getDoc(ownerRef)
+  
+  if (ownerDoc.exists()) {
+    const ownerData = ownerDoc.data() as VendorOwner
+    await updateDoc(ownerRef, {
+      stores: [...ownerData.stores, vendorRef.id],
+      activeStoreId: ownerData.activeStoreId || vendorRef.id, // Set as active if first store
+    })
+  } else {
+    await setDoc(ownerRef, {
+      uid: ownerId,
+      stores: [vendorRef.id],
+      activeStoreId: vendorRef.id,
+      maxStores: 3,
+    })
+  }
+
+  return vendorRef.id
 }
 
-// Approve a vendor application (callable from admin dashboard / server action)
-export const approveVendor = async (uid: string) => {
-  const vendorRef = doc(db, "vendors", uid)
+// Get all stores owned by a user
+export const getUserStores = async (ownerId: string): Promise<Vendor[]> => {
+  console.log("Getting stores for owner:", ownerId)
+  const q = query(collection(db, "vendors"), where("ownerId", "==", ownerId))
+  const snapshot = await getDocs(q)
+  const stores = snapshot.docs.map(doc => {
+    const data = doc.data()
+    console.log("Store data:", { id: doc.id, ...data })
+    return { id: doc.id, ...data } as Vendor
+  })
+  console.log("Returning stores:", stores)
+  return stores
+}
+
+// Get vendor owner information
+export const getVendorOwner = async (ownerId: string): Promise<VendorOwner | null> => {
+  console.log("Getting vendor owner for:", ownerId)
+  const snapshot = await getDoc(doc(db, "vendorOwners", ownerId))
+  if (!snapshot.exists()) {
+    console.log("No vendor owner document found")
+    return null
+  }
+  const ownerData = snapshot.data() as VendorOwner
+  console.log("Vendor owner data:", ownerData)
+  return ownerData
+}
+
+// Switch active store for a user
+export const switchActiveStore = async (ownerId: string, storeId: string): Promise<void> => {
+  const ownerRef = doc(db, "vendorOwners", ownerId)
+  await updateDoc(ownerRef, { activeStoreId: storeId })
+}
+
+// Get active store for a user
+export const getActiveStore = async (ownerId: string): Promise<Vendor | null> => {
+  const owner = await getVendorOwner(ownerId)
+  if (!owner || !owner.activeStoreId) return null
+  
+  const storeDoc = await getDoc(doc(db, "vendors", owner.activeStoreId))
+  if (!storeDoc.exists()) return null
+  
+  return { id: storeDoc.id, ...storeDoc.data() } as Vendor
+}
+
+// Approve a vendor store (callable from admin dashboard)
+export const approveVendor = async (storeId: string) => {
+  const vendorRef = doc(db, "vendors", storeId)
   await updateDoc(vendorRef, { approved: true })
 }
 
-// Reject / delete vendor application
-export const rejectVendor = async (uid: string) => {
-  await updateDoc(doc(db, "vendors", uid), { approved: false })
-  // or delete doc if you prefer: await deleteDoc(doc(db, "vendors", uid))
+// Reject a vendor store application
+export const rejectVendor = async (storeId: string) => {
+  await updateDoc(doc(db, "vendors", storeId), { approved: false })
 }
 
-export const getVendor = async (uid: string): Promise<Vendor | null> => {
-  const snapshot = await getDoc(doc(db, "vendors", uid))
+// Get vendor store by ID
+export const getVendor = async (storeId: string): Promise<Vendor | null> => {
+  const snapshot = await getDoc(doc(db, "vendors", storeId))
   if (!snapshot.exists()) return null
-  return snapshot.data() as Vendor
+  return { id: snapshot.id, ...snapshot.data() } as Vendor
 }
 
 export const getApprovedVendors = async (): Promise<Vendor[]> => {
   const q = query(collection(db, "vendors"), where("approved", "==", true))
   const sn = await getDocs(q)
-  return sn.docs.map((d) => d.data() as Vendor)
+  return sn.docs.map((d) => ({ id: d.id, ...d.data() } as Vendor))
 }
 
 export const getAllVendors = async (): Promise<Vendor[]> => {
   const q = query(collection(db, "vendors"))
   const sn = await getDocs(q)
-  return sn.docs.map((d) => ({ id: d.id, ...d.data() } as Vendor & { id: string }))
+  return sn.docs.map((d) => ({ id: d.id, ...d.data() } as Vendor))
 }
 
-export const getVendorProducts = async (vendorId: string) => {
-  const q = query(collection(db, "products"), where("vendorId", "==", vendorId))
+export const getVendorProducts = async (storeId: string) => {
+  const q = query(collection(db, "products"), where("vendorId", "==", storeId))
   const sn = await getDocs(q)
   return sn.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
+// Update vendor store information
+export const updateVendorStore = async (storeId: string, data: Partial<Vendor>) => {
+  const vendorRef = doc(db, "vendors", storeId)
+  await updateDoc(vendorRef, data)
+}
+
+// Deactivate a vendor store
+export const deactivateVendorStore = async (ownerId: string, storeId: string) => {
+  // Mark store as inactive
+  await updateDoc(doc(db, "vendors", storeId), { isActive: false })
+  
+  // Remove from owner's stores and update active store
+  const owner = await getVendorOwner(ownerId)
+  if (owner) {
+    const updatedStores = owner.stores.filter(id => id !== storeId)
+    const newActiveStore = owner.activeStoreId === storeId 
+      ? (updatedStores.length > 0 ? updatedStores[0] : null)
+      : owner.activeStoreId
+    
+    await updateDoc(doc(db, "vendorOwners", ownerId), {
+      stores: updatedStores,
+      activeStoreId: newActiveStore,
+    })
+  }
 } 

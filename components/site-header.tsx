@@ -36,6 +36,7 @@ import { useCart } from "@/components/cart-provider"
 import { useWishlist } from "@/hooks/use-wishlist"
 import { useAuth } from "@/components/auth-provider"
 import { useVendor } from "@/hooks/use-vendor"
+import { VendorHeaderSwitcher } from "@/components/vendor-header-switcher"
 import clsx from "clsx"
 
 const categories = [
@@ -150,7 +151,7 @@ export default function HeaderImproved() {
         <Link href="/" className="flex items-center space-x-2">
           <Image src="/logo/logo.png" alt="RUACH Logo" width={120} height={40} className="h-10 w-auto" />
           <span className="font-bold tracking-tight text-gray-900 hidden sm:inline">
-            RUACH PRODUCTION
+            RUACH E-STORE
           </span>
         </Link>
 
@@ -171,6 +172,9 @@ export default function HeaderImproved() {
 
         {/* Icons */}
         <div className="flex items-center space-x-3 md:space-x-4">
+          {/* Vendor Store Switcher */}
+          <VendorHeaderSwitcher />
+          
           <Link href="/wishlist" className="relative" aria-label="Wishlist">
             <Button variant="ghost" size="icon" className="hover:text-green-600">
               <Heart className="h-5 w-5" />

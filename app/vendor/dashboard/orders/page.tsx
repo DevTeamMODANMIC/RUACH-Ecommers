@@ -57,7 +57,7 @@ interface Order {
 }
 
 export default function VendorOrdersPage() {
-  const { vendor } = useVendor()
+  const { vendor, activeStore } = useVendor()
   const [orders, setOrders] = useState<Order[]>([])
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([])
   const [searchTerm, setSearchTerm] = useState("")

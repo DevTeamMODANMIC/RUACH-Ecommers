@@ -1,5 +1,6 @@
 import { collection, doc, getDocs, getDoc, addDoc, updateDoc, query, where, orderBy, limit, onSnapshot } from "firebase/firestore"
 import { db } from "./firebase"
+import { updateProduct } from "./firebase-products"
 
 export interface OrderItem {
   productId: string
@@ -56,7 +57,34 @@ export const createOrder = async (orderData: Omit<Order, "id" | "orderNumber" | 
       updatedAt: new Date(),
     }
 
+    // Create the order first
     const docRef = await addDoc(collection(db, "orders"), order)
+    
+    // CRITICAL: Decrement inventory for each ordered item
+    try {
+      for (const item of orderData.items) {
+        // Get current product data
+        const productDoc = await getDoc(doc(db, "products", item.productId))
+        if (productDoc.exists()) {
+          const productData = productDoc.data()
+          const currentStock = productData.stockQuantity || 0
+          const newStock = Math.max(0, currentStock - item.quantity)
+          
+          // Update product stock
+          await updateProduct(item.productId, {
+            stockQuantity: newStock,
+            inStock: newStock > 0
+          })
+          
+          console.log(`Decremented stock for ${item.name}: ${currentStock} -> ${newStock}`)
+        }
+      }
+    } catch (stockError) {
+      console.error("Error updating stock levels:", stockError)
+      // Note: Order still created, but stock update failed
+      // Consider implementing compensating transaction in production
+    }
+    
     return { id: docRef.id, ...order }
   } catch (error: any) {
     throw new Error(error.message)
