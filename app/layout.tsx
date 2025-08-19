@@ -1,8 +1,8 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter, Poppins } from "next/font/google"
-import "./globals.css"
 import "./tailwind.css"
+import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import SiteHeader from "@/components/site-header"
 import Footer from "@/components/footer"
@@ -114,7 +114,7 @@ export default function RootLayout({
                 <AuthProvider>
                   <KeyboardNavigation />
                   <SiteHeader />
-                  <main className="min-h-screen pt-20 sm:pt-24 md:pt-28">
+                  <main className="min-h-screen">
                     {children}
                   </main>
                   <Footer />

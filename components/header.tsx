@@ -35,7 +35,6 @@ import { useVendor } from "@/hooks/use-vendor";
 
 const mainNavItems = [
   { title: "Home", href: "/", icon: Home },
-  { title: "About us", href: "/about", icon: Info },
   {
     title: "Shop",
     href: "/shop",
@@ -52,27 +51,13 @@ const mainNavItems = [
       { title: "Provisions", href: "/shop?category=provisions" },
       { title: "Fresh Produce", href: "/shop?category=fresh-produce" },
       { title: "Fresh Vegetables", href: "/shop?category=fresh-vegetables" },
+      { title: "Fish & Meat", href: "/shop?category=meat" },
     ],
   },
   { title: "Stores", href: "/stores", icon: Store },
   { title: "Become a Vendor", href: "/vendor/register", icon: User },
   { title: "Bulk Order", href: "/bulk-order", icon: Package },
   { title: "Contact us", href: "/contact", icon: MessageCircle },
-];
-
-const categoryNavItems = [
-  { title: "Drinks", href: "/shop?category=drinks" },
-  { title: "Flour", href: "/shop?category=flour" },
-  { title: "Rice", href: "/shop?category=rice" },
-  { title: "Pap/Custard", href: "/shop?category=pap-custard" },
-  { title: "Spices", href: "/shop?category=spices" },
-  { title: "Drinks & Beverages", href: "/shop?category=drinks" },
-  { title: "Dried Spices", href: "/shop?category=dried-spices" },
-  { title: "Oil", href: "/shop?category=oil" },
-  { title: "Provisions", href: "/shop?category=provisions" },
-  { title: "Fresh Produce", href: "/shop?category=fresh-produce" },
-  { title: "Fresh Vegetables", href: "/shop?category=fresh-vegetables" },
-  { title: "Fish & Meat", href: "/shop?category=meat" },
 ];
 
 export default function Header() {
@@ -143,16 +128,6 @@ export default function Header() {
         className={`fixed top-0 left-0 right-0 z-50 w-full bg-white border-b border-gray-200 shadow-lg transition-all duration-300 ${isScrolled ? "py-1" : "py-2"}`}
       >
         <div className="container mx-auto px-4">
-          {/* Top Bar - Optional contact info or announcements */}
-          <div className="hidden md:flex justify-end items-center space-x-6 py-1 text-xs text-gray-500 border-b border-gray-100">
-            <span className="flex items-center">
-              <Phone className="h-3 w-3 mr-1.5" /> +44 123 456 7890
-            </span>
-            <span className="font-medium text-green-600">Free UK delivery on orders over £50</span>
-            <Link href="/vendor/register" className="hover:underline ml-4">
-              Sell with Us
-            </Link>
-          </div>
           
           {/* Main Header */}
           <div className="flex items-center justify-between py-2">
@@ -216,7 +191,7 @@ export default function Header() {
                           toggleDropdown(item.title);
                         }
                       }}
-                      className="flex items-center cursor-pointer dropdown-menu-container px-3"
+                      className="flex items-center cursor-pointer dropdown-menu-container px-3 rounded-md hover:bg-gray-50 transition-colors duration-200"
                     >
                       <Link
                         href={item.href}
@@ -241,26 +216,27 @@ export default function Header() {
                     {/* Dropdown Menu */}
                     {item.dropdown && (
                       <div
-                        className={`absolute top-full right-0 shadow-lg rounded-b-lg w-48 z-30 transition-all duration-300 dropdown-menu-container
-                          bg-white border-t-2 border-green-500 ${
+                        className={`absolute top-full left-0 shadow-xl rounded-md w-64 z-50 transition-all duration-200 dropdown-menu-container
+                          bg-white border border-gray-200 max-h-60 overflow-hidden ${
                             activeDropdown === item.title
-                              ? "opacity-100 translate-y-0 visible"
-                              : "opacity-0 -translate-y-2 invisible"
+                              ? "opacity-100 translate-y-2 visible scale-100"
+                              : "opacity-0 -translate-y-2 invisible scale-95"
                           }`}
                       >
-                        <ul className="py-1 max-h-60 overflow-y-auto">
-                          {item.dropdown.map((subItem) => (
-                            <li key={subItem.title}>
+                        <div className="overflow-y-auto h-full py-2">
+                          <div className="grid grid-cols-2 gap-1.5 px-3">
+                            {item.dropdown.map((subItem) => (
                               <Link
+                                key={subItem.title}
                                 href={subItem.href}
-                                className="flex items-center px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-700 text-sm"
+                                className="flex items-center px-2 py-1 text-gray-700 hover:bg-green-50 hover:text-green-700 text-xs transition-colors duration-150 rounded"
                                 onClick={() => setActiveDropdown(null)}
                               >
                                 {subItem.title}
                               </Link>
-                            </li>
-                          ))}
-                        </ul>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </li>
@@ -588,21 +564,20 @@ export default function Header() {
                         } text-gray-500`}
                       />
                     </div>
-
-                    {/* Mobile Dropdown */}
                     <div
-                      className={`overflow-hidden transition-all duration-300 ${
+                      className={`overflow-hidden transition-all duration-200 ${
                         activeDropdown === item.title
-                          ? "max-h-96 opacity-100"
-                          : "max-h-0 opacity-0"
+                          ? "max-h-60 opacity-100 mt-1 overflow-y-auto"
+                          : "max-h-0 opacity-0 mt-0"
                       }`}
                     >
-                      <ul className="pl-4 mt-2 border-l-2 border-green-500/30 space-y-2">
-                        {item.dropdown.map((subItem) => (
-                          <li key={subItem.title}>
+                      <div className="pl-3 border-l-2 border-green-500/30 py-1.5">
+                        <div className="grid grid-cols-2 gap-1">
+                          {item.dropdown.map((subItem) => (
                             <Link
+                              key={subItem.title}
                               href={subItem.href}
-                              className="flex items-center py-2 text-gray-600 hover:text-green-600"
+                              className="flex items-center py-1.5 px-2 text-gray-600 hover:text-green-700 transition-colors duration-150 text-sm rounded hover:bg-green-50"
                               onClick={() => {
                                 setActiveDropdown(null);
                                 setMobileMenuOpen(false);
@@ -610,9 +585,9 @@ export default function Header() {
                             >
                               {subItem.title}
                             </Link>
-                          </li>
-                        ))}
-                      </ul>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -693,51 +668,19 @@ export default function Header() {
             </li>
 
             {/* Mobile Categories */}
-            <li className="py-2">
-              <div className="font-medium text-gray-900 py-2">Categories</div>
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                <Link
-                  href="/shop?category=drinks"
-                  className="text-gray-700 py-2 px-3 bg-gray-100 rounded hover:bg-gray-200 hover:text-green-600 text-sm transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Drinks
-                </Link>
-                <Link
-                  href="/shop?category=flour"
-                  className="text-gray-700 py-2 px-3 bg-gray-100 rounded hover:bg-gray-200 hover:text-green-600 text-sm transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Flour
-                </Link>
-                <Link
-                  href="/shop?category=rice"
-                  className="text-gray-700 py-2 px-3 bg-gray-100 rounded hover:bg-gray-200 hover:text-green-600 text-sm transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Rice
-                </Link>
-                <Link
-                  href="/shop?category=custard"
-                  className="text-gray-700 py-2 px-3 bg-gray-100 rounded hover:bg-gray-200 hover:text-green-600 text-sm transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Pap/Custard
-                </Link>
-                <Link
-                  href="/shop?category=spices"
-                  className="text-gray-700 py-2 px-3 bg-gray-100 rounded hover:bg-gray-200 hover:text-green-600 text-sm transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Spices
-                </Link>
-                <Link
-                  href="/shop?category=beverages"
-                  className="text-gray-700 py-2 px-3 bg-gray-100 rounded hover:bg-gray-200 hover:text-green-600 text-sm transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Beverages
-                </Link>
+            <li className="py-1">
+              <div className="font-medium text-gray-900 py-1.5 text-sm">Categories</div>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                {mainNavItems[1].dropdown?.map((category) => (
+                  <Link
+                    key={category.title}
+                    href={category.href}
+                    className="text-gray-700 py-1.5 px-2.5 bg-gray-100 rounded hover:bg-green-50 hover:text-green-700 text-xs transition-all duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {category.title}
+                  </Link>
+                ))}
               </div>
             </li>
 

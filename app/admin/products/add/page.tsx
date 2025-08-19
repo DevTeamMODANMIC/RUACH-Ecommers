@@ -24,23 +24,9 @@ import { useToast } from "@/hooks/use-toast"
 import { useCurrency } from "@/hooks/use-currency"
 import CloudinaryUploadWidget from "@/components/cloudinary-upload-widget"
 
-// Match categories exactly with shop page
-const categories = [
-  { id: "drinks", name: "Drinks & Beverages" },
-  { id: "food", name: "Food" },
-  { id: "flour", name: "Flour" },
-  { id: "rice", name: "Rice" },
-  { id: "pap-custard", name: "Pap/Custard" },
-  { id: "spices", name: "Spices" },
-  { id: "dried-spices", name: "Dried Spices" },
-  { id: "oil", name: "Oil" },
-  { id: "provisions", name: "Provisions" },
-  { id: "fresh-produce", name: "Fresh Produce" },
-  { id: "fresh-vegetables", name: "Fresh Vegetables" },
-  { id: "vegetables", name: "Vegetables" },
-  { id: "meat", name: "Fish & Meat" },
-  { id: "other", name: "Other" }
-]
+// Use centralized categories
+import { MAIN_CATEGORIES } from "@/lib/categories"
+const categories = MAIN_CATEGORIES.filter(c => c.id !== 'all').map(c => ({ id: c.id, name: c.name }))
 
 const countries = [
   "All", "United Kingdom", "Nigeria", "Ghana", "South Africa", "Kenya", 

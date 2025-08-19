@@ -32,23 +32,8 @@ import {
 } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 
-// Define available categories
-const categories = [
-  { id: "all", name: "All Products" },
-  { id: "drinks", name: "Drinks & Beverages" },
-  { id: "food", name: "Food" },
-  { id: "flour", name: "Flour" },
-  { id: "rice", name: "Rice" },
-  { id: "pap-custard", name: "Pap/Custard" },
-  { id: "spices", name: "Spices" },
-  { id: "dried-spices", name: "Dried Spices" },
-  { id: "oil", name: "Oil" },
-  { id: "provisions", name: "Provisions" },
-  { id: "fresh-produce", name: "Fresh Produce" },
-  { id: "fresh-vegetables", name: "Fresh Vegetables" },
-  { id: "vegetables", name: "Vegetables" },
-  { id: "meat", name: "Fish & Meat" }
-];
+// Centralized categories for consistency across the site
+import { MAIN_CATEGORIES as categories, normalizeCategoryId, bucketProductToMainCategory } from "@/lib/categories";
 
 // Define price ranges
 const priceRanges = [
@@ -59,23 +44,7 @@ const priceRanges = [
   { id: "over10000", name: "Over ₦10,000", min: 10000, max: Infinity }
 ];
 
-// Map URL category parameters to actual product categories
-const categoryMapping: Record<string, string> = {
-  "drinks": "drinks",
-  "beverages": "drinks",
-  "flour": "flour",
-  "rice": "rice",
-  "pap-custard": "pap-custard",
-  "spices": "spices",
-  "dried-spices": "dried-spices",
-  "oil": "oil",
-  "provisions": "provisions",
-  "fresh-produce": "fresh-produce",
-  "fresh-vegetables": "fresh-vegetables",
-  "vegetables": "vegetables",
-  "meat": "meat",
-  "food": "food"
-};
+// Category mapping moved to centralized lib/categories.ts
 
 // Add reverse mapping for product categories to URL parameters
 const productCategoryMapping: Record<string, string> = {
@@ -102,7 +71,7 @@ export default function ShopPage() {
   const router = useRouter()
   
   // Get category from URL or default to "all"
-  const categoryParam = searchParams.get("category") || "all"
+  const categoryParam = normalizeCategoryId(searchParams.get("category"))
   // Get search term from URL
   const searchParam = searchParams.get("search") || ""
   
@@ -155,8 +124,7 @@ export default function ShopPage() {
         const firebaseFilters: ProductFilters = {}
         
         // We'll apply category filter client-side to avoid the composite index requirement
-        let categoryFilter = selectedCategory !== "all" ? 
-          categoryMapping[selectedCategory] || selectedCategory : null
+        const categoryFilter = selectedCategory !== "all" ? selectedCategory : null
         
         // Only apply origin filter to Firebase query
         if (selectedOrigin !== "all") {
@@ -193,6 +161,12 @@ export default function ShopPage() {
               // Get the displayCategory if available
               const productDisplayCategory = String((product as any).displayCategory || "").toLowerCase().trim()
               
+              // Bucket product to a main category for 'others' handling
+              const bucket = bucketProductToMainCategory(product as any)
+              if (categoryFilterLower === 'others') {
+                return bucket === 'others'
+              }
+
               // More precise matching for categories
               const exactCategoryMatch = productCategory === categoryFilterLower;
               const exactDisplayCategoryMatch = productDisplayCategory === categoryFilterLower;
@@ -273,13 +247,19 @@ export default function ShopPage() {
             
             // Apply category filter
             if (selectedCategory !== "all") {
-              const mappedCategory = categoryMapping[selectedCategory] || selectedCategory
+              const mappedCategory = selectedCategory
               localProducts = localProducts.filter((product) => {
                 const productCategory = String(product.category || "").toLowerCase().trim();
                 // Use type assertion for displayCategory
                 const productDisplayCategory = String((product as any).displayCategory || "").toLowerCase().trim();
                 const mappedLower = mappedCategory.toLowerCase().trim();
                 const selectedLower = selectedCategory.toLowerCase().trim();
+
+                // Handle 'others' bucket
+                const bucket = bucketProductToMainCategory(product as any)
+                if (selectedLower === 'others') {
+                  return bucket === 'others'
+                }
 
                 // Exact matches only
                 if (productCategory === mappedLower || productCategory === selectedLower) return true;

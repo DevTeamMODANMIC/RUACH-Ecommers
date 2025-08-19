@@ -7,6 +7,7 @@ import { Slider } from "@/components/ui/slider"
 import { Search, Filter, ChevronDown } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { MAIN_CATEGORIES } from "@/lib/categories"
 
 export function ProductFilters() {
   const router = useRouter()
@@ -84,16 +85,8 @@ export function ProductFilters() {
     router.push('/shop')
   }
 
-  const categoryOptions = [
-    { id: 'drinks', label: 'Drinks & Beverages' },
-    { id: 'food', label: 'Food & Snacks' },
-    { id: 'rice', label: 'Rice & Grains' },
-    { id: 'flour', label: 'Flour' },
-    { id: 'spices', label: 'Spices & Seasonings' },
-    { id: 'vegetables', label: 'Vegetables & Fruits' },
-    { id: 'meat', label: 'Fish & Meat' },
-    { id: 'oil', label: 'Oil' }
-  ]
+  // Use centralized main categories (excluding 'all')
+  const categoryOptions = MAIN_CATEGORIES.filter(c => c.id !== 'all').map(c => ({ id: c.id, label: c.name }))
   
   const originOptions = [
     { id: 'nigeria', label: 'Nigeria' },

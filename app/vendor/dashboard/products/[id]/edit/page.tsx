@@ -33,17 +33,9 @@ interface ProductFormData {
   discount?: number
 }
 
-const categories = [
-  "drinks",
-  "food", 
-  "flour",
-  "rice",
-  "spices",
-  "oil",
-  "provisions",
-  "vegetables",
-  "meat"
-]
+// Use centralized categories (exclude 'all')
+import { MAIN_CATEGORIES } from "@/lib/categories"
+const categories = MAIN_CATEGORIES.filter(c => c.id !== 'all').map(c => c.id)
 
 const origins = [
   "nigeria",
@@ -58,7 +50,7 @@ const origins = [
 export default function EditProductPage() {
   const router = useRouter()
   const params = useParams()
-  const { vendor, isLoading: vendorLoading } = useVendor()
+  const { vendor, loading: vendorLoading } = useVendor()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -92,8 +84,8 @@ export default function EditProductPage() {
         return
       }
 
-      // Check if this product belongs to the current vendor
-      if (productData.vendorId !== vendor?.uid) {
+      // Check if this product belongs to the current vendor (allow legacy products without vendorId)
+      if (productData.vendorId && productData.vendorId !== vendor?.id) {
         toast({
           title: "Access denied",
           description: "You can only edit your own products.",
@@ -139,7 +131,7 @@ export default function EditProductPage() {
     try {
       await updateProduct(productId, {
         ...product,
-        vendorId: vendor.uid,
+        vendorId: vendor.id,
         vendorName: vendor.shopName,
         updatedAt: new Date()
       })

@@ -96,7 +96,7 @@ export default function Hero() {
 
   return (
     <section 
-      className="relative h-[60vh] sm:h-[70vh] md:h-[85vh] overflow-hidden bg-white border-b border-gray-200 mb-12"
+      className="relative h-[60vh] sm:h-[70vh] md:h-[85vh] overflow-hidden bg-white border-b border-gray-200"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

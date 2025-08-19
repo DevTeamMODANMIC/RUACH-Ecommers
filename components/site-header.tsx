@@ -37,9 +37,11 @@ import { useWishlist } from "@/hooks/use-wishlist"
 import { useAuth } from "@/components/auth-provider"
 import { useVendor } from "@/hooks/use-vendor"
 import { VendorHeaderSwitcher } from "@/components/vendor-header-switcher"
+import { DesktopMegaMenu, MobileMegaMenu } from "@/components/mega-menu"
 import clsx from "clsx"
 
-const categories = [
+// Legacy categories - keeping for backward compatibility if needed
+const legacyCategories = [
   { id: "drinks", name: "Drinks & Beverages" },
   { id: "flour", name: "Flour" },
   { id: "rice", name: "Rice" },
@@ -55,11 +57,11 @@ const categories = [
 
 const primaryLinks = [
   { title: "Home", href: "/" },
-  { title: "About", href: "/about" },
   { title: "Shop", href: "/shop" },
   { title: "Stores", href: "/stores" },
   { title: "Become a Vendor", href: "/vendor/register" },
   { title: "Bulk Order", href: "/bulk-order" },
+  { title: "FAQs", href: "/faq" },
 ]
 
 export default function HeaderImproved() {
@@ -121,16 +123,7 @@ export default function HeaderImproved() {
               ))}
               <div>
                 <p className="uppercase text-xs text-gray-500 mb-2">Categories</p>
-                {categories.map(c => (
-                  <Link
-                    key={c.id}
-                    href={`/shop?category=${c.id}`}
-                    onClick={() => setMobileOpen(false)}
-                    className="block py-1 text-gray-600 hover:text-green-600"
-                  >
-                    {c.name}
-                  </Link>
-                ))}
+                <MobileMegaMenu onNavigate={() => setMobileOpen(false)} />
               </div>
 
               {/* Mobile Vendor CTA */}
@@ -196,13 +189,7 @@ export default function HeaderImproved() {
             )}
           </Link>
 
-          {/* Sell on RUACH Button */}
-          <Link
-            href="/vendor/register"
-            className="hidden lg:inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-medium mr-2"
-          >
-            Sell on RUACH
-          </Link>
+          {/* Sell on RUACH Button - Removed */}
 
           {/* WhatsApp Floating Icon */}
           <a
@@ -255,25 +242,7 @@ export default function HeaderImproved() {
         <nav className="flex items-center justify-center space-x-8 text-sm h-10">
           {primaryLinks.map(link =>
             link.title === "Shop" ? (
-              <DropdownMenu key={link.title}>
-                <DropdownMenuTrigger className={clsx(
-                  "flex items-center gap-1",
-                  pathname.startsWith("/shop") ? "text-green-700 font-semibold" : "text-gray-800 hover:text-green-600"
-                )}>
-                  {link.title} <ChevronDown className="h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 p-1">
-                  {categories.map(c => (
-                    <DropdownMenuItem
-                      key={c.id}
-                      onSelect={() => router.push(`/shop?category=${c.id}`)}
-                      className="hover:bg-green-50 cursor-pointer"
-                    >
-                      {c.name}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <DesktopMegaMenu key={link.title} pathname={pathname} />
             ) : (
               <Link
                 key={link.title}
