@@ -45,6 +45,9 @@ export default function Footer() {
               <p className="text-sm leading-relaxed mb-6">
                 Your trusted source for authentic products –delivered with care and quality assurance.
               </p>
+              <p className="text-sm leading-relaxed mb-6">
+                Partnered with Modanmic.
+              </p>
               <div className="flex space-x-4">
                 {[
                   { Icon: Facebook, href: "#", label: "Facebook" },
@@ -118,7 +121,7 @@ export default function Footer() {
                     description: "You'll receive our next newsletter soon.",
                   })
                 }}
-                className="flex items-center w-full max-w-md mx-auto sm:mx-0"
+                className="flex flex-col w-full max-w-md mx-auto sm:mx-0 gap-3"
               >
                 <input
                   type="email"
@@ -126,11 +129,11 @@ export default function Footer() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="Enter your email"
-                  className="flex-1 rounded-full rounded-r-none px-4 py-1.5 text-gray-900 placeholder-gray-500 focus:outline-none"
+                                    className="w-full rounded-md border border-gray-300 px-4 py-2 h-10 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
                 />
                 <button
                   type="submit"
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-full rounded-l-none transition-colors"
+                                    className="w-full bg-green-600 hover:bg-green-700 text-white px-4 h-10 rounded-md transition-colors flex items-center justify-center"
                   aria-label="Subscribe"
                 >
                   <Send className="h-4 w-4" />
@@ -159,7 +162,7 @@ export default function Footer() {
 
           {/* Bottom bar */}
           <div className="flex flex-col md:flex-row justify-between items-center border-t border-gray-700 pt-6 mt-10 text-sm text-gray-400 gap-4">
-            <p className="mb-4 md:mb-0">© {currentYear} RUACH E-STORE. All rights reserved.</p>
+            <p className="mb-4 md:mb-0">© {currentYear} RUACH E-STORE. Partnered with Modanmic.</p>
             <div className="flex items-center flex-wrap justify-center md:justify-start gap-4">
               <span>We Accept</span>
               <img src="/visa.svg" alt="Visa" className="h-6 w-auto" />
