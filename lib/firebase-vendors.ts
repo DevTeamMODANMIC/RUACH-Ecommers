@@ -10,6 +10,8 @@ import {
   Timestamp,
   serverTimestamp,
   addDoc,
+  writeBatch,
+  deleteDoc,
 } from "firebase/firestore"
 import { db } from "./firebase"
 
@@ -48,6 +50,7 @@ export const createVendorStore = async (
     ...data,
     approved: false,
     isActive: true,
+    status: "pending",
     createdAt: serverTimestamp(),
   })
 
@@ -120,12 +123,12 @@ export const getActiveStore = async (ownerId: string): Promise<Vendor | null> =>
 // Approve a vendor store (callable from admin dashboard)
 export const approveVendor = async (storeId: string) => {
   const vendorRef = doc(db, "vendors", storeId)
-  await updateDoc(vendorRef, { approved: true })
+  await updateDoc(vendorRef, { approved: true, isActive: true, rejected: false, status: "approved" })
 }
 
 // Reject a vendor store application
 export const rejectVendor = async (storeId: string) => {
-  await updateDoc(doc(db, "vendors", storeId), { approved: false })
+  await updateDoc(doc(db, "vendors", storeId), { approved: false, isActive: false, rejected: true, status: "rejected" })
 }
 
 // Get vendor store by ID
@@ -159,22 +162,45 @@ export const updateVendorStore = async (storeId: string, data: Partial<Vendor>) 
   await updateDoc(vendorRef, data)
 }
 
-// Deactivate a vendor store
-export const deactivateVendorStore = async (ownerId: string, storeId: string) => {
-  // Mark store as inactive
-  await updateDoc(doc(db, "vendors", storeId), { isActive: false })
-  
-  // Remove from owner's stores and update active store
+// Permanently delete a vendor store and its related data
+export const deleteVendorStore = async (ownerId: string, storeId: string) => {
+  // Start a batch for atomic updates where possible
+  const batch = writeBatch(db)
+
+  // 1) Remove storeId from owner's stores and update active store if needed
   const owner = await getVendorOwner(ownerId)
   if (owner) {
     const updatedStores = owner.stores.filter(id => id !== storeId)
     const newActiveStore = owner.activeStoreId === storeId 
       ? (updatedStores.length > 0 ? updatedStores[0] : null)
       : owner.activeStoreId
-    
-    await updateDoc(doc(db, "vendorOwners", ownerId), {
+
+    batch.update(doc(db, "vendorOwners", ownerId), {
       stores: updatedStores,
       activeStoreId: newActiveStore,
     })
   }
+
+  // 2) Delete all products for this store
+  const productsQ = query(collection(db, "products"), where("vendorId", "==", storeId))
+  const productsSn = await getDocs(productsQ)
+  for (const d of productsSn.docs) {
+    batch.delete(doc(db, "products", d.id))
+  }
+
+  // 3) Optionally, delete store orders or mark them as orphaned
+  // If you want to retain order history, comment this out.
+  const ordersQ = query(collection(db, "orders"), where("vendorId", "==", storeId))
+  const ordersSn = await getDocs(ordersQ)
+  for (const d of ordersSn.docs) {
+    // Retain order history by removing vendor linkage
+    batch.update(doc(db, "orders", d.id), { vendorId: null })
+    // Or to delete orders entirely, use: batch.delete(doc(db, "orders", d.id))
+  }
+
+  // 4) Delete the vendor store document itself
+  batch.delete(doc(db, "vendors", storeId))
+
+  // Commit all changes
+  await batch.commit()
 } 

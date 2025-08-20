@@ -89,7 +89,7 @@ export default function Footer() {
               <ul className="space-y-2 text-sm">
                 {[
                   { href: "/faq", label: "FAQs" },
-                  { href: "/shipping", label: "Shipping & Delivery" },
+                  { href: "/shipping-and-delivery", label: "Shipping & Delivery" },
                   { href: "/returns-and-refunds", label: "Returns & Refunds" },
                   { href: "/privacy-policy", label: "Privacy Policy" },
                   { href: "/terms", label: "Terms & Conditions" },
@@ -142,7 +142,7 @@ export default function Footer() {
           {/* Unique selling points */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10 text-center sm:text-left">
             {[
-              { Icon: Truck, title: "Fast Delivery", desc: "Free on orders ₦25,000+" },
+              { Icon: Truck, title: "Fast Delivery", desc: "Always on time" },
               { Icon: Shield, title: "Secure Payment", desc: "100% protected" },
               { Icon: CreditCard, title: "Quality Products", desc: "Authentic guarantee" },
               { Icon: Heart, title: "Customer Love", desc: "24/7 support" },

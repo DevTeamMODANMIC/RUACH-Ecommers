@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore"
+import { onAuthStateChanged } from "firebase/auth"
 import { db, auth } from "@/lib/firebase"
-import { approveVendor, rejectVendor, getApprovedVendors } from "@/lib/firebase-vendors"
+import { approveVendor, rejectVendor, getApprovedVendors, deleteVendorStore } from "@/lib/firebase-vendors"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Loader2, Check, X, RefreshCw, Store, Calendar, Eye, Users, ShoppingBag } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { toast } from "sonner"
 
 interface VendorApp {
   id: string
@@ -24,8 +26,24 @@ interface VendorApp {
 }
 
 export default function AdminVendorsPage() {
+  const handleDeleteStore = async (vendor: VendorApp) => {
+    if (!vendor?.id || !vendor?.ownerId) return
+    if (!confirm(`Permanently delete store "${vendor.shopName}"? This cannot be undone.`)) return
+    try {
+      setDeletingId(vendor.id)
+      await deleteVendorStore(vendor.ownerId, vendor.id)
+      toast.success(`Deleted store: ${vendor.shopName}`)
+      await fetchVendors()
+    } catch (e: any) {
+      console.error("Admin delete store failed", e)
+      toast.error(e?.message || "Failed to delete store")
+    } finally {
+      setDeletingId(null)
+    }
+  }
   const [loading, setLoading] = useState(true)
   const [pendingVendors, setPendingVendors] = useState<VendorApp[]>([])
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [approvedVendors, setApprovedVendors] = useState<VendorApp[]>([])
   const [actionUid, setActionUid] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -41,11 +59,11 @@ export default function AdminVendorsPage() {
       try {
         const pendingQuery = query(
           collection(db, "vendors"),
-          where("approved", "==", false),
+          where("status", "==", "pending"),
           orderBy("createdAt", "desc")
         )
         const pendingSnapshot = await getDocs(pendingQuery)
-        const fetchedPendingVendors = pendingSnapshot.docs.map((doc) => {
+        let fetchedPendingVendors = pendingSnapshot.docs.map((doc) => {
           const data = doc.data()
           return {
             id: doc.id,
@@ -58,6 +76,7 @@ export default function AdminVendorsPage() {
             isActive: data.isActive !== undefined ? data.isActive : true,
           } as VendorApp
         })
+        fetchedPendingVendors = fetchedPendingVendors.filter(v => !(v as any).rejected)
         setPendingVendors(fetchedPendingVendors)
         console.log("Fetched pending vendors:", fetchedPendingVendors)
       } catch (pendingError: any) {
@@ -66,10 +85,10 @@ export default function AdminVendorsPage() {
         try {
           const simplePendingQuery = query(
             collection(db, "vendors"),
-            where("approved", "==", false)
+            where("status", "==", "pending")
           )
           const simplePendingSnapshot = await getDocs(simplePendingQuery)
-          const fetchedPendingVendors = simplePendingSnapshot.docs.map((doc) => {
+          let fetchedPendingVendors = simplePendingSnapshot.docs.map((doc) => {
             const data = doc.data()
             return {
               id: doc.id,
@@ -82,6 +101,7 @@ export default function AdminVendorsPage() {
               isActive: data.isActive !== undefined ? data.isActive : true,
             } as VendorApp
           })
+          fetchedPendingVendors = fetchedPendingVendors.filter(v => !(v as any).rejected)
           setPendingVendors(fetchedPendingVendors)
           console.log("Fetched pending vendors (simple query):", fetchedPendingVendors)
         } catch (simpleError: any) {
@@ -145,33 +165,36 @@ export default function AdminVendorsPage() {
   }, [])
 
   useEffect(() => {
-    // Check admin access first
-    const checkAdminAccess = async () => {
-      if (auth.currentUser) {
-        console.log("Current user:", auth.currentUser.uid)
-        console.log("User email:", auth.currentUser.email)
-        
-        // Try to get user profile to check role
-        try {
-          const userDoc = await getDocs(query(collection(db, "users"), where("uid", "==", auth.currentUser.uid)))
-          if (!userDoc.empty) {
-            const userData = userDoc.docs[0].data()
-            console.log("User role:", userData.role)
-            if (userData.role !== "admin") {
-              setError("Access denied: Admin role required")
-              setLoading(false)
-              return
-            }
-          }
-        } catch (roleError) {
-          console.log("Could not check user role:", roleError)
-        }
+    // Listen for auth state and then check admin access
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setError("Access denied: Admin role required")
+        setLoading(false)
+        return
       }
-      
-      fetchVendors()
-    }
-    
-    checkAdminAccess()
+      try {
+        const userDoc = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)))
+        if (userDoc.empty) {
+          setError("Access denied: Admin role required")
+          setLoading(false)
+          return
+        }
+        const userData = userDoc.docs[0].data()
+        if (userData.role !== "admin") {
+          setError("Access denied: Admin role required")
+          setLoading(false)
+          return
+        }
+        // has admin role
+        setError(null)
+        await fetchVendors()
+      } catch (e) {
+        console.log("Could not check user role:", e)
+        setError("Access denied: Admin role required")
+        setLoading(false)
+      }
+    })
+    return () => unsub()
   }, [fetchVendors])
 
   const handleAction = async (storeId: string, action: 'approve' | 'reject') => {
@@ -179,16 +202,10 @@ export default function AdminVendorsPage() {
     try {
       if (action === 'approve') {
         await approveVendor(storeId)
-        // Move vendor from pending to approved
-        const vendor = pendingVendors.find(v => v.id === storeId)
-        if (vendor) {
-          setApprovedVendors(prev => [...prev, { ...vendor, approved: true }])
-        }
       } else {
         await rejectVendor(storeId)
       }
-      // Remove from pending list
-      setPendingVendors(prev => prev.filter(v => v.id !== storeId))
+      await fetchVendors()
     } catch (err: any) {
       console.error(`Failed to ${action} vendor:`, err)
       setError(`Could not ${action} the vendor. Please try again.`)
@@ -238,7 +255,17 @@ export default function AdminVendorsPage() {
             ) : (
               <div className="w-15 h-15 bg-gray-200 rounded-full flex items-center justify-center">
                 <Store className="h-8 w-8 text-gray-400" />
-              </div>
+                <Button
+                size="sm"
+                variant="outline"
+                className="text-red-600 hover:bg-red-50 border-red-200"
+                onClick={() => handleDeleteStore(vendor)}
+                disabled={deletingId === vendor.id}
+              >
+                {deletingId === vendor.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4 mr-1" />}
+                Delete
+              </Button>
+            </div>
             )}
           </div>
           
@@ -284,7 +311,17 @@ export default function AdminVendorsPage() {
                     <ShoppingBag className="h-4 w-4 mr-1" />
                     Products
                   </Button>
-                </>
+                  <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-600 hover:bg-red-50 border-red-200"
+                  onClick={() => handleDeleteStore(vendor)}
+                  disabled={deletingId === vendor.id}
+                >
+                  {deletingId === vendor.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4 mr-1" />}
+                  Delete
+                </Button>
+              </>
               ) : (
                 <div className="flex gap-2">
                   <Button
@@ -442,7 +479,7 @@ match /vendors/{vendorId} {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {pendingVendors.map((vendor) => (
-                <VendorCard key={vendor.uid} vendor={vendor} isPending={true} />
+                <VendorCard key={vendor.id} vendor={vendor} isPending={true} />
               ))}
             </div>
           )}
@@ -466,7 +503,7 @@ match /vendors/{vendorId} {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {approvedVendors.map((vendor) => (
-                <VendorCard key={vendor.uid} vendor={vendor} isPending={false} />
+                <VendorCard key={vendor.id} vendor={vendor} isPending={false} />
               ))}
             </div>
           )}

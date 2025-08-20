@@ -38,10 +38,9 @@ import { MAIN_CATEGORIES as categories, normalizeCategoryId, bucketProductToMain
 // Define price ranges
 const priceRanges = [
   { id: "all", name: "All Prices" },
-  { id: "under1000", name: "Under ₦1,000", min: 0, max: 1000 },
-  { id: "1000to5000", name: "₦1,000 - ₦5,000", min: 1000, max: 5000 },
-  { id: "5000to10000", name: "₦5,000 - ₦10,000", min: 5000, max: 10000 },
-  { id: "over10000", name: "Over ₦10,000", min: 10000, max: Infinity }
+  { id: "under10000", name: "Under ₦10,000", min: 0, max: 10000 },
+  { id: "10000to50000", name: "₦10,000 - ₦50,000", min: 10000, max: 50000 },
+  { id: "over50000", name: "Over ₦50,000", min: 50000, max: Infinity }
 ];
 
 // Category mapping moved to centralized lib/categories.ts
@@ -84,35 +83,20 @@ export default function ShopPage() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
   const [activeFiltersCount, setActiveFiltersCount] = useState(0)
   const [resultsCount, setResultsCount] = useState(products.length)
-  const [selectedOrigin, setSelectedOrigin] = useState("all")
   const [expandedSections, setExpandedSections] = useState({
     categories: true,
     priceRange: true,
-    origin: true,
     sort: true
   })
-  
-  // Define origins
-  const origins = [
-    { id: "all", name: "All" },
-    { id: "nigeria", name: "Nigeria" },
-    { id: "ghana", name: "Ghana" },
-    { id: "kenya", name: "Kenya" },
-    { id: "south-africa", name: "South Africa" },
-    { id: "cameroon", name: "Cameroon" },
-    { id: "senegal", name: "Senegal" },
-    { id: "international", name: "International" }
-  ];
   
   // Calculate active filters count
   useEffect(() => {
     let count = 0
     if (selectedCategory !== "all") count++
     if (selectedPriceRange !== "all") count++
-    if (selectedOrigin !== "all") count++
     if (searchTerm) count++
     setActiveFiltersCount(count)
-  }, [selectedCategory, selectedPriceRange, selectedOrigin, searchTerm])
+  }, [selectedCategory, selectedPriceRange, searchTerm])
   
   // Filter products based on selected filters
   useEffect(() => {
@@ -126,12 +110,7 @@ export default function ShopPage() {
         // We'll apply category filter client-side to avoid the composite index requirement
         const categoryFilter = selectedCategory !== "all" ? selectedCategory : null
         
-        // Only apply origin filter to Firebase query
-        if (selectedOrigin !== "all") {
-          console.log("Filtering by origin:", selectedOrigin)
-          console.log("Setting Firebase filter country to:", selectedOrigin)
-          firebaseFilters.country = selectedOrigin
-        }
+        
 
         try {
           console.log("Fetching products with filters:", firebaseFilters)
@@ -275,37 +254,7 @@ export default function ShopPage() {
               })
             }
             
-            // Apply origin filter
-            if (selectedOrigin !== "all") {
-              localProducts = localProducts.filter((product) => {
-                // Handle missing origin values
-                if (!product.origin) return false
-                
-                const productOrigin = String(product.origin || "").toLowerCase().trim();
-                const selectedOriginLower = selectedOrigin.toLowerCase().trim();
-                
-                // Exact match
-                if (productOrigin === selectedOriginLower) return true;
-                
-                // Special case for international products
-                if (selectedOriginLower === "international" && 
-                   (productOrigin === "international" || 
-                    productOrigin === "uk" || 
-                    productOrigin === "united kingdom" ||
-                    !["nigeria", "ghana", "kenya", "south-africa"].includes(productOrigin))) {
-                  return true;
-                }
-                
-                // Special case for UK products
-                if (selectedOriginLower === "uk" &&
-                   (productOrigin === "uk" ||
-                    productOrigin === "united kingdom")) {
-                  return true;
-                }
-                
-                return false;
-              })
-            }
+            
             
             // Apply price range filter
             if (selectedPriceRange !== "all") {
@@ -382,7 +331,7 @@ export default function ShopPage() {
     }
     
     loadProducts()
-  }, [selectedCategory, selectedPriceRange, selectedOrigin, searchTerm, selectedSort])
+  }, [selectedCategory, selectedPriceRange, searchTerm, selectedSort])
   
   // Update URL when filters change
   useEffect(() => {
@@ -401,11 +350,7 @@ export default function ShopPage() {
       params.set("category", selectedCategory)
     }
     
-    if (selectedOrigin === "all") {
-      params.delete("origin")
-    } else {
-      params.set("origin", selectedOrigin)
-    }
+    
     
     if (searchTerm) {
       params.set("search", searchTerm)
@@ -414,7 +359,7 @@ export default function ShopPage() {
     }
     
     router.replace(`/shop?${params.toString()}`)
-  }, [selectedCategory, selectedOrigin, searchTerm, router, searchParams])
+  }, [selectedCategory, searchTerm, router, searchParams])
   
   // Handle category change
   const handleCategoryChange = (categoryId: string) => {
@@ -438,16 +383,10 @@ export default function ShopPage() {
     // The URL will be updated via the useEffect that watches searchTerm
   }
 
-  // Handle origin change
-  const handleOriginChange = (originId: string) => {
-    setSelectedOrigin(originId)
-  }
-
   // Clear all filters
   const clearAllFilters = () => {
     setSelectedCategory("all")
     setSelectedPriceRange("all")
-    setSelectedOrigin("all")
     setSearchTerm("")
   }
 
@@ -469,11 +408,7 @@ export default function ShopPage() {
     return sort ? sort.name : "Popular"
   }
   
-  // Get the name of the selected origin
-  const getSelectedOriginName = () => {
-    const origin = origins.find(org => org.id === selectedOrigin)
-    return origin ? origin.name : "All"
-  }
+  
   
   // Toggle section visibility
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -581,41 +516,7 @@ export default function ShopPage() {
         )}
       </div>
       
-      {/* Origin Filter - Accordion style */}
-      <div className="mb-2 border border-gray-200 rounded-md">
-        <button 
-          onClick={() => toggleSection('origin')}
-          className="w-full flex justify-between items-center p-3 text-left focus:outline-none"
-        >
-          <span className="font-medium text-gray-700">Origin</span>
-          <ChevronDown 
-            className={`h-4 w-4 text-gray-500 transition-transform ${expandedSections.origin ? 'rotate-180' : ''}`} 
-          />
-        </button>
-         
-        {expandedSections.origin && (
-          <div className="p-3 border-t border-gray-200 space-y-2">
-            {origins.map((origin) => (
-              <div key={origin.id} className="flex items-center">
-                <input
-                  type="radio"
-                  id={`origin-${origin.id}`}
-                  checked={selectedOrigin === origin.id}
-                  onChange={() => handleOriginChange(origin.id)}
-                  className="h-4 w-4 border-gray-300 text-green-600 focus:ring-green-500 focus:ring-1 bg-white"
-                  name="origin"
-                />
-                <label 
-                  htmlFor={`origin-${origin.id}`} 
-                  className="ml-2 text-sm text-gray-700 cursor-pointer"
-                >
-                  {origin.name}
-                </label>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      
       
       {/* Sort By - Mobile Only */}
       {isMobile && (
@@ -656,7 +557,7 @@ export default function ShopPage() {
       )}
       
       {/* Active Filters - Simplified */}
-      {(selectedCategory !== "all" || selectedPriceRange !== "all" || selectedOrigin !== "all" || searchTerm) && (
+      {(selectedCategory !== "all" || selectedPriceRange !== "all" || searchTerm) && (
         <div className="mt-3 pt-2 border-t border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs text-gray-700">Active Filters</h3>
@@ -682,12 +583,7 @@ export default function ShopPage() {
                 <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => setSelectedPriceRange("all")} />
               </Badge>
             )}
-            {selectedOrigin !== "all" && (
-              <Badge variant="outline" className="text-xs bg-gray-50 border-gray-200 gap-1 py-1">
-                {getSelectedOriginName()}
-                <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => setSelectedOrigin("all")} />
-              </Badge>
-            )}
+            
             {searchTerm && (
               <Badge variant="outline" className="text-xs bg-gray-50 border-gray-200 gap-1 py-1">
                 {searchTerm}

@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -29,46 +29,72 @@ import Link from "next/link"
 
 // TEMPORARILY DISABLED: import StripeCheckout from "@/components/stripe-checkout"
 
+// NGN currency formatter and Nigeria states list for this page
+const formatNaira = (amount: number) => new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 2 }).format(amount)
+
+const NIGERIA_STATES = [
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River", "Delta",
+  "Ebonyi", "Edo", "Ekiti", "Enugu", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina",
+  "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo",
+  "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara", "FCT Abuja"
+]
+
 export default function CheckoutPage() {
   const router = useRouter()
   const { items, getTotalPrice, clearCart } = useCart()
-  const { formatPrice } = useSafeCurrency()
+  // We will override formatting to NGN on this page
+  const formatPrice = (amount: number) => formatNaira(amount)
   const { user } = useAuth()
   const { toast } = useToast()
 
   const [step, setStep] = useState(1)
   const [isProcessing, setIsProcessing] = useState(false)
   const [shippingInfo, setShippingInfo] = useState({
-    firstName: user?.name?.split(" ")[0] || "",
-    lastName: user?.name?.split(" ")[1] || "",
-    email: user?.email || "",
+    firstName: "",
+    lastName: "",
+    email: "",
     phone: "",
     address: "",
     city: "",
+    state: "Lagos",
     postalCode: "",
-    country: "UK",
+    country: "Nigeria",
   })
   const [billingInfo, setBillingInfo] = useState({
     firstName: "",
     lastName: "",
     address: "",
     city: "",
+    state: "Lagos",
     postalCode: "",
-    country: "UK",
+    country: "Nigeria",
   })
+
+  // Populate shipping info from authenticated user after mount to avoid SSR/CSR mismatch
+  useEffect(() => {
+    if (user) {
+      setShippingInfo((prev) => ({
+        ...prev,
+        firstName: user.displayName ? user.displayName.split(" ")[0] || "" : prev.firstName,
+        lastName: user.displayName ? user.displayName.split(" ")[1] || "" : prev.lastName,
+        email: user.email || prev.email,
+      }))
+    }
+  }, [user])
   const [paymentInfo, setPaymentInfo] = useState({
     cardNumber: "",
     expiryDate: "",
     cvv: "",
     nameOnCard: "",
   })
-  const [shippingMethod, setShippingMethod] = useState("standard")
+  const [shippingMethod, setShippingMethod] = useState("lagos")
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [sameAsShipping, setSameAsShipping] = useState(true)
 
   const subtotal = getTotalPrice()
-  const shippingCost = shippingMethod === "express" ? 9.99 : shippingMethod === "standard" ? 4.99 : 0
-  const tax = subtotal * 0.2 // 20% VAT
+  const shippingCost = shippingMethod === "lagos" ? 3000 : 7000
+  // VAT = 2.5% of subtotal
+  const tax = subtotal * 0.025
   const total = subtotal + shippingCost + tax
 
   const handleShippingChange = (field: string, value: string) => {
@@ -178,9 +204,9 @@ export default function CheckoutPage() {
               country: billingInfo.country,
               phone: shippingInfo.phone,
             },
-        estimatedDelivery: shippingMethod === "express" 
-          ? Date.now() + 2 * 24 * 60 * 60 * 1000  // 2 days for express
-          : Date.now() + 5 * 24 * 60 * 60 * 1000, // 5 days for standard
+        estimatedDelivery: shippingMethod === "lagos"
+          ? Date.now() + 2 * 24 * 60 * 60 * 1000  // 1-2 days for Lagos
+          : Date.now() + 5 * 24 * 60 * 60 * 1000, // 3-5 days for Interstate
       }
 
       // Process payment (this would be integrated with a payment provider)
@@ -188,14 +214,17 @@ export default function CheckoutPage() {
       // Handle different payment methods
       if (paymentMethod === "external") {
         // For external payment redirect, we create the order first as pending
-        orderData.paymentStatus = "pending";
-        
+        // Ensure required fields for createOrder
+        (orderData as any).currency = "GBP";
+        (orderData as any).paymentStatus = "pending";
+
         // Create the order in Firebase Realtime Database
-        const orderId = await createOrder(orderData);
-        
+        const created = await createOrder(orderData as any);
+        const orderId = created?.id || created;
+
         // For now, we redirect to the payment successful page for testing
         // This will be replaced with the actual payment link later
-        router.push(`/payment-successful?orderId=${orderId}&amount=${total.toFixed(2)}&items=${items.length}&email=${shippingInfo.email}`);
+        router.push(`/payment-successful?orderId=${orderId}&amount=${total.toFixed(2)}&items=${items.length}&email=${encodeURIComponent(shippingInfo.email)}`);
         
         // Note: The above redirect will be replaced with your external payment link
         // Example: router.push(`https://payment-provider.com?orderId=${orderId}&amount=${total}`);
@@ -207,12 +236,15 @@ export default function CheckoutPage() {
         const paymentResult = await simulatePaymentProcessing();
         
         if (paymentResult.success) {
-          // Add payment details to order
-          orderData.paymentStatus = "paid";
-          orderData.paymentId = paymentResult.paymentId;
-          
+
+          // Add payment details to order (use any-cast to satisfy type requirements)
+          (orderData as any).paymentStatus = "paid";
+          (orderData as any).paymentId = paymentResult.paymentId;
+          (orderData as any).currency = "GBP";
+
           // Create the order in Firebase Realtime Database
-          const orderId = await createOrder(orderData);
+          const created = await createOrder(orderData as any);
+          const orderId = created?.id || created;
   
           // Clear cart
           clearCart();
@@ -224,7 +256,7 @@ export default function CheckoutPage() {
           });
   
                     // Redirect to payment successful page with order details
-          router.push(`/payment-successful?orderId=${orderId}&amount=${total.toFixed(2)}&items=${items.length}&email=${shippingInfo.email}`);
+          router.push(`/payment-successful?orderId=${orderId}&amount=${total.toFixed(2)}&items=${items.length}&email=${encodeURIComponent(shippingInfo.email)}`);
         } else {
           throw new Error("Payment processing failed");
         }
@@ -407,19 +439,20 @@ export default function CheckoutPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="country">Country *</Label>
+                      <Label htmlFor="state">State *</Label>
                       <Select
-                        value={shippingInfo.country}
-                        onValueChange={(value) => handleShippingChange("country", value)}
+                        value={shippingInfo.state}
+                        onValueChange={(value) => handleShippingChange("state", value)}
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Select a state" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="UK">United Kingdom</SelectItem>
-                          <SelectItem value="US">United States</SelectItem>
-                          <SelectItem value="CA">Canada</SelectItem>
-                          <SelectItem value="AU">Australia</SelectItem>
+                          {NIGERIA_STATES.map((state) => (
+                            <SelectItem key={state} value={state}>
+                              {state}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -430,26 +463,26 @@ export default function CheckoutPage() {
                     <Label className="text-base font-semibold">Shipping Method</Label>
                     <RadioGroup value={shippingMethod} onValueChange={setShippingMethod} className="mt-3">
                       <div className="flex items-center space-x-2 border p-3 rounded-lg">
-                        <RadioGroupItem value="standard" id="standard" />
-                        <Label htmlFor="standard" className="flex-1 cursor-pointer">
+                        <RadioGroupItem value="lagos" id="lagos" />
+                        <Label htmlFor="lagos" className="flex-1 cursor-pointer">
                           <div className="flex justify-between">
                             <div>
-                              <div className="font-medium">Standard Delivery</div>
-                              <div className="text-sm text-muted-foreground">5-7 business days</div>
+                              <div className="font-medium">Lagos Delivery</div>
+                              <div className="text-sm text-muted-foreground">1-2 business days</div>
                             </div>
-                            <div className="font-medium">{formatPrice(4.99)}</div>
+                            <div className="font-medium">{formatPrice(3000)}</div>
                           </div>
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2 border p-3 rounded-lg">
-                        <RadioGroupItem value="express" id="express" />
-                        <Label htmlFor="express" className="flex-1 cursor-pointer">
+                        <RadioGroupItem value="interstate" id="interstate" />
+                        <Label htmlFor="interstate" className="flex-1 cursor-pointer">
                           <div className="flex justify-between">
                             <div>
-                              <div className="font-medium">Express Delivery</div>
-                              <div className="text-sm text-muted-foreground">2-3 business days</div>
+                              <div className="font-medium">Interstate Delivery</div>
+                              <div className="text-sm text-muted-foreground">3-5 business days</div>
                             </div>
-                            <div className="font-medium">{formatPrice(9.99)}</div>
+                            <div className="font-medium">{formatPrice(7000)}</div>
                           </div>
                         </Label>
                       </div>
@@ -673,12 +706,13 @@ export default function CheckoutPage() {
                         </div>
                         <Button 
                           className="w-full bg-green-600 hover:bg-green-700 text-white" 
-                          asChild
+                          onClick={() => {
+                            // Generate the test order id client-side to avoid SSR/CSR mismatch
+                            const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+                            router.push(`/payment-successful?orderId=${orderId}&amount=${total.toFixed(2)}&items=${items.length}&email=${encodeURIComponent(shippingInfo.email)}`);
+                          }}
                         >
-                          {/* REPLACE THIS HREF WITH YOUR PAYMENT LINK LATER */}
-                          <Link href={`/payment-successful?orderId=ORDER-${Date.now()}&amount=${total.toFixed(2)}&items=${items.length}&email=${shippingInfo.email}`}>
-                            Proceed to Payment
-                          </Link>
+                          Proceed to Payment
                         </Button>
                       </div>
                       
@@ -705,7 +739,7 @@ export default function CheckoutPage() {
                     <h3 className="font-semibold mb-4">Order Items</h3>
                     <div className="space-y-3">
                       {items.map((item) => (
-                        <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                        <div key={item.productId} className="flex items-center gap-3 p-3 border rounded-lg">
                           <div className="relative w-12 h-12 rounded overflow-hidden">
                             <Image
                               src={item.image || "/placeholder.svg"}
@@ -790,7 +824,7 @@ export default function CheckoutPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   {items.map((item) => (
-                    <div key={item.id} className="flex justify-between text-sm">
+                    <div key={item.productId} className="flex justify-between text-sm">
                       <span>
                         {item.name} × {item.quantity}
                       </span>

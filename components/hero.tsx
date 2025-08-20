@@ -10,30 +10,30 @@ import { ChevronLeft, ChevronRight, User, Mail, ShoppingBag, ArrowRight } from "
 const slides = [
   {
     id: 1,
-    title: "Premium African & International Foods",
-    subtitle: "Discover authentic flavors from around the world",
+    title: "Discover a World of Products",
+    subtitle: "From fashion and electronics to handmade crafts, find it all on Ruach E-Store.",
     description: "Experience the tastes of home with our carefully curated selection of international groceries",
-    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=2940&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8ZmFzaGlvbnxlbnwwfHwwfHx8MA%3D%3D",
     cta: "Shop Now",
     ctaLink: "/shop"
   },
   {
     id: 2,
-    title: "Fresh Beverages from Home",
-    subtitle: "Authentic drinks from your homeland",
+    title: "Shop Local, Support Your Community",
+    subtitle: "Discover unique products from independent vendors in your area.",
     description: "Quench your thirst with our wide range of international beverages and refreshments",
-    image: "https://images.unsplash.com/photo-1595981267035-7b04ca84a82d?q=80&w=2970&auto=format&fit=crop",
+    image: "https://plus.unsplash.com/premium_photo-1661331827641-c6302f69d3f7?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8RSUyMHZlbmRvcnxlbnwwfHwwfHx8MA%3D%3D",
     cta: "View Collection",
-    ctaLink: "/shop?category=beverages"
+    ctaLink: "/shop"
   },
   {
     id: 3,
-    title: "Bulk Orders Available",
-    subtitle: "Perfect for events, restaurants & catering",
+    title: "Start Selling on Ruach E-Store Today",
+    subtitle: "Join our community of vendors and reach a wider audience.",
     description: "Get volume discounts on bulk purchases with our special wholesale options",
-    image: "https://images.unsplash.com/photo-1467453678174-768ec283a940?q=80&w=2844&auto=format&fit=crop",
-    cta: "Bulk Orders",
-    ctaLink: "/bulk-order"
+    image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZHVjdHxlbnwwfHwwfHx8MA%3D%3D",
+    cta: "Become a Vendor",
+    ctaLink: "/vendor/register"
   },
 ]
 

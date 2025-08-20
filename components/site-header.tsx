@@ -88,9 +88,8 @@ export default function HeaderImproved() {
         <div className="flex items-center gap-6">
           <span className="flex items-center gap-1">
             <Phone className="h-3 w-3" />
-            +44 123 456 7890
+            +2348160662997
           </span>
-          <span>🚚 Free UK delivery on orders over £50</span>
         </div>
         {/*<Link href="/vendor/register" className="text-green-700 hover:underline">
           Sell with Us

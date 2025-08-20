@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useVendor } from "@/hooks/use-vendor"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { 
   Store, 
@@ -39,12 +40,11 @@ import Link from "next/link"
 import Image from "next/image"
 
 export default function VendorStoresPage() {
-  const { activeStore, allStores, switchStore, canCreateMoreStores } = useVendor()
+  const { activeStore, allStores, switchStore, canCreateMoreStores, vendorOwner, refreshStores } = useVendor()
   const [switchingStore, setSwitchingStore] = useState<string | null>(null)
 
   const handleStoreSwitch = async (storeId: string) => {
     if (storeId === activeStore?.id) return
-    
     setSwitchingStore(storeId)
     try {
       await switchStore(storeId)
@@ -55,8 +55,36 @@ export default function VendorStoresPage() {
     }
   }
 
+  const onRequestDeleteStore = (store: any) => {
+    if (!confirm(`Are you sure you want to permanently delete the store "${store.shopName}"? This cannot be undone.`)) {
+      return
+    }
+    handleDeleteStore(store)
+  }
+
+  const handleDeleteStore = async (store: any) => {
+    if (!vendorOwner || !store?.id) return
+    setDeletingStoreId(store.id)
+    const optimisticId = store.id
+    try {
+      const { deleteVendorStore } = await import("@/lib/firebase-vendors")
+      await deleteVendorStore(vendorOwner.uid, store.id)
+      toast.success(`Deleted store: ${store.shopName}`)
+      // Optimistically remove from UI by refreshing stores
+      if (refreshStores) {
+        await refreshStores()
+      }
+    } catch (error: any) {
+      console.error("Failed to delete store:", error)
+      toast.error(error?.message || "Failed to delete store")
+    } finally {
+      setDeletingStoreId(null)
+    }
+  }
+
   const [storeStats, setStoreStats] = useState<Record<string, any>>({})
   const [loadingStats, setLoadingStats] = useState<Record<string, boolean>>({})
+  const [deletingStoreId, setDeletingStoreId] = useState<string | null>(null)
 
   // Fetch stats for all stores when component loads
   useEffect(() => {
@@ -401,6 +429,14 @@ export default function VendorStoresPage() {
                                 <BarChart3 className="h-4 w-4 mr-2" />
                                 Analytics Dashboard
                               </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="text-red-600 focus:text-red-700"
+                              onClick={() => onRequestDeleteStore(store)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Store
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

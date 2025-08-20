@@ -1,4 +1,57 @@
-﻿  return (
+﻿import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "@/components/ui/breadcrumb";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ArrowLeft, Lock, Truck, Shield } from "lucide-react";
+import StripeCheckout from "@/components/stripe-checkout";
+
+// Dummy data and functions for demonstration
+const initialShippingInfo = { firstName: "", lastName: "", email: "", phone: "", address: "", city: "", postalCode: "", country: "UK" };
+const initialBillingInfo = { firstName: "", lastName: "", address: "", city: "", postalCode: "", country: "UK" };
+interface CartItem {
+  productId: string;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+  options?: Record<string, string>;
+}
+
+const items: CartItem[] = [];
+const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+const shippingCost = 4.99; // default to standard shipping
+const tax = 0;
+const total = 0;
+const formatPrice = (price: number) => `₦${price.toFixed(2)}`;
+
+export default function CheckoutPage() {
+  const [step, setStep] = useState(1);
+  const [shippingInfo, setShippingInfo] = useState(initialShippingInfo);
+  const [billingInfo, setBillingInfo] = useState(initialBillingInfo);
+  const [sameAsShipping, setSameAsShipping] = useState(true);
+  const [shippingMethod, setShippingMethod] = useState("standard");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const router = useRouter();
+  const totalInCents = total * 100;
+
+  // Dummy handlers
+  const handleShippingChange = (field: string, value: string) => setShippingInfo({ ...shippingInfo, [field]: value });
+  const handleBillingChange = (field: string, value: string) => setBillingInfo({ ...billingInfo, [field]: value });
+  const handleCreateOrder = () => { setIsProcessing(true); setTimeout(() => { setOrderId("order_123"); setIsProcessing(false); setStep(3); }, 1000); };
+  const handlePaymentSuccess = () => router.push("/order-confirmation");
+  const handlePaymentError = () => alert("Payment failed");
+  const validateStep = (step: number) => true;
+
+  // ...existing code...
+  return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
         <Breadcrumb className="mb-6">
@@ -323,7 +376,7 @@
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   {items.map((item) => (
-                    <div key={item.id} className="flex justify-between text-sm">
+                    <div key={item.productId} className="flex justify-between text-sm">
                       <span>
                         {item.name}  {item.quantity}
                       </span>

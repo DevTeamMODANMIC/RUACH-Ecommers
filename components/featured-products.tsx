@@ -148,7 +148,7 @@ export default function FeaturedProducts() {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-gray-800">Featured Products</h2>
           <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-green-600 rounded-full mb-6"></div>
           <p className="text-gray-600 text-center max-w-2xl mb-8">
-            Discover our curated selection of premium African and international products, from beverages and food to spices and fresh produce.
+            From our hands to yours. Discover the best of African and international craftsmanship in our featured collection. We've sourced the most unique products, from everyday essentials to one-of-a-kind treasures.
           </p>
         </div>
 

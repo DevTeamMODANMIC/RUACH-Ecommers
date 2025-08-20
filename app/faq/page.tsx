@@ -96,7 +96,7 @@ export default function FAQPage() {
         <h2 className="text-2xl font-semibold mb-4">Customer Support</h2>
         <details className="mb-4 border rounded p-4">
           <summary className="cursor-pointer font-medium">How do I contact Ruach E-Store customer support?</summary>
-          <p className="mt-2 text-gray-600">You can reach us via live chat, email at support@ruachestore.com, or call our helpline at [phone number].</p>
+          <p className="mt-2 text-gray-600">You can reach us via live chat, email at support@ruachestore.com.ng, or call our helpline at [phone number].</p>
         </details>
         <details className="mb-4 border rounded p-4">
           <summary className="cursor-pointer font-medium">What if I receive a fake or counterfeit item?</summary>
