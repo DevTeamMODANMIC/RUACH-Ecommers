@@ -134,7 +134,7 @@ export default function Hero() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/60" />
           
-          <div className="absolute inset-0 flex flex-col items-center justify-center md:items-start">
+          <div className="absolute inset-0 flex flex-col items-center justify-center md:items-start z-10">
             <div 
               className={`text-center md:text-left max-w-5xl px-6 md:px-16 transform transition-all duration-1000 ease-out ${
                 index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"

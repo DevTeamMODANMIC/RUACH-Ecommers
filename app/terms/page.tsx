@@ -228,7 +228,7 @@ export default function TermsAndConditionsPage() {
               <div className="space-y-4 text-gray-700">
                 <p>If you have questions about these Terms & Conditions, please reach out to us:</p>
                 <ul className="list-none space-y-2">
-                  <li>Email: legal@ruachestore.com</li>
+                  <li>Email: legal@ruachestore.com.ng</li>
                   <li>Phone/WhatsApp: <a href="https://wa.me/2348160662997" className="text-green-600 hover:text-green-700">+234 816 066 2997</a></li>
                 </ul>
               </div>
