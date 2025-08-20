@@ -62,11 +62,11 @@ export default function Newsletter() {
               <span>Join 5,000+ subscribers</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-bold mb-4 leading-tight max-w-3xl mx-auto text-gray-800">
-              Stay Updated with RUACH E-STORE
+              Get Fresh Updates from RUACH E-STORE
             </h2>
             <div className="w-24 h-1 bg-green-500 rounded mx-auto mb-4"></div>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Get notified about new products, special offers and authentic African recipes delivered straight to your inbox.
+              Stay in the loop with exclusive updates on new products, special discounts, and latest arrivals from our trusted vendors.
             </p>
           </div>
 
@@ -193,7 +193,7 @@ export default function Newsletter() {
           </div>
 
           <div className="mt-12 text-center text-sm text-gray-600">
-            <p>Join thousands of satisfied customers who enjoy our premium African products</p>
+            <p>Join thousands of satisfied customers who enjoy our premium products</p>
           </div>
         </div>
       </div>

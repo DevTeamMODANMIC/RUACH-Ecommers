@@ -43,7 +43,7 @@ export default function Footer() {
             <div className="w-full sm:w-1/2 lg:w-1/4 text-center sm:text-left">
               <h3 className="text-lg font-semibold text-white mb-4">RUACH E-STORE</h3>
               <p className="text-sm leading-relaxed mb-6">
-                Your trusted source for authentic African and international foods – freshly delivered with care and quality assurance.
+                Your trusted source for authentic products –delivered with care and quality assurance.
               </p>
               <div className="flex space-x-4">
                 {[
@@ -105,9 +105,9 @@ export default function Footer() {
 
             {/* Newsletter */}
             <div className="w-full sm:w-1/2 lg:w-1/4 text-center sm:text-left">
-              <h3 className="text-lg font-semibold text-white mb-4">Newsletter</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">Stay Updated with RUACH E-STORE</h3>
               <p className="text-sm leading-relaxed mb-4">
-                Subscribe &amp; get 10% off your first order.
+                Get exclusive updates on new products, special discounts, and latest arrivals from our trusted vendors delivered straight to your inbox.
               </p>
               <form
                 onSubmit={(e) => {
@@ -142,7 +142,7 @@ export default function Footer() {
           {/* Unique selling points */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10 text-center sm:text-left">
             {[
-              { Icon: Truck, title: "Fast Delivery", desc: "Free on orders £50+" },
+              { Icon: Truck, title: "Fast Delivery", desc: "Free on orders ₦25,000+" },
               { Icon: Shield, title: "Secure Payment", desc: "100% protected" },
               { Icon: CreditCard, title: "Quality Products", desc: "Authentic guarantee" },
               { Icon: Heart, title: "Customer Love", desc: "24/7 support" },

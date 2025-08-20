@@ -223,62 +223,60 @@ export default function BulkOrderPage() {
               <TabsContent value="businesses" className="mt-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Bulk Solutions for Businesses</CardTitle>
+                      <CardTitle>Bulk Solutions for Vendors</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p>
-                      We offer specialized bulk ordering solutions for restaurants, cafes, grocery stores, and other
-                      food businesses. Our business accounts include:
-                    </p>
-                    <ul className="space-y-2">
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span>Dedicated account manager for personalized service</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span>Flexible payment terms with net-30 invoicing options</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span>Regular delivery schedules to ensure consistent stock levels</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span>Product customization and private labeling options</span>
-                      </li>
-                    </ul>
+                      <p>
+                        We empower our vendors with tailored bulk ordering solutions to help them grow and manage their businesses efficiently. Our vendor-focused accounts include:
+                      </p>
+                      <ul className="space-y-2">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span>Access to high-demand products at competitive bulk rates</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span>Streamlined ordering and inventory management tools</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span>Priority support and dedicated vendor success team</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span>Flexible payment options and exclusive vendor promotions</span>
+                        </li>
+                      </ul>
                   </CardContent>
                 </Card>
               </TabsContent>
               <TabsContent value="events" className="mt-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Bulk Orders for Events</CardTitle>
+                      <CardTitle>Vendor Event Solutions</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p>
-                      Planning a wedding, corporate event, or cultural celebration? Our event bulk ordering service
-                      helps you:
-                    </p>
-                    <ul className="space-y-2">
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span>Get exactly the right quantities for your guest count</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span>Coordinate delivery timing with your event schedule</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span>Access special event packaging and presentation options</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span>Receive guidance on quantities and popular selections</span>
-                      </li>
-                    </ul>
+                      <p>
+                        Supporting vendors for weddings, corporate events, and celebrations with tailored bulk solutions:
+                      </p>
+                      <ul className="space-y-2">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span>Order the right quantities for any event size</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span>Flexible delivery scheduling to match your event timeline</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span>Custom packaging and branding for special occasions</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span>Expert advice on product selection and quantities</span>
+                        </li>
+                      </ul>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -355,9 +353,9 @@ export default function BulkOrderPage() {
                   <h3 className="font-medium mb-2">Contact Us Directly</h3>
                   <p className="text-sm text-muted-foreground mb-2">For immediate assistance with bulk orders:</p>
                   <p className="text-sm">
-                    Email: <span className="font-medium">bulk@heritageofskegness.co.uk</span>
+                    Email: <span className="font-medium">support@ruachestore.com.ng</span>
                     <br />
-                    Phone: <span className="font-medium">+44 20 1234 5678</span>
+                    Phone: <span className="font-medium">+2348160662997</span>
                   </p>
                 </div>
               </div>
