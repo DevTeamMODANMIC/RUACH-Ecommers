@@ -166,7 +166,7 @@ export default function Footer() {
               <img src="/mastercard.svg" alt="Mastercard" className="h-6 w-auto" />
               <img src="/paypal.svg" alt="Paypal" className="h-6 w-auto" />
               <a
-                href="https://wa.me/2348012345678"
+                href="https://wa.me/2348160662997"
                 target="_blank"
                 rel="noopener noreferrer"
                 suppressHydrationWarning

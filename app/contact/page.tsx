@@ -138,8 +138,12 @@ export default function ContactPage() {
                   <Phone className="h-6 w-6 text-green-600 mt-1" />
                   <div>
                     <h3 className="font-semibold">Phone</h3>
-                    <p className="text-muted-foreground">+44 20 1234 5678</p>
-                    <p className="text-muted-foreground">+44 20 8765 4321</p>
+                    <p className="text-muted-foreground">+234 816 066 2997</p>
+                    <p className="text-muted-foreground mt-2">
+                      <a href="https://wa.me/2348160662997" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-700">
+                        Chat on WhatsApp
+                      </a>
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-4">
@@ -147,11 +151,9 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-semibold">Address</h3>
                     <p className="text-muted-foreground">
-                      123 Food Street
+                      Lekki, Lagos
                       <br />
-                      London, SW1A 1AA
-                      <br />
-                      United Kingdom
+                      Nigeria
                     </p>
                   </div>
                 </div>
@@ -178,19 +180,27 @@ export default function ContactPage() {
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold">What are your delivery areas?</h4>
+                    <h4 className="font-semibold">How long does delivery take?</h4>
                     <p className="text-sm text-muted-foreground">
-                      We deliver across the UK. Delivery times and costs vary by location.
+                      Delivery times vary depending on the vendor and your location. Estimated delivery times will be shown at checkout.
                     </p>
                   </div>
                   <div>
-                    <h4 className="font-semibold">Do you offer bulk discounts?</h4>
-                    <p className="text-sm text-muted-foreground">Yes! Contact us for special pricing on bulk orders.</p>
+                    <h4 className="font-semibold">What payment methods are accepted?</h4>
+                    <p className="text-sm text-muted-foreground">
+                      We accept debit/credit cards, bank transfers, mobile money, and cash on delivery (where available).
+                    </p>
                   </div>
                   <div>
-                    <h4 className="font-semibold">How fresh are your products?</h4>
+                    <h4 className="font-semibold">Can I order from multiple vendors at once?</h4>
                     <p className="text-sm text-muted-foreground">
-                      We source fresh products weekly and maintain strict quality standards.
+                      Yes, you can add items from different vendors to your cart. However, they may be delivered separately depending on the vendors.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">Is shopping on Ruach E-Store safe?</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Yes, we use secure payment gateways, encrypted data protection, and vendor verification to ensure safe shopping.
                     </p>
                   </div>
                 </div>

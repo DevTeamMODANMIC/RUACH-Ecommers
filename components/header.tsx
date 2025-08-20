@@ -327,7 +327,7 @@ export default function Header() {
                 </Link>
 
                 <a
-                  href="https://wa.me/2348012345678"
+                  href="https://wa.me/2348160662997"
                   target="_blank"
                   rel="noopener noreferrer"
                   suppressHydrationWarning
