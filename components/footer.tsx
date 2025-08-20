@@ -90,7 +90,7 @@ export default function Footer() {
                 {[
                   { href: "/faq", label: "FAQs" },
                   { href: "/shipping", label: "Shipping & Delivery" },
-                  { href: "/returns", label: "Returns & Refunds" },
+                  { href: "/returns-and-refunds", label: "Returns & Refunds" },
                   { href: "/privacy-policy", label: "Privacy Policy" },
                   { href: "/terms", label: "Terms & Conditions" },
                 ].map(({ href, label }) => (
