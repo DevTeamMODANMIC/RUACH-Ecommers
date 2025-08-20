@@ -130,8 +130,7 @@ export default function ContactPage() {
                   <Mail className="h-6 w-6 text-green-600 mt-1" />
                   <div>
                     <h3 className="font-semibold">Email</h3>
-                    <p className="text-muted-foreground">enochehimika@gmail.com</p>
-                    <p className="text-muted-foreground">enochehimika@gmail.com</p>
+                    <p className="text-muted-foreground">support@ruachestore.com</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-4">
