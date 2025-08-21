@@ -39,6 +39,23 @@ const NIGERIA_STATES = [
   "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara", "FCT Abuja"
 ]
 
+const lagosShippingOptions = [
+  { id: 'lagos-mainland-1', name: 'Lagos Mainland 1', price: 1500, description: 'Allen Avenue, Opebi, Toyin Ikeja' },
+  { id: 'lagos-mainland-2', name: 'Lagos Mainland 2', price: 2000, description: 'Computer village, Alausa, Oregun Ikeja' },
+  { id: 'lagos-mainland-3', name: 'Lagos Mainland 3', price: 3000, description: 'Omole phase 1 & 2, Magodo, Ogudu, Ojota, Oko oba, Agege' },
+  { id: 'lagos-mainland-4', name: 'Lagos Mainland 4', price: 3500, description: 'Surulere, Yaba, Bariga, Gbagada, Ajao estate, Anthony, Ikosi, Ketu, Iju ishaga, Oshodi, Maryland, Mushin, Ilupeju' },
+  { id: 'lagos-mainland-5', name: 'Lagos Mainland 5', price: 4500, description: 'Iyana ipaja, Ikotun, Egbeda, Abule Egba, Amuwo odofin, Igando, Festac, Meiran, Ayobo, Ago palace way, Satellite town, idimu, Ijaiye, Ejigbo' },
+  { id: 'lagos-mainland-6', name: 'Lagos Mainland 6', price: 5000, description: 'Ojokoro, Ikorodu, Akute, Alagbado' },
+  { id: 'lagos-island-1', name: 'Lagos Island 1', price: 4500, description: 'Eko idumota, IKOYI, Victoria island, Oniru' },
+  { id: 'lagos-island-2', name: 'Lagos Island 2', price: 4500, description: 'Lekki, Agungi, Ikate, Ologolo' },
+  { id: 'lagos-island-3', name: 'Lagos Island 3', price: 3000, description: 'CHEVRON, VGC, ORCHID, IKOTA, AJAH, IGBO-EFON' },
+  { id: 'sangotedo', name: 'Sangotedo', price: 2000, description: '' },
+  { id: 'abijo-awoyaya', name: 'Abijo/Awoyaya', price: 3000, description: '' },
+  { id: 'gig-logistics', name: 'GIG Logistics', price: 6000, description: "Tracked delivery outside Lagos. 3-5 working days. Price may be higher for orders over 2kg." },
+  { id: 'international-delivery', name: 'International Delivery', price: 3000, description: "Outside Nigeria. Price determined by weight. Agent will contact you." },
+  { id: 'bus-park-delivery', name: 'Bus Park Delivery', price: 1000, description: '' },
+];
+
 export default function CheckoutPage() {
   const router = useRouter()
   const { items, getTotalPrice, clearCart } = useCart()
@@ -87,12 +104,15 @@ export default function CheckoutPage() {
     cvv: "",
     nameOnCard: "",
   })
-  const [shippingMethod, setShippingMethod] = useState("lagos")
+  const [deliveryType, setDeliveryType] = useState('lagos');
+  const [lagosShippingOptionId, setLagosShippingOptionId] = useState(lagosShippingOptions[0].id);
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [sameAsShipping, setSameAsShipping] = useState(true)
 
   const subtotal = getTotalPrice()
-  const shippingCost = shippingMethod === "lagos" ? 3000 : 7000
+  const shippingCost = deliveryType === 'lagos' 
+    ? lagosShippingOptions.find(option => option.id === lagosShippingOptionId)?.price || 0
+    : 7000;
   // VAT = 2.5% of subtotal
   const tax = subtotal * 0.025
   const total = subtotal + shippingCost + tax
@@ -204,7 +224,7 @@ export default function CheckoutPage() {
               country: billingInfo.country,
               phone: shippingInfo.phone,
             },
-        estimatedDelivery: shippingMethod === "lagos"
+        estimatedDelivery: deliveryType === "lagos"
           ? Date.now() + 2 * 24 * 60 * 60 * 1000  // 1-2 days for Lagos
           : Date.now() + 5 * 24 * 60 * 60 * 1000, // 3-5 days for Interstate
       }
@@ -461,19 +481,29 @@ export default function CheckoutPage() {
                   {/* Shipping Method */}
                   <div className="mt-6">
                     <Label className="text-base font-semibold">Shipping Method</Label>
-                    <RadioGroup value={shippingMethod} onValueChange={setShippingMethod} className="mt-3">
+                    <RadioGroup value={deliveryType} onValueChange={setDeliveryType} className="mt-3 space-y-2">
                       <div className="flex items-center space-x-2 border p-3 rounded-lg">
                         <RadioGroupItem value="lagos" id="lagos" />
                         <Label htmlFor="lagos" className="flex-1 cursor-pointer">
-                          <div className="flex justify-between">
-                            <div>
-                              <div className="font-medium">Lagos Delivery</div>
-                              <div className="text-sm text-muted-foreground">1-2 business days</div>
-                            </div>
-                            <div className="font-medium">{formatPrice(3000)}</div>
-                          </div>
+                          Lagos Delivery
                         </Label>
                       </div>
+                      {deliveryType === 'lagos' && (
+                        <div className="pl-8 py-2">
+                          <Select value={lagosShippingOptionId} onValueChange={setLagosShippingOptionId}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a Lagos shipping option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {lagosShippingOptions.map((option) => (
+                                <SelectItem key={option.id} value={option.id}>
+                                  {option.name} - {formatPrice(option.price)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                       <div className="flex items-center space-x-2 border p-3 rounded-lg">
                         <RadioGroupItem value="interstate" id="interstate" />
                         <Label htmlFor="interstate" className="flex-1 cursor-pointer">
