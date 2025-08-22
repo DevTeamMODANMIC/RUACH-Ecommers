@@ -35,20 +35,10 @@ export default function VendorAddProductPage() {
     stockQuantity: "100",
   })
   
-  // Log categories on component mount
-  useEffect(() => {
-    console.log('Categories loaded:', categories.length);
-  }, []);
+  // ... existing code ...
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
-
-  const handleSelectChange = (name: string, value: string) => {
-    console.log(`🔥 handleSelectChange: ${name} = ${value}`);
-    const newFormData = { ...formData, [name]: value };
-    console.log('🔥 New formData:', newFormData);
-    setFormData(newFormData);
   }
 
   const handleCloudinaryUpload = (publicId: string, url: string, alt?: string) => {
@@ -153,36 +143,12 @@ export default function VendorAddProductPage() {
           </div>
           <div>
             <Label htmlFor="category">Product Category *</Label>
-            <p className="text-xs text-blue-600 mb-1">
-              Select from {categories.length} available categories (filtered to show only those with subcategories)
-            </p>
-            
-            {/* Debug: Show current selection */}
-            <div className="text-xs bg-gray-100 p-2 rounded mb-2">
-              Current selection: "{formData.category}" {formData.category && `(${categories.find(c => c.id === formData.category)?.name || 'Unknown'})`}
-              <button
-                type="button"
-                onClick={() => handleSelectChange('category', 'appliances')}
-                className="ml-2 px-2 py-1 bg-blue-200 rounded text-xs"
-              >
-                Test: Set Appliances
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectChange('category', '')}
-                className="ml-1 px-2 py-1 bg-red-200 rounded text-xs"
-              >
-                Clear
-              </button>
-            </div>
             
             <Select
               value={formData.category || ""}
               onValueChange={(value) => {
-                console.log('Dropdown selected:', value);
-                handleSelectChange("category", value);
-                // Reset subcategory when main category changes
-                handleSelectChange("subcategory", "");
+                // Update both category and subcategory in a single state update to avoid race conditions
+                setFormData(prev => ({ ...prev, category: value, subcategory: "" }));
               }}
               required
             >
@@ -195,24 +161,14 @@ export default function VendorAddProductPage() {
                     No categories available
                   </SelectItem>
                 ) : (
-                  categories.map((category, index) => (
+                  categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
-                      {index + 1}. {category.name} ({category.subcategories?.length || 0} subs)
+                      {category.name}
                     </SelectItem>
                   ))
                 )}
               </SelectContent>
             </Select>
-            {categories.length === 0 && (
-              <p className="text-xs text-red-600 mt-1">
-                ⚠️ No categories with subcategories available!
-              </p>
-            )}
-            {categories.length > 0 && (
-              <p className="text-xs text-green-600 mt-1">
-                ✅ {categories.length} categories loaded successfully
-              </p>
-            )}
           </div>
         </div>
         
@@ -228,8 +184,10 @@ export default function VendorAddProductPage() {
             <div>
               <Label htmlFor="subcategory">Subcategory *</Label>
               <Select
-                value={formData.subcategory}
-                onValueChange={(value) => handleSelectChange("subcategory", value)}
+                value={formData.subcategory || ""}
+                onValueChange={(value) => {
+                  setFormData(prev => ({ ...prev, subcategory: value }));
+                }}
                 required
               >
                 <SelectTrigger>
@@ -255,27 +213,6 @@ export default function VendorAddProductPage() {
                   })()} 
                 </SelectContent>
               </Select>
-              
-              <div className="text-xs space-y-1 mt-2">
-                <p className="text-gray-500">
-                  💡 This hierarchical structure matches the shop page categories, helping customers find your products easily.
-                </p>
-                {(() => {
-                  const selectedCategory = categories.find(cat => cat.id === formData.category);
-                  if (selectedCategory?.subcategories) {
-                    return (
-                      <p className="text-green-600">
-                        ✅ {selectedCategory.subcategories.length} subcategories available for "{selectedCategory.name}"
-                      </p>
-                    );
-                  }
-                  return (
-                    <p className="text-orange-600">
-                      ⚠️ No subcategories available for this category.
-                    </p>
-                  );
-                })()} 
-              </div>
             </div>
           </div>
         )}

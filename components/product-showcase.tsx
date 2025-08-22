@@ -120,7 +120,8 @@ export default function ProductShowcase({
       name: product.name,
       price: product.price,
       image: product.image,
-      quantity: 1
+      quantity: 1,
+      options: {}
     });
   };
 
@@ -191,7 +192,7 @@ export default function ProductShowcase({
                     src={product.images?.[0] || "/placeholder.jpg"}
                     alt={product.name}
                     fill
-                    className="object-contain p-4 group-hover:scale-105 transition-transform"
+                    className="object-cover group-hover:scale-105 transition-transform"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                     onError={handleImageError}
                   />

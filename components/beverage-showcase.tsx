@@ -9,6 +9,20 @@ import { Badge } from "@/components/ui/badge"
 import { Star, ShoppingCart, Plus, ChevronRight } from "lucide-react"
 import { getRandomCategoryImage } from "@/lib/utils"
 
+interface ShowcaseProduct {
+  id: string;
+  name: string;
+  subtitle: string;
+  price: number;
+  image: string;
+  slug: string;
+  rating: number;
+  reviews: number;
+  isBestSeller?: boolean;
+  isBulk?: boolean;
+  isNew?: boolean;
+}
+
 interface ProductShowcaseProps {
   category?: string;
   title?: string;
@@ -23,7 +37,7 @@ export default function ProductShowcase({
   const [showDebug, setShowDebug] = useState(false)
   
   // Product data by category
-  const productData = {
+  const productData: Record<string, ShowcaseProduct[]> = {
     "Beverages": [
     {
       id: "coca-cola-50cl",
@@ -364,15 +378,15 @@ export default function ProductShowcase({
                 <div className="relative h-48 bg-gray-50 flex items-center justify-center p-4 overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   
-                  {(product.isBestSeller || product.isNew || product.isBulk) && (
+                  {(product.isBestSeller || (product as any).isNew || (product as any).isBulk) && (
                     <div className="absolute top-3 left-3 flex flex-col gap-2">
                       {product.isBestSeller && (
                         <Badge className="bg-amber-500 hover:bg-amber-600">Best Seller</Badge>
                       )}
-                      {product.isNew && (
+                      {(product as any).isNew && (
                         <Badge className="bg-blue-500 hover:bg-blue-600">New</Badge>
                       )}
-                      {product.isBulk && (
+                      {(product as any).isBulk && (
                         <Badge className="bg-purple-500 hover:bg-purple-600">Bulk</Badge>
                       )}
                     </div>
@@ -382,7 +396,7 @@ export default function ProductShowcase({
                     src={product.image}
                     alt={product.name}
                     fill
-                    className="object-contain p-2 transform group-hover:scale-110 transition-transform duration-300"
+                    className="object-cover transform group-hover:scale-110 transition-transform duration-300"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                     onError={handleImageError}
                     priority

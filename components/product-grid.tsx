@@ -12,26 +12,7 @@ import { formatCurrency } from "@/lib/utils"
 import { useWishlist, type WishlistItem } from "@/hooks/use-wishlist"
 import ProductDetailModal from "@/components/product-detail-modal"
 import { getVendor, type Vendor } from "@/lib/firebase-vendors"
-
-interface Product {
-  id: string
-  name: string
-  description?: string
-  price: number
-  originalPrice?: number
-  discount?: number
-  images?: string[]
-  category?: string
-  displayCategory?: string
-  rating?: number
-  reviewCount?: number
-  bestseller?: boolean
-  new?: boolean
-  popular?: boolean
-  outOfStock?: boolean
-  inStock?: boolean
-  vendorId?: string
-}
+import { Product } from "@/types"
 
 interface ProductGridProps {
   products: Product[]
@@ -49,7 +30,7 @@ export default function ProductGrid({ products, isLoading = false }: ProductGrid
   // Fetch vendor information for products
   useEffect(() => {
     const fetchVendors = async () => {
-      const vendorIds = [...new Set(products.filter(p => p.vendorId).map(p => p.vendorId!))]
+      const vendorIds = [...new Set(products.filter(p => (p as any).vendorId).map(p => (p as any).vendorId!))]
       const vendorPromises = vendorIds.map(async (vendorId) => {
         try {
           const vendor = await getVendor(vendorId)
@@ -79,14 +60,17 @@ export default function ProductGrid({ products, isLoading = false }: ProductGrid
 
   const handleAddToCart = (product: Product, e?: React.MouseEvent) => {
     if (e) e.preventDefault();
+    
+    const discount = (product as any).discount || 0;
+    const finalPrice = discount > 0 ? product.price * (1 - discount / 100) : product.price;
+    
     addToCart({
       productId: product.id,
       name: product.name,
-      price: product.discount 
-        ? product.price * (1 - product.discount / 100) 
-        : product.price,
+      price: finalPrice,
       image: product.images?.[0] || "/placeholder.jpg",
-      quantity: 1
+      quantity: 1,
+      options: {}
     });
   };
 
@@ -99,14 +83,19 @@ export default function ProductGrid({ products, isLoading = false }: ProductGrid
   const handleToggleWishlist = (product: Product, e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     
+    // Create a compatible product object with fallbacks
+    const discount = (product as any).discount || 0;
+    const originalPrice = discount > 0 ? product.price : undefined;
+    const discountedPrice = discount > 0 ? product.price * (1 - discount / 100) : product.price;
+    
     const wishlistItem: WishlistItem = {
       id: product.id,
       name: product.name,
-      price: product.discount ? product.price * (1 - product.discount / 100) : product.price,
-      originalPrice: product.discount ? product.price : undefined,
+      price: discountedPrice,
+      originalPrice,
       image: product.images?.[0] || "/placeholder.jpg",
       category: product.category || product.displayCategory,
-      inStock: product.inStock !== false && !product.outOfStock // Default to true if not specified
+      inStock: product.inStock
     };
     
     toggleWishlist(wishlistItem);
@@ -154,25 +143,25 @@ export default function ProductGrid({ products, isLoading = false }: ProductGrid
                 className="absolute inset-0 z-10 cursor-pointer"
                 onClick={(e) => handleProductClick(product, e)}
               >
-                {product.outOfStock && (
+                {(product as any).outOfStock && (
                   <div className="absolute top-4 left-0 z-20 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-r-lg shadow-md">
                     Out of Stock
                   </div>
                 )}
                 
-                {product.discount && (
+                {(product as any).discount && (
                   <div className="absolute top-12 left-0 z-20 bg-red-500 text-white text-xs font-bold px-3 py-0.5 rounded-r-lg shadow-md">
-                    -{product.discount}% OFF
+                    -{(product as any).discount}% OFF
                   </div>
                 )}
                 
-                {product.bestseller && (
+                {(product as any).bestseller && (
                   <div className="absolute bottom-4 left-4 z-20">
                     <Badge className="bg-amber-500 hover:bg-amber-600">Bestseller</Badge>
                   </div>
                 )}
                 
-                {product.new && (
+                {(product as any).new && (
                   <div className="absolute bottom-4 left-4 z-20">
                     <Badge className="bg-blue-500 hover:bg-blue-600">New Arrival</Badge>
                   </div>
@@ -183,7 +172,7 @@ export default function ProductGrid({ products, isLoading = false }: ProductGrid
                 src={product.images?.[0] || "/placeholder.jpg"}
                 alt={product.name}
                 fill
-                className="object-contain p-4 transition-all duration-500 group-hover:scale-110 group-hover:rotate-1"
+                className="object-cover transition-all duration-500 group-hover:scale-110"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
@@ -219,7 +208,7 @@ export default function ProductGrid({ products, isLoading = false }: ProductGrid
                   onClick={(e) => handleAddToCart(product, e)}
                   className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-green-500 hover:text-white transition-colors"
                   aria-label="Add to cart"
-                  disabled={product.outOfStock}
+                  disabled={(product as any).outOfStock}
                 >
                   <ShoppingCart className="h-5 w-5" />
                 </button>
@@ -238,13 +227,13 @@ export default function ProductGrid({ products, isLoading = false }: ProductGrid
               <p className="text-sm text-gray-500 mt-1">{product.displayCategory || product.category}</p>
               
               {/* Vendor Information */}
-              {product.vendorId && vendors[product.vendorId] && (
+              {(product as any).vendorId && vendors[(product as any).vendorId] && (
                 <div className="mt-2 flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
-                    {vendors[product.vendorId].logoUrl ? (
+                    {vendors[(product as any).vendorId].logoUrl ? (
                       <Image
-                        src={vendors[product.vendorId].logoUrl}
-                        alt={vendors[product.vendorId].shopName}
+                        src={vendors[(product as any).vendorId].logoUrl}
+                        alt={vendors[(product as any).vendorId].shopName}
                         width={16}
                         height={16}
                         className="rounded-full object-cover"
@@ -253,11 +242,11 @@ export default function ProductGrid({ products, isLoading = false }: ProductGrid
                       <Store className="h-4 w-4 text-gray-400" />
                     )}
                     <Link 
-                      href={`/vendor/${product.vendorId}`}
+                      href={`/vendor/${(product as any).vendorId}`}
                       className="text-xs text-gray-600 hover:text-green-600 transition-colors font-medium"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {vendors[product.vendorId].shopName}
+                      {vendors[(product as any).vendorId].shopName}
                     </Link>
                   </div>
                   <Badge variant="outline" className="text-xs px-1.5 py-0.5">
@@ -273,28 +262,28 @@ export default function ProductGrid({ products, isLoading = false }: ProductGrid
                       <Star 
                         key={i} 
                         className={`h-4 w-4 ${
-                          i < Math.floor(product.rating) 
+                          product.rating && i < Math.floor(product.rating) 
                             ? "text-amber-400 fill-amber-400" 
-                            : i < product.rating 
+                            : product.rating && i < product.rating 
                               ? "text-amber-400 fill-amber-400" 
                               : "text-gray-300"
                         }`}
                       />
                     ))}
                   </div>
-                  {product.reviewCount && (
+                  {(product as any).reviewCount && (
                     <span className="text-sm text-gray-600 ml-2">
-                      ({product.reviewCount})
+                      ({(product as any).reviewCount})
                     </span>
                   )}
                 </div>
               )}
               
               <div className="mt-2">
-                {product.discount ? (
+                {(product as any).discount ? (
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-green-600">
-                      {formatCurrency(product.price * (1 - product.discount / 100))}
+                      {formatCurrency(product.price * (1 - (product as any).discount / 100))}
                     </span>
                     <span className="text-sm text-gray-500 line-through">
                       {formatCurrency(product.price)}
@@ -313,9 +302,9 @@ export default function ProductGrid({ products, isLoading = false }: ProductGrid
                 className="w-full" 
                 size="sm"
                 onClick={(e) => handleAddToCart(product, e)}
-                disabled={product.outOfStock}
+                disabled={(product as any).outOfStock}
               >
-                {product.outOfStock ? "Out of Stock" : "Add to Cart"}
+                {(product as any).outOfStock ? "Out of Stock" : "Add to Cart"}
               </Button>
             </CardFooter>
           </Card>

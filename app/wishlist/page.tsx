@@ -43,7 +43,8 @@ export default function WishlistPage() {
       name: product.name,
       price: product.price,
       image: product.image,
-      quantity: 1
+      quantity: 1,
+      options: {}
     })
     
     toast({
@@ -120,7 +121,7 @@ export default function WishlistPage() {
                   src={product.image}
                   alt={product.name}
                   fill
-                  className="object-contain p-4"
+                  className="object-cover"
                 />
               </div>
               <CardContent className="p-6">

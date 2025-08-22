@@ -86,7 +86,8 @@ export default function FeaturedProducts() {
         product.price * (1 - product.discount / 100) :
         product.price,
       image: product.images?.[0] || "/placeholder.jpg",
-      quantity: 1
+      quantity: 1,
+      options: {}
     });
   };
 
@@ -229,7 +230,7 @@ export default function FeaturedProducts() {
                       src={product.images?.[0] || "/placeholder.jpg"}
                       alt={product.name}
                       fill
-                      className="object-contain p-4 transition-all duration-500 group-hover:scale-110 group-hover:rotate-1"
+                      className="object-cover transition-all duration-500 group-hover:scale-110"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                       onError={(e) => {
                         console.error(`Failed to load image: ${product.images?.[0]}`);
@@ -376,7 +377,7 @@ export default function FeaturedProducts() {
                   src={quickViewProduct.images?.[0] || "/placeholder.jpg"}
                   alt={quickViewProduct.name}
                   fill
-                  className="object-contain p-4"
+                  className="object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = "/placeholder.jpg";

@@ -42,7 +42,8 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
              product.images?.[selectedImage] || 
              product.images?.[0] || 
              "/placeholder.jpg",
-      quantity
+      quantity,
+      options: {}
     })
   }
 
@@ -56,7 +57,7 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
              product.images?.[0] || 
              "/placeholder.jpg",
       category: product.category || product.displayCategory,
-      inStock: !product.outOfStock
+      inStock: product.inStock
     }
     
     toggleWishlist(wishlistItem)
@@ -89,7 +90,7 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
                   src={product.images?.[selectedImage] || "/product_images/unknown-product.jpg"}
                   alt={product.name}
                   fill
-                  className="object-contain p-4"
+                  className="object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = "/product_images/unknown-product.jpg";
@@ -97,7 +98,7 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
                 />
               )}
               
-              {product.outOfStock && (
+              {!product.inStock && (
                 <div className="absolute top-4 left-0 z-10 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-r-lg shadow-md">
                   Out of Stock
                 </div>
@@ -116,12 +117,6 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
             <div>
               <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">{product.name}</h1>
-                {product.bestseller && (
-                  <Badge className="bg-amber-500 hover:bg-amber-600">Bestseller</Badge>
-                )}
-                {product.new && (
-                  <Badge className="bg-blue-500 hover:bg-blue-600">New Arrival</Badge>
-                )}
               </div>
               
               <p className="text-gray-600 mt-1">{product.displayCategory || product.category}</p>
@@ -186,7 +181,7 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
               <Button 
                 onClick={handleAddToCart}
                 className="flex-1 flex items-center justify-center gap-2"
-                disabled={product.outOfStock}
+                disabled={!product.inStock}
               >
                 <ShoppingCart className="h-4 w-4" />
                 Add to Cart

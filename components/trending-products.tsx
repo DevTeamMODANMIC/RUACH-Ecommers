@@ -184,7 +184,7 @@ export default function TrendingProducts() {
                     src={product.images?.[0] || "/placeholder.jpg"} 
                     alt={product.name} 
                     fill
-                    className="object-contain p-4 group-hover:scale-105 transition-transform"
+                    className="object-cover group-hover:scale-105 transition-transform"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                   />
                 </Link>
