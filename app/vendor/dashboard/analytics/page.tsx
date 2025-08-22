@@ -139,7 +139,7 @@ export default function VendorAnalyticsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
           <p className="text-gray-600 mt-1">
-            Track your store's performance and insights
+            Track your store&apos;s performance and insights
           </p>
         </div>
         <div className="mt-4 sm:mt-0 flex gap-3">
@@ -398,7 +398,7 @@ export default function VendorAnalyticsPage() {
             <div className="p-3 border border-gray-200 rounded-lg">
               <h4 className="font-medium mb-2">Expand Popular Categories</h4>
               <p className="text-sm text-gray-600">
-                Consider adding more food products as they're your best performers
+                Consider adding more food products as they&apos;re your best performers
               </p>
             </div>
             <div className="p-3 border border-gray-200 rounded-lg">

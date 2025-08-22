@@ -71,7 +71,7 @@ export default function PaymentSuccessfulPage() {
             </div>
             
             <div className="text-sm text-gray-600">
-              <p>We've sent a confirmation email to your inbox with all the details of your purchase.</p>
+              <p>We’ve sent a confirmation email to your inbox with all the details of your purchase.</p>
             </div>
           </CardContent>
           

@@ -88,7 +88,7 @@ export default function TermsAndConditionsPage() {
                 <p>
                   Welcome to Ruach E-Store. By accessing or using our website and services, you agree to be bound by these Terms & Conditions. Please read them carefully.
                 </p>
-                <p>These Terms & Conditions govern the use of Ruach E-Store's website, products, and services. By placing an order with us, you agree to these terms along with our Privacy Policy, Shipping & Delivery Policy, and Returns & Refunds Policy.</p>
+                <p>These Terms & Conditions govern the use of Ruach E-Store&apos;s website, products, and services. By placing an order with us, you agree to these terms along with our Privacy Policy, Shipping & Delivery Policy, and Returns & Refunds Policy.</p>
               </div>
             </section>
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -40,6 +41,7 @@ export default function AdminOrdersPage() {
   
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [imageError, setImageError] = useState<Record<string, boolean>>({})
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -340,14 +342,15 @@ export default function AdminOrdersPage() {
                       {order.items.slice(0, 2).map((item) => (
                         <div key={`${order.id}-${item.productId}`} className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center overflow-hidden">
-                            {item.image ? (
-                              <img 
+                            {item.image && !imageError[item.productId] ? (
+                              <Image 
                                 src={item.image} 
-                                alt={item.name} 
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.src = "/product_images/unknown-product.jpg";
+                                alt={item.name}
+                                fill
+                                className="object-cover"
+                                onError={() => {
+                                  // Handle error with a state variable instead
+                                  setImageError(prev => ({ ...prev, [item.productId]: true }));
                                 }}
                               />
                             ) : (

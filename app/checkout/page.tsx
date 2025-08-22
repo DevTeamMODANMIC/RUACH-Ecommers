@@ -718,7 +718,7 @@ export default function CheckoutPage() {
                       <div className="p-4 border rounded-lg bg-gray-50">
                         <h3 className="text-sm font-medium text-gray-800 mb-2">External Payment Redirect</h3>
                         <p className="text-sm text-gray-600 mb-4">
-                          After placing your order, you'll be redirected to our external payment processor.
+                          After placing your order, you&apos;ll be redirected to our external payment processor.
                         </p>
                         
                         <div className="p-3 bg-amber-50 border border-amber-200 rounded-md mb-4">
@@ -752,7 +752,7 @@ export default function CheckoutPage() {
                         
                         <div className="mt-4 pt-3 border-t border-gray-200 text-center">
                           <p className="text-xs text-gray-500">
-                            You'll be able to review your order before completing payment
+                            You’ll be able to review your order before completing payment
                           </p>
                         </div>
                       </div>

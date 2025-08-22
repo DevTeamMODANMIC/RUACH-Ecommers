@@ -264,7 +264,7 @@ export default function StoresPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Want to Start Your Own Store?</h2>
           <p className="text-gray-800 mb-6 max-w-2xl mx-auto">
             Join our marketplace and reach thousands of customers looking for authentic African products. 
-            It's easy to get started!
+            It’s easy to get started!
           </p>
           <Link href="/vendor/register">
             <Button size="lg" className="bg-green-600 hover:bg-green-700">

@@ -4,7 +4,14 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Mail, ShoppingBag, ArrowRight } from "lucide-react"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
+import { ChevronLeft, ChevronRight, User, Mail, ShoppingBag, ArrowRight } from "lucide-react"
 
 // Updated slides with better images and content
 const slides = [
@@ -12,8 +19,8 @@ const slides = [
     id: 1,
     title: "Discover a World of Products",
     subtitle: "From fashion and electronics to handmade crafts, find it all on Ruach E-Store.",
-    description: "Experience the tastes of home with our carefully curated selection of international Products.",
-    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop&q=80",
+    description: "Experience the tastes of home with our carefully curated selection of international groceries",
+    image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8ZmFzaGlvbnxlbnwwfHwwfHx8MA%3D%3D",
     cta: "Shop Now",
     ctaLink: "/shop"
   },
@@ -21,17 +28,17 @@ const slides = [
     id: 2,
     title: "Shop Local, Support Your Community",
     subtitle: "Discover unique products from independent vendors in your area.",
-    description: "Quench your thirst with our wide range of international product and services",
-    image: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=1200&auto=format&fit=crop&q=80",
+    description: "Quench your thirst with our wide range of international beverages and refreshments",
+    image: "https://plus.unsplash.com/premium_photo-1661331827641-c6302f69d3f7?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8RSUyMHZlbmRvcnxlbnwwfHwwfHx8MA%3D%3D",
     cta: "View Collection",
     ctaLink: "/shop"
   },
   {
     id: 3,
-    title: "Start Your Vendor Journey Today",
-    subtitle: "Join our community of vendors and reach customers worldwide",
-    description: "Manage up to 3 independent stores with our comprehensive vendor platform",
-    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&auto=format&fit=crop&q=80",
+    title: "Start Selling on Ruach E-Store Today",
+    subtitle: "Join our community of vendors and reach a wider audience.",
+    description: "Get volume discounts on bulk purchases with our special wholesale options",
+    image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZHVjdHxlbnwwfHwwfHx8MA%3D%3D",
     cta: "Become a Vendor",
     ctaLink: "/vendor/register"
   },
@@ -67,7 +74,7 @@ export default function Hero() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }, 7000) // Auto-advance every 7 seconds
+    }, 7000) // Slightly longer duration for a more professional feel
     return () => clearInterval(timer)
   }, [])
 
@@ -134,15 +141,15 @@ export default function Hero() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/60" />
           
-          <div className="absolute inset-0 flex flex-col items-center justify-center lg:items-start z-10">
+          <div className="absolute inset-0 flex flex-col items-center justify-center md:items-start z-10">
             <div 
-              className={`text-center lg:text-left max-w-5xl px-6 md:px-12 lg:px-16 transform transition-all duration-1000 ease-out ${
+              className={`text-center md:text-left max-w-5xl px-6 md:px-16 transform transition-all duration-1000 ease-out ${
                 index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
               }`}
             >
-              <span className="inline-block px-4 py-1 bg-green-600 text-white text-xs md:text-sm rounded-full mb-4 shadow-lg">Premium Quality Guaranteed</span>
+              <span className="inline-block px-4 py-1 bg-green-600 text-white text-xs md:text-sm rounded-full mb-4 shadow-lg">Limited Time Offers</span>
               
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-2 sm:mb-4 drop-shadow-lg text-white">
+              <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-2 sm:mb-4 drop-shadow-lg text-white">
                 {slide.title}
               </h1>
               
@@ -150,31 +157,31 @@ export default function Hero() {
                 {slide.subtitle}
               </p>
               
-              <p className="hidden lg:block text-white/80 max-w-xl mb-6 text-lg">
+              <p className="hidden md:block text-white/80 max-w-xl mb-6 text-lg">
                 {slide.description}
               </p>
               
-              <div className="flex flex-col md:flex-row items-center md:items-center justify-center lg:justify-start gap-3 md:gap-4 mt-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center justify-center md:justify-start gap-3 sm:gap-4 mt-6">
                 <Button 
                   size="lg" 
                   asChild
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 lg:px-10 py-6 md:py-7 text-sm md:text-base lg:text-lg font-semibold shadow-lg hover:shadow-xl transition-all rounded-full group relative overflow-hidden w-full md:w-auto"
+                  className="bg-green-600 hover:bg-green-700 text-white px-8 sm:px-10 py-7 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all rounded-full group relative overflow-hidden"
                 >
                   <Link href={slide.ctaLink}>
                     <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-500/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></span>
-                    <ShoppingBag className="mr-2 h-4 md:h-5 w-4 md:w-5 group-hover:animate-bounce" />
+                    <ShoppingBag className="mr-2 h-5 w-5 group-hover:animate-bounce" />
                     {slide.cta}
-                    <ArrowRight className="ml-2 h-4 md:h-5 w-4 md:w-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>
                 <Button 
                   size="lg" 
                   variant="outline"
                   onClick={scrollToNewsletter}
-                  className="bg-white/20 text-white border-white/30 hover:bg-white/40 hover:border-white/50 px-6 md:px-8 lg:px-10 py-6 md:py-7 text-sm md:text-base lg:text-lg font-semibold shadow-lg hover:shadow-xl transition-all backdrop-blur-sm rounded-full group relative overflow-hidden w-full md:w-auto"
+                  className="bg-white/20 text-white border-white/30 hover:bg-white/40 hover:border-white/50 px-8 sm:px-10 py-7 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all backdrop-blur-sm rounded-full group relative overflow-hidden"
                 >
                   <span className="absolute inset-0 w-full h-full bg-white/10 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></span>
-                  <Mail className="mr-2 h-4 md:h-5 w-4 md:w-5 group-hover:animate-pulse" />
+                  <Mail className="mr-2 h-5 w-5 group-hover:animate-pulse" />
                   Subscribe to Updates
                 </Button>
               </div>
@@ -187,19 +194,19 @@ export default function Hero() {
       <Button
         variant="ghost"
         size="icon"
-        className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-white hover:bg-black/20 h-10 w-10 md:h-12 md:w-12 rounded-full shadow-md backdrop-blur-sm bg-black/30 hidden md:flex"
+        className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 text-white hover:bg-black/20 h-10 w-10 sm:h-12 sm:w-12 rounded-full shadow-md backdrop-blur-sm bg-black/30 hidden sm:flex"
         onClick={prevSlide}
       >
-        <ChevronLeft className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7" />
+        <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7" />
         <span className="sr-only">Previous</span>
       </Button>
       <Button
         variant="ghost"
         size="icon"
-        className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 text-white hover:bg-black/20 h-10 w-10 md:h-12 md:w-12 rounded-full shadow-md backdrop-blur-sm bg-black/30 hidden md:flex"
+        className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 text-white hover:bg-black/20 h-10 w-10 sm:h-12 sm:w-12 rounded-full shadow-md backdrop-blur-sm bg-black/30 hidden sm:flex"
         onClick={nextSlide}
       >
-        <ChevronRight className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7" />
+        <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7" />
         <span className="sr-only">Next</span>
       </Button>
 
@@ -208,13 +215,13 @@ export default function Hero() {
         {slides.map((_, index) => (
           <button
             key={index}
-            className={`w-3 h-3 sm:w-3 sm:h-3 rounded-full transition-all duration-300 border-2 border-white/30 ${
+            className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
               index === currentSlide 
-                ? "bg-green-500 w-10 sm:w-10 border-green-400" 
-                : "bg-white/50 hover:bg-white/80 hover:border-white/60"
+                ? "bg-green-500 w-8 sm:w-10" 
+                : "bg-white/50 hover:bg-white/80"
             }`}
             onClick={() => setCurrentSlide(index)}
-            aria-label={`Go to slide ${index + 1}: ${slides[index].title}`}
+            aria-label={`Go to slide ${index + 1}`}
           />
         ))}
       </div>

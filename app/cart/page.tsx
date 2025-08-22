@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from "lucide-react"
@@ -10,6 +11,7 @@ import { formatCurrency } from "@/lib/utils"
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, getTotalPrice, getTotalItems } = useCart()
+  const [imageError, setImageError] = useState<Record<string, boolean>>({})
 
   const subtotal = getTotalPrice()
   const shipping = subtotal >= 50 ? 0 : 4.99
@@ -23,7 +25,7 @@ export default function CartPage() {
             <ShoppingBag className="h-24 w-24 mx-auto text-gray-400 mb-6" />
             <h1 className="text-3xl font-bold mb-4">Your cart is empty</h1>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
-              Looks like you haven't added any items to your cart yet. Start shopping to fill it up!
+              Looks like you haven’t added any items to your cart yet. Start shopping to fill it up!
             </p>
             <Button asChild className="bg-green-600 hover:bg-green-700 text-white">
               <Link href="/shop">
@@ -54,14 +56,12 @@ export default function CartPage() {
               <div key={item.productId} className="bg-white border border-gray-200 rounded-lg p-4">
                 <div className="flex items-start gap-4">
                   <div className="relative w-20 h-20 rounded-lg overflow-hidden border">
-                    <img 
-                      src={item.image || "/product_images/unknown-product.jpg"} 
+                    <Image 
+                      src={imageError[item.productId] ? "/product_images/unknown-product.jpg" : (item.image || "/product_images/unknown-product.jpg")} 
                       alt={item.name}
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/product_images/unknown-product.jpg";
-                      }}
+                      fill
+                      className="object-contain"
+                      onError={() => setImageError(prev => ({ ...prev, [item.productId]: true }))}
                     />
                   </div>
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -38,6 +39,7 @@ export default function OrdersPage() {
   
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [imageError, setImageError] = useState<Record<string, boolean>>({})
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -312,16 +314,16 @@ export default function OrdersPage() {
                       {order.items.slice(0, 3).map((item) => (
                         <div key={`${order.id}-${item.productId}`} className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center overflow-hidden">
-                            {item.image ? (
-                              <img 
-                                src={item.image} 
-                                alt={item.name} 
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.src = "/product_images/unknown-product.jpg";
-                                }}
-                              />
+                            {item.image && !imageError[`${order.id}-${item.productId}`] ? (
+                              <div className="relative w-full h-full">
+                                <Image 
+                                  src={imageError[`${order.id}-${item.productId}`] ? "/product_images/unknown-product.jpg" : item.image}
+                                  alt={item.name}
+                                  fill
+                                  className="object-cover"
+                                  onError={() => setImageError(prev => ({ ...prev, [`${order.id}-${item.productId}`]: true }))}
+                                />
+                              </div>
                             ) : (
                               <Package className="h-6 w-6 text-muted-foreground" />
                             )}

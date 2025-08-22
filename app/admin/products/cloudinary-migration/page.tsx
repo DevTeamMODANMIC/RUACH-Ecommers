@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -20,6 +21,7 @@ export default function CloudinaryMigrationPage() {
   const { toast } = useToast()
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [imageError, setImageError] = useState<Record<string, boolean>>({})
   const [products, setProducts] = useState<Product[]>([])
   const [migrating, setMigrating] = useState(false)
   const [migrationResults, setMigrationResults] = useState<Record<string, any>>({})
@@ -282,14 +284,14 @@ export default function CloudinaryMigrationPage() {
                       size="medium"
                       className="w-full h-full object-contain"
                     />
-                  ) : product.images && product.images.length > 0 ? (
-                    <img
+                  ) : product.images && product.images.length > 0 && !imageError[product.id] ? (
+                    <Image
                       src={product.images[0]}
                       alt={product.name}
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/product_images/unknown-product.jpg";
+                      fill
+                      className="object-contain"
+                      onError={() => {
+                        setImageError(prev => ({ ...prev, [product.id]: true }));
                       }}
                     />
                   ) : (

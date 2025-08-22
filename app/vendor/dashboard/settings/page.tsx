@@ -99,7 +99,7 @@ export default function StoreSettingsPage() {
 
     setIsDeactivating(true)
     try {
-      await deactivateVendorStore(user.uid, activeStore.id)
+      await deleteVendorStore(user.uid, activeStore.id)
       await refreshStores()
       alert("Store has been deactivated successfully")
     } catch (error) {

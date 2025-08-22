@@ -145,7 +145,7 @@ export default function VendorDashboardHome() {
           </h1>
           <p className="text-lg text-gray-500 mb-2">Welcome to your vendor dashboard</p>
           <p className="text-xl text-gray-600 mb-8">
-            Let's get your store set up and start selling amazing products.
+            Let&apos;s get your store set up and start selling amazing products.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-green-600 hover:bg-green-700">
@@ -338,7 +338,7 @@ export default function VendorDashboardHome() {
             {getTimeBasedGreeting()}, {activeStore.shopName}!
           </h1>
           <p className="text-gray-600 mt-1">
-            Here's what's happening with your store today.
+            Here&apos;s what&apos;s happening with your store today.
           </p>
         </div>
         <div className="mt-4 sm:mt-0 flex gap-3">

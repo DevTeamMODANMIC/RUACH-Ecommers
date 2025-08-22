@@ -50,7 +50,7 @@ export default function ReturnsAndRefundsPage() {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-800">Returns & Refunds</h1>
-          <p className="text-lg text-gray-600 mt-2">Your satisfaction is our priority. Here's how we handle returns.</p>
+          <p className="text-lg text-gray-600 mt-2">Your satisfaction is our priority. Here’s how we handle returns.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
@@ -167,7 +167,7 @@ export default function ReturnsAndRefundsPage() {
                   <li>Email: support@ruachestore.com.ng</li>
                   <li>Phone/WhatsApp: <a href="https://wa.me/2348160662997" className="text-green-600 hover:text-green-700">+234 816 066 2997</a></li>
                 </ul>
-                <p>We'll be glad to assist you.</p>
+                <p>We’ll be glad to assist you.</p>
               </div>
             </section>
           </main>

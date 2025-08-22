@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -43,6 +44,7 @@ export default function OrderDetailPage() {
   const { toast } = useToast()
   const [orderDetails, setOrderDetails] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
+  const [imageError, setImageError] = useState<Record<string, boolean>>({})
   const [error, setError] = useState<string | null>(null)
   const [updating, setUpdating] = useState(false)
 
@@ -256,16 +258,16 @@ export default function OrderDetailPage() {
                   {orderDetails.items.map((item) => (
                     <div key={item.productId} className="flex items-center gap-4 p-4 border rounded-lg">
                       <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                        {item.image ? (
-                          <img 
-                            src={item.image} 
-                            alt={item.name} 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "/product_images/unknown-product.jpg";
-                            }}
-                          />
+                        {item.image && !imageError[item.productId] ? (
+                          <div className="relative w-full h-full">
+                            <Image 
+                              src={imageError[item.productId] ? "/product_images/unknown-product.jpg" : item.image}
+                              alt={item.name}
+                              fill
+                              className="object-cover"
+                              onError={() => setImageError(prev => ({ ...prev, [item.productId]: true }))}
+                            />
+                          </div>
                         ) : (
                           <span className="text-2xl">📦</span>
                         )}

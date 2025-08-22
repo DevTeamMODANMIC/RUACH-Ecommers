@@ -373,7 +373,7 @@ export default function AdminProducts() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                      No products found. Click "Add New Product" to create one or "Import Products" to import from scraped data.
+                      No products found. Click &quot;Add New Product&quot; to create one or &quot;Import Products&quot; to import from scraped data.
                     </TableCell>
                   </TableRow>
                 )}

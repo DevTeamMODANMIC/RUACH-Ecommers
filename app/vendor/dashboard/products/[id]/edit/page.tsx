@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft, Save, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
+import Image from "next/image"
 import CloudinaryUploadWidget from "@/components/cloudinary-upload-widget"
 
 interface ProductFormData {
@@ -55,6 +56,7 @@ export default function EditProductPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [product, setProduct] = useState<ProductFormData | null>(null)
+  const [imageError, setImageError] = useState<Record<string, boolean>>({})
 
   const productId = params.id as string
 
@@ -350,11 +352,17 @@ export default function EditProductPage() {
                     <div className="grid grid-cols-3 gap-4">
                       {product.cloudinaryImages.map((img, index) => (
                         <div key={index} className="relative">
-                          <img
-                            src={img.url}
-                            alt={`Product ${index + 1}`}
-                            className="w-full h-24 object-cover rounded border"
-                          />
+                          <div className="relative w-full h-24">
+                            {!imageError[img.url] && (
+                              <Image
+                                src={imageError[img.url] ? "/product_images/unknown-product.jpg" : img.url}
+                                alt={`Product ${index + 1}`}
+                                fill
+                                className="object-cover rounded border"
+                                onError={() => setImageError(prev => ({ ...prev, [img.url]: true }))}
+                              />
+                            )}
+                          </div>
                           <Button
                             type="button"
                             variant="destructive"

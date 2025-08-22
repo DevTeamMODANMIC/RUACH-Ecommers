@@ -7,7 +7,7 @@
     "build": "npm run tailwind:build && next build",
     "dev": "npm run tailwind:build && next dev",
     "dev:with-styles": "npm run tailwind:build && next dev",
-    "lint": "next lint",
+    "lint": "eslint .",
     "start": "next start",
     "tailwind:build": "npx tailwindcss -i ./styles/globals.css -o ./app/tailwind.css"
   },
@@ -72,12 +72,18 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@next/eslint-plugin-next": "^15.5.0",
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^9.33.0",
+    "eslint-config-next": "^15.5.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "typescript": "^5",
+    "typescript-eslint": "^8.40.0"
   }
 }

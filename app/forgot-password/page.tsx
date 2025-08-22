@@ -46,13 +46,13 @@ export default function ForgotPasswordPage() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Check Your Email</CardTitle>
-            <CardDescription>We've sent password reset instructions to {email}</CardDescription>
+            <CardDescription>We&apos;ve sent password reset instructions to {email}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-center">
               <Mail className="mx-auto h-12 w-12 text-green-600 mb-4" />
               <p className="text-sm text-muted-foreground mb-4">
-                If you don't see the email in your inbox, check your spam folder.
+                If you don&apos;t see the email in your inbox, check your spam folder.
               </p>
               <Button asChild variant="outline" className="w-full">
                 <Link href="/login">
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Reset Your Password</CardTitle>
-          <CardDescription>Enter your email address and we'll send you a link to reset your password</CardDescription>
+          <CardDescription>Enter your email address and we’ll send you a link to reset your password</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

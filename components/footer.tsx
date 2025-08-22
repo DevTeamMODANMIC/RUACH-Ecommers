@@ -45,9 +45,7 @@ export default function Footer() {
               <p className="text-sm leading-relaxed mb-6">
                 Your trusted source for authentic products –delivered with care and quality assurance.
               </p>
-              <p className="text-sm leading-relaxed mb-6">
-                Partnered with Modanmic.
-              </p>
+              
               <div className="flex space-x-4">
                 {[
                   { Icon: Facebook, href: "#", label: "Facebook" },
@@ -118,7 +116,7 @@ export default function Footer() {
                   setEmail("")
                   toast({
                     title: "Subscribed!",
-                    description: "You'll receive our next newsletter soon.",
+                    description: "You’ll receive our next newsletter soon.",
                   })
                 }}
                 className="flex flex-col w-full max-w-md mx-auto sm:mx-0 gap-3"

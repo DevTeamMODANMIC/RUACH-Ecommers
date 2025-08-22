@@ -734,7 +734,7 @@ export default function ShopPage() {
                 <div className="text-center max-w-md">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
                   <p className="text-gray-600 mb-6">
-                    We couldn't find any products matching your current filters. Try adjusting your search or clear filters to see all products.
+                    We couldn’t find any products matching your current filters. Try adjusting your search or clear filters to see all products.
                   </p>
                   <Button onClick={clearAllFilters}>
                     Clear Filters

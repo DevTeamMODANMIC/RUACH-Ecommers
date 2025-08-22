@@ -100,7 +100,7 @@ export default function RegisterPage() {
           <Button
             type="button"
             variant="outline"
-              className="w-full h-12 border-gray-700/30 bg-[#1a212b]/50 hover:bg-[#1a212b] hover:border-gray-600/50 transition-all duration-200 mb-6 text-gray-100"
+                                className="pl-10 border-gray-300 h-12"
             onClick={handleGoogleSignup}
             disabled={isGoogleLoading}
           >
@@ -141,7 +141,7 @@ export default function RegisterPage() {
                     placeholder="Full Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                    className="pl-10 bg-[#1a212b]/80 border-gray-700/30 focus:border-green-500/50 h-12"
+                    className="pl-10 border-gray-300 h-12"
                   required
                 />
               </div>
@@ -156,7 +156,7 @@ export default function RegisterPage() {
                     placeholder="Email Address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 bg-[#1a212b]/80 border-gray-700/30 focus:border-green-500/50 h-12"
+                    className="pl-10 border-gray-300 h-12"
                   required
                 />
               </div>
@@ -171,7 +171,7 @@ export default function RegisterPage() {
                     placeholder="Create Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 bg-[#1a212b]/80 border-gray-700/30 focus:border-green-500/50 h-12"
+                    className="pl-10 pr-10 border-gray-300 h-12 placeholder-gray-400"
                   required
                 />
                   <button
@@ -198,7 +198,7 @@ export default function RegisterPage() {
                     placeholder="Confirm Password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10 pr-10 bg-[#1a212b]/80 border-gray-700/30 focus:border-green-500/50 h-12"
+                    className="pl-10 pr-10 border-gray-300 h-12 placeholder-gray-400"
                   required
                 />
                   <button

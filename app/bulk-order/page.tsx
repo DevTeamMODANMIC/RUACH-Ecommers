@@ -80,7 +80,7 @@ export default function BulkOrderPage() {
                 <div className="space-y-6">
                   <h2 className="text-3xl md:text-4xl font-bold">Volume Discounts Up To 25%</h2>
                   <p className="text-lg text-green-100">
-                    Whether you're a restaurant owner, retailer, or planning a large event, our bulk ordering system
+                    Whether you&apos;re a restaurant owner, retailer, or planning a large event, our bulk ordering system
                     offers significant savings and personalized service.
                   </p>
                   <div className="flex flex-wrap gap-4">
@@ -317,7 +317,7 @@ export default function BulkOrderPage() {
               <div className="lg:col-span-2 space-y-6">
                 <h2 className="text-2xl md:text-3xl font-bold">Get in Touch</h2>
                 <p className="text-muted-foreground">
-                  Fill out the form to discuss your bulk order requirements with our team. We'll provide a custom quote
+                  Fill out the form to discuss your bulk order requirements with our team. We&apos;ll provide a custom quote
                   based on your specific needs.
                 </p>
 
@@ -326,7 +326,7 @@ export default function BulkOrderPage() {
                     <Clock className="h-5 w-5 text-green-600 mt-1" />
                     <div>
                       <h3 className="font-medium">Quick Response</h3>
-                      <p className="text-sm text-muted-foreground">We'll respond to your inquiry within 24 hours</p>
+                      <p className="text-sm text-muted-foreground">We’ll respond to your inquiry within 24 hours</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -414,7 +414,7 @@ export default function BulkOrderPage() {
                         <Label htmlFor="productInterest">Products of Interest *</Label>
                         <Textarea
                           id="productInterest"
-                          placeholder="Please list the products and approximate quantities you're interested in"
+                          placeholder="Please list the products and approximate quantities you’re interested in"
                           required
                           rows={3}
                         />

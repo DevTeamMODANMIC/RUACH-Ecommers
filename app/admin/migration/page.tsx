@@ -138,8 +138,8 @@ export default function MigrationPage() {
             
             <div className="bg-white p-4 rounded border border-amber-200">
               <p className="text-sm text-gray-700 mb-3">
-                <strong>Important:</strong> This migration is safe and will not delete any data. 
-                However, it's recommended to backup your database before proceeding.
+                                <strong>Important:</strong> This migration is safe and will not delete any data. 
+                However, it’s recommended to backup your database before proceeding.
               </p>
               
               <Button 

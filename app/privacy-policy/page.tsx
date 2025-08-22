@@ -49,7 +49,7 @@ export default function PrivacyPolicyPage() {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-800">Privacy Policy</h1>
-          <p className="text-lg text-gray-600 mt-2">Your privacy is important to us. Here's how we protect your data.</p>
+          <p className="text-lg text-gray-600 mt-2">Your privacy is important to us. Here’s how we protect your data.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
