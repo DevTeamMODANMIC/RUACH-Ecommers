@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useVendor } from "@/hooks/use-vendor"
 import { addProduct } from "@/lib/firebase-products"
@@ -13,48 +13,42 @@ import { Label } from "@/components/ui/label"
 import { Loader2, X, Plus } from "lucide-react"
 import Image from "next/image"
 
-// Popular category examples - vendors can use these or create their own
-const categoryExamples = [
-  "African Foods",
-  "Traditional Spices", 
-  "Fresh Vegetables",
-  "Beverages & Drinks",
-  "Grains & Rice",
-  "Flour & Baking",
-  "Meat & Fish",
-  "Snacks & Sweets",
-  "Health & Beauty",
-  "Home & Kitchen",
-  "Baby Products",
-  "Traditional Medicine",
-  "Clothing & Fashion",
-  "Electronics",
-  "Books & Education",
-  "Toys & Games",
-  "Sports & Fitness",
-  "Arts & Crafts",
-  "Automotive",
-  "Garden & Outdoor"
-]
+// Use centralized categories to match shop page filtering
+import { MAIN_CATEGORIES } from "@/lib/categories"
 
 export default function VendorAddProductPage() {
+  // Filter categories to only show those with subcategories
+  const categories = MAIN_CATEGORIES.filter(c => c.id !== 'all' && c.subcategories && c.subcategories.length > 0)
+  
   const { vendor, activeStore } = useVendor()
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [cloudinaryImages, setCloudinaryImages] = useState<Array<{ publicId: string; url: string; alt?: string }>>([])
-  const [categoryInput, setCategoryInput] = useState("")
-  const [showExamples, setShowExamples] = useState(false)
+  
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
     category: "",
+    subcategory: "",
     inStock: true,
     stockQuantity: "100",
   })
+  
+  // Log categories on component mount
+  useEffect(() => {
+    console.log('Categories loaded:', categories.length);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  const handleSelectChange = (name: string, value: string) => {
+    console.log(`🔥 handleSelectChange: ${name} = ${value}`);
+    const newFormData = { ...formData, [name]: value };
+    console.log('🔥 New formData:', newFormData);
+    setFormData(newFormData);
   }
 
   const handleCloudinaryUpload = (publicId: string, url: string, alt?: string) => {
@@ -74,17 +68,24 @@ export default function VendorAddProductPage() {
       return
     }
     
-    // Validate category input
-    if (!categoryInput.trim()) {
-      alert("Please enter a category for your product.")
+    // Validate category selection
+    if (!formData.category) {
+      alert("Please select a category for your product.")
+      return
+    }
+    
+    if (!formData.subcategory) {
+      alert("Please select a subcategory for your product.")
       return
     }
     
     setSubmitting(true)
     try {
-      // Use the category input directly
-      const finalCategory = categoryInput.trim().toLowerCase().replace(/\s+/g, '-')
-      const finalDisplayCategory = categoryInput.trim()
+      // Find display name for the selected category and subcategory
+      const selectedCategory = categories.find(cat => cat.id === formData.category)
+      const selectedSubcategory = selectedCategory?.subcategories?.find(sub => sub.id === formData.subcategory)
+      const finalCategory = formData.subcategory // Use subcategory as the main category
+      const finalDisplayCategory = selectedSubcategory ? selectedSubcategory.name : formData.subcategory
       
       const productData = {
         name: formData.name,
@@ -152,70 +153,146 @@ export default function VendorAddProductPage() {
           </div>
           <div>
             <Label htmlFor="category">Product Category *</Label>
-            <div className="space-y-3">
-              <div className="relative">
-                <Input
-                  id="category"
-                  placeholder="Enter your product category (e.g., Traditional African Spices, Fresh Vegetables, Handmade Crafts)"
-                  value={categoryInput}
-                  onChange={(e) => {
-                    setCategoryInput(e.target.value)
-                    console.log("Category input:", e.target.value)
-                  }}
-                  className="w-full"
-                  required
-                />
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setShowExamples(!showExamples)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-700"
-                >
-                  {showExamples ? "Hide" : "Show"} Examples
-                </Button>
-              </div>
-              
-              {showExamples && (
-                <div className="bg-gray-50 rounded-lg p-4 border">
-                  <p className="text-sm font-medium text-gray-700 mb-3">Popular category examples (click to use):</p>
-                  <div className="flex flex-wrap gap-2">
-                    {categoryExamples.map((example, index) => (
-                      <Button
-                        key={index}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setCategoryInput(example)
-                          setShowExamples(false)
-                          console.log("Selected example category:", example)
-                        }}
-                        className="text-xs h-7 px-2 hover:bg-green-50 hover:border-green-300"
-                      >
-                        {example}
-                      </Button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-3">
-                    💡 Tip: Create categories that best describe your products. This helps customers find what they're looking for!
-                  </p>
-                </div>
-              )}
-              
-              {categoryInput.trim() && (
-                <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                  <p className="text-sm text-blue-800">
-                    <strong>Your category:</strong> {categoryInput.trim()}
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    This will help customers find your product when browsing or searching.
-                  </p>
-                </div>
-              )}
+            <p className="text-xs text-blue-600 mb-1">
+              Select from {categories.length} available categories (filtered to show only those with subcategories)
+            </p>
+            
+            {/* Debug: Show current selection */}
+            <div className="text-xs bg-gray-100 p-2 rounded mb-2">
+              Current selection: "{formData.category}" {formData.category && `(${categories.find(c => c.id === formData.category)?.name || 'Unknown'})`}
+              <button
+                type="button"
+                onClick={() => handleSelectChange('category', 'appliances')}
+                className="ml-2 px-2 py-1 bg-blue-200 rounded text-xs"
+              >
+                Test: Set Appliances
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectChange('category', '')}
+                className="ml-1 px-2 py-1 bg-red-200 rounded text-xs"
+              >
+                Clear
+              </button>
             </div>
+            
+            <Select
+              value={formData.category || ""}
+              onValueChange={(value) => {
+                console.log('Dropdown selected:', value);
+                handleSelectChange("category", value);
+                // Reset subcategory when main category changes
+                handleSelectChange("subcategory", "");
+              }}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={`Choose from ${categories.length} categories`} />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.length === 0 ? (
+                  <SelectItem value="no-categories" disabled>
+                    No categories available
+                  </SelectItem>
+                ) : (
+                  categories.map((category, index) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {index + 1}. {category.name} ({category.subcategories?.length || 0} subs)
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            {categories.length === 0 && (
+              <p className="text-xs text-red-600 mt-1">
+                ⚠️ No categories with subcategories available!
+              </p>
+            )}
+            {categories.length > 0 && (
+              <p className="text-xs text-green-600 mt-1">
+                ✅ {categories.length} categories loaded successfully
+              </p>
+            )}
           </div>
         </div>
+        
+        {formData.category && (
+          <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-md font-semibold text-gray-700">Product Subcategory</h3>
+              <p className="text-sm text-gray-600">
+                Select the specific subcategory for your product within "{categories.find(cat => cat.id === formData.category)?.name}".
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="subcategory">Subcategory *</Label>
+              <Select
+                value={formData.subcategory}
+                onValueChange={(value) => handleSelectChange("subcategory", value)}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a subcategory" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(() => {
+                    const selectedCategory = categories.find(cat => cat.id === formData.category);
+                    
+                    if (!selectedCategory || !selectedCategory.subcategories) {
+                      return (
+                        <SelectItem value="no-subcategories" disabled>
+                          No subcategories available
+                        </SelectItem>
+                      );
+                    }
+                    
+                    return selectedCategory.subcategories.map((subcategory) => (
+                      <SelectItem key={subcategory.id} value={subcategory.id}>
+                        {subcategory.name}
+                      </SelectItem>
+                    ));
+                  })()} 
+                </SelectContent>
+              </Select>
+              
+              <div className="text-xs space-y-1 mt-2">
+                <p className="text-gray-500">
+                  💡 This hierarchical structure matches the shop page categories, helping customers find your products easily.
+                </p>
+                {(() => {
+                  const selectedCategory = categories.find(cat => cat.id === formData.category);
+                  if (selectedCategory?.subcategories) {
+                    return (
+                      <p className="text-green-600">
+                        ✅ {selectedCategory.subcategories.length} subcategories available for "{selectedCategory.name}"
+                      </p>
+                    );
+                  }
+                  return (
+                    <p className="text-orange-600">
+                      ⚠️ No subcategories available for this category.
+                    </p>
+                  );
+                })()} 
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {!formData.category && (
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <div className="text-blue-500">ℹ️</div>
+              <div>
+                <p className="text-sm font-medium text-blue-700">Select a Category First</p>
+                <p className="text-xs text-blue-600">
+                  Choose a main category above to see available subcategories for your product.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         <div>
           <Label htmlFor="stockQuantity">Stock Quantity</Label>
           <Input id="stockQuantity" type="number" name="stockQuantity" value={formData.stockQuantity} onChange={handleChange} />

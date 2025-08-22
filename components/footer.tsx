@@ -65,7 +65,7 @@ export default function Footer() {
             </div>
 
             {/* Quick links */}
-            <div className="w-full sm:w-1/2 lg:w-1/4 text-center sm:text-left">
+            <div className="w-full sm:w-1/2 lg:w-1/5 text-center sm:text-left">
               <h3 className="text-lg font-semibold text-white mb-4">Quick Links</h3>
               <ul className="space-y-2 text-sm">
                 {[
@@ -84,8 +84,29 @@ export default function Footer() {
               </ul>
             </div>
 
+            {/* Services */}
+            <div className="w-full sm:w-1/2 lg:w-1/5 text-center sm:text-left">
+              <h3 className="text-lg font-semibold text-white mb-4">Our Services</h3>
+              <ul className="space-y-2 text-sm">
+                {[
+                  { href: "/services", label: "All Services" },
+                  { href: "/services/delivery", label: "Fast Delivery" },
+                  { href: "/services/bulk-orders", label: "Bulk Orders" },
+                  { href: "/services/vendor-onboarding", label: "Vendor Onboarding" },
+                  { href: "/services/customer-support", label: "24/7 Support" },
+                  { href: "/request-service", label: "Request Service" },
+                ].map(({ href, label }) => (
+                  <li key={label}>
+                    <Link href={href} className="hover:text-white transition-transform transform hover:scale-110">
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {/* Customer Service */}
-            <div className="w-full sm:w-1/2 lg:w-1/4 text-center sm:text-left">
+            <div className="w-full sm:w-1/2 lg:w-1/5 text-center sm:text-left">
               <h3 className="text-lg font-semibold text-white mb-4">Customer Service</h3>
               <ul className="space-y-2 text-sm">
                 {[
@@ -94,6 +115,7 @@ export default function Footer() {
                   { href: "/returns-and-refunds", label: "Returns & Refunds" },
                   { href: "/privacy-policy", label: "Privacy Policy" },
                   { href: "/terms", label: "Terms & Conditions" },
+                  { href: "/complaint", label: "File Complaint" },
                 ].map(({ href, label }) => (
                   <li key={label}>
                     <Link href={href} className="hover:text-white transition-transform transform hover:scale-110">
@@ -137,16 +159,33 @@ export default function Footer() {
                   <Send className="h-4 w-4" />
                 </button>
               </form>
+              
+              {/* Contact Info */}
+              <div className="mt-6 space-y-2">
+                <div className="flex items-center justify-center sm:justify-start space-x-2 text-sm">
+                  <Phone className="h-4 w-4 text-green-400" />
+                  <span>+234 816 066 2997</span>
+                </div>
+                <div className="flex items-center justify-center sm:justify-start space-x-2 text-sm">
+                  <Mail className="h-4 w-4 text-green-400" />
+                  <span>support@ruachestore.com.ng</span>
+                </div>
+                <div className="flex items-center justify-center sm:justify-start space-x-2 text-sm">
+                  <MapPin className="h-4 w-4 text-green-400" />
+                  <span>Lagos & Abuja, Nigeria</span>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Unique selling points */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10 text-center sm:text-left">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mt-10 text-center sm:text-left">
             {[
-              { Icon: Truck, title: "Fast Delivery", desc: "Always on time" },
+              { Icon: Truck, title: "Fast Delivery", desc: "Same day in Lagos" },
               { Icon: Shield, title: "Secure Payment", desc: "100% protected" },
               { Icon: CreditCard, title: "Quality Products", desc: "Authentic guarantee" },
-              { Icon: Heart, title: "Customer Love", desc: "24/7 support" },
+              { Icon: Heart, title: "24/7 Support", desc: "Always available" },
+              { Icon: Send, title: "Easy Returns", desc: "Hassle-free process" },
             ].map(({ Icon, title, desc }) => (
               <div key={title} className="flex items-center space-x-3">
                 <Icon className="h-5 w-5 text-green-500 flex-shrink-0" />

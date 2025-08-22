@@ -37,11 +37,11 @@ export const metadata: Metadata = {
     "Discover authentic African and international foods, spices, and beverages. Fresh produce, quality ingredients, and traditional flavors delivered to your door.",
   keywords: "African food, international cuisine, spices, beverages, fresh produce, online grocery, RUACH E-STORE",
   authors: [{ name: SITE_NAME }],
-  metadataBase: new URL("https://ruachestore.com"),
+  metadataBase: new URL("https://ruachestore.com.ng"),
   openGraph: {
     title: `${SITE_NAME} - RUACH E-STORE`,
     description: "Discover authentic African and international foods, spices, and beverages.",
-    url: "https://ruachestore.com",
+    url: "https://ruachestore.com.ng",
     siteName: SITE_NAME,
     images: [
       {

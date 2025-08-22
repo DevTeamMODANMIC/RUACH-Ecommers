@@ -32,24 +32,61 @@ export function VendorDashboardStats({ storeId }: { storeId: string }) {
         const totalProducts = productsSnapshot.size
 
         // Fetch total orders and sales
-        const ordersQuery = query(
-          collection(db, "orders"), 
-          where("vendorId", "==", storeId),
-          orderBy("createdAt", "desc")
-        )
-        const ordersSnapshot = await getDocs(ordersQuery)
-        
-        const totalOrders = ordersSnapshot.size
-        const totalSales = ordersSnapshot.docs.reduce((sum, doc) => {
-          const orderData = doc.data()
-          return sum + (orderData.total || 0)
-        }, 0)
-
-        setStats({
-          totalProducts,
-          totalOrders,
-          totalSales
-        })
+        try {
+          // Try with orderBy first
+          const ordersQuery = query(
+            collection(db, "orders"), 
+            where("vendorId", "==", storeId),
+            orderBy("createdAt", "desc")
+          )
+          const ordersSnapshot = await getDocs(ordersQuery)
+          
+          const totalOrders = ordersSnapshot.size
+          let totalSales = 0
+          
+          ordersSnapshot.forEach((doc) => {
+            const orderData = doc.data()
+            totalSales += orderData.total || 0
+          })
+          
+          setStats({
+            totalProducts,
+            totalOrders,
+            totalSales
+          })
+        } catch (ordersError: any) {
+          console.log("Orders query failed, trying without orderBy:", ordersError.message)
+          
+          // Fallback: query without orderBy to avoid composite index requirement
+          try {
+            const simpleOrdersQuery = query(
+              collection(db, "orders"), 
+              where("vendorId", "==", storeId)
+            )
+            const ordersSnapshot = await getDocs(simpleOrdersQuery)
+            
+            const totalOrders = ordersSnapshot.size
+            let totalSales = 0
+            
+            ordersSnapshot.forEach((doc) => {
+              const orderData = doc.data()
+              totalSales += orderData.total || 0
+            })
+            
+            setStats({
+              totalProducts,
+              totalOrders,
+              totalSales
+            })
+          } catch (fallbackError: any) {
+            console.error("Error fetching order stats:", fallbackError)
+            setStats({
+              totalProducts,
+              totalOrders: 0,
+              totalSales: 0
+            })
+          }
+        }
       } catch (error) {
         console.error("Failed to fetch vendor stats:", error)
       }

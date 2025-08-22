@@ -58,6 +58,7 @@ const legacyCategories = [
 const primaryLinks = [
   { title: "Home", href: "/" },
   { title: "Shop", href: "/shop" },
+  { title: "Services", href: "/services" },
   { title: "Stores", href: "/stores" },
   { title: "Become a Vendor", href: "/vendor/register" },
   { title: "Bulk Order", href: "/bulk-order" },
@@ -224,6 +225,9 @@ export default function HeaderImproved() {
                       Vendor Dashboard
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem onSelect={() => router.push("/service-provider/dashboard")}>
+                    Service Provider Dashboard
+                  </DropdownMenuItem>
                   <DropdownMenuItem onSelect={logout} className="text-red-600">
                     Log out
                   </DropdownMenuItem>

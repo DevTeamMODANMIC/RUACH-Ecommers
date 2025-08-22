@@ -55,12 +55,12 @@ export default function AdminVendorsPage() {
     try {
       console.log("Fetching vendors...")
       
-      // Try to fetch pending vendors first
+      // Try to fetch pending vendors with client-side sorting to avoid composite index requirement
       try {
+        // Use simple query without orderBy to avoid index requirement
         const pendingQuery = query(
           collection(db, "vendors"),
-          where("status", "==", "pending"),
-          orderBy("createdAt", "desc")
+          where("status", "==", "pending")
         )
         const pendingSnapshot = await getDocs(pendingQuery)
         let fetchedPendingVendors = pendingSnapshot.docs.map((doc) => {
@@ -76,38 +76,22 @@ export default function AdminVendorsPage() {
             isActive: data.isActive !== undefined ? data.isActive : true,
           } as VendorApp
         })
-        fetchedPendingVendors = fetchedPendingVendors.filter(v => !(v as any).rejected)
+        
+        // Filter out rejected vendors and sort client-side
+        fetchedPendingVendors = fetchedPendingVendors
+          .filter(v => !(v as any).rejected)
+          .sort((a, b) => {
+            // Sort by createdAt desc (newest first) - client side
+            const aTime = a.createdAt?.toDate?.() ? a.createdAt.toDate().getTime() : 0
+            const bTime = b.createdAt?.toDate?.() ? b.createdAt.toDate().getTime() : 0
+            return bTime - aTime
+          })
+        
         setPendingVendors(fetchedPendingVendors)
-        console.log("Fetched pending vendors:", fetchedPendingVendors)
+        console.log("Fetched pending vendors (client-side sorted):", fetchedPendingVendors)
       } catch (pendingError: any) {
         console.error("Error fetching pending vendors:", pendingError)
-        // Try without orderBy in case the index doesn't exist
-        try {
-          const simplePendingQuery = query(
-            collection(db, "vendors"),
-            where("status", "==", "pending")
-          )
-          const simplePendingSnapshot = await getDocs(simplePendingQuery)
-          let fetchedPendingVendors = simplePendingSnapshot.docs.map((doc) => {
-            const data = doc.data()
-            return {
-              id: doc.id,
-              ownerId: data.ownerId || data.uid || '', // Fallback for old data structure
-              shopName: data.shopName || '',
-              bio: data.bio || '',
-              logoUrl: data.logoUrl || '',
-              createdAt: data.createdAt,
-              approved: data.approved || false,
-              isActive: data.isActive !== undefined ? data.isActive : true,
-            } as VendorApp
-          })
-          fetchedPendingVendors = fetchedPendingVendors.filter(v => !(v as any).rejected)
-          setPendingVendors(fetchedPendingVendors)
-          console.log("Fetched pending vendors (simple query):", fetchedPendingVendors)
-        } catch (simpleError: any) {
-          console.error("Error with simple pending query:", simpleError)
-          setPendingVendors([])
-        }
+        setPendingVendors([])
       }
 
       // Try to fetch approved vendors

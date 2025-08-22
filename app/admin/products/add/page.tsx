@@ -26,7 +26,6 @@ import CloudinaryUploadWidget from "@/components/cloudinary-upload-widget"
 
 // Use centralized categories
 import { MAIN_CATEGORIES } from "@/lib/categories"
-const categories = MAIN_CATEGORIES.filter(c => c.id !== 'all').map(c => ({ id: c.id, name: c.name }))
 
 const countries = [
   "All", "United Kingdom", "Nigeria", "Ghana", "South Africa", "Kenya", 
@@ -44,11 +43,18 @@ export default function AddProduct() {
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [cloudinaryImages, setCloudinaryImages] = useState<Array<{publicId: string, url: string, alt?: string}>>([])
   
+  // Move categories filter inside component for better debugging
+  const categories = MAIN_CATEGORIES.filter(c => c.id !== 'all' && c.subcategories && c.subcategories.length > 0)
+  
+  // Add debug state to track what's happening
+  const [debugInfo, setDebugInfo] = useState<string>("");
+  
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
     category: "",
+    subcategory: "",
     images: [] as string[],
     inStock: true,
     stockQuantity: "100",
@@ -71,6 +77,19 @@ export default function AddProduct() {
 
     return () => checkAuth()
   }, [router])
+  
+  // Debug: Log categories on component mount
+  useEffect(() => {
+    console.log('=== ADD PRODUCT PAGE DEBUG ===');
+    console.log('Total MAIN_CATEGORIES:', MAIN_CATEGORIES.length);
+    console.log('Filtered categories (with subcategories):', categories.length);
+    console.log('Categories:', categories.map(c => ({
+      id: c.id,
+      name: c.name,
+      subcategoryCount: c.subcategories?.length || 0
+    })));
+    console.log('================================');
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -80,10 +99,38 @@ export default function AddProduct() {
   }
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData({
+    const timestamp = new Date().toLocaleTimeString();
+    console.log(`[${timestamp}] handleSelectChange called:`, { name, value });
+    
+    const newFormData = {
       ...formData,
       [name]: value,
-    })
+    };
+    
+    console.log(`[${timestamp}] Setting formData:`, newFormData);
+    setFormData(newFormData);
+    
+    // Update debug info for display
+    setDebugInfo(`Last action: Set ${name} = "${value}" at ${timestamp}`);
+    
+    // If changing category, log the available subcategories
+    if (name === 'category') {
+      const selectedCategory = categories.find(cat => cat.id === value);
+      console.log(`[${timestamp}] Selected category:`, selectedCategory);
+      console.log(`[${timestamp}] Available subcategories:`, selectedCategory?.subcategories);
+      
+      if (selectedCategory?.subcategories) {
+        console.log(`[${timestamp}] Subcategory count:`, selectedCategory.subcategories.length);
+        selectedCategory.subcategories.forEach((sub, index) => {
+          console.log(`[${timestamp}] Subcategory ${index + 1}:`, { id: sub.id, name: sub.name });
+        });
+      } else {
+        console.log(`[${timestamp}] ERROR: No subcategories found for category ${value}`);
+      }
+    }
+    
+    console.log(`[${timestamp}] Current formData.category:`, newFormData.category);
+    console.log(`[${timestamp}] Should show subcategory section:`, !!newFormData.category);
   }
 
   const handleSwitchChange = (checked: boolean) => {
@@ -156,21 +203,55 @@ export default function AddProduct() {
       return;
     }
 
+    // Validate category and subcategory selection
+    if (!formData.category) {
+      toast({
+        title: "Category required",
+        description: "Please select a main category.",
+        variant: "destructive",
+      });
+      setSubmitting(false);
+      return;
+    }
+
+    if (!formData.subcategory) {
+      toast({
+        title: "Subcategory required",
+        description: "Please select a subcategory.",
+        variant: "destructive",
+      });
+      setSubmitting(false);
+      return;
+    }
+
+    // Validate that the selected category actually has the selected subcategory
+    const selectedCategory = categories.find(cat => cat.id === formData.category);
+    if (!selectedCategory?.subcategories?.find(sub => sub.id === formData.subcategory)) {
+      toast({
+        title: "Invalid subcategory",
+        description: "The selected subcategory is not valid for the selected category. Please reselect.",
+        variant: "destructive",
+      });
+      setSubmitting(false);
+      return;
+    }
+
     try {
       // Use the collected image URLs
       let productImages = imageUrls.length > 0 ? imageUrls : ["/product_images/unknown-product.jpg"]
 
-      // Find display name for the selected category
+      // Find display name for the selected category and subcategory
       const selectedCategory = categories.find(cat => cat.id === formData.category);
-      const displayCategory = selectedCategory ? selectedCategory.name : formData.category;
+      const selectedSubcategory = selectedCategory?.subcategories?.find(sub => sub.id === formData.subcategory);
+      const finalCategory = formData.subcategory; // Use subcategory as the main category
+      const finalDisplayCategory = selectedSubcategory ? selectedSubcategory.name : formData.subcategory;
 
-      // Prepare data for Firebase
       const productData = {
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
-        category: formData.category, // This is the category ID
-        displayCategory: displayCategory, // This is the human-readable category name
+        category: finalCategory, // This is the subcategory ID
+        displayCategory: finalDisplayCategory, // This is the human-readable subcategory name
         images: productImages,
         cloudinaryImages,
         cloudinaryMigrated: true, // Mark as already migrated
@@ -255,6 +336,53 @@ export default function AddProduct() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Debug Information Section */}
+          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+            <h4 className="font-semibold text-yellow-800 mb-2">Debug Information</h4>
+            <div className="text-xs space-y-1">
+              <p><strong>Categories loaded:</strong> {categories.length}</p>
+              <p><strong>Current category:</strong> "{formData.category}" {formData.category ? '✅' : '❌'}</p>
+              <p><strong>Current subcategory:</strong> "{formData.subcategory}" {formData.subcategory ? '✅' : '❌'}</p>
+              <p><strong>Should show subcategory section:</strong> {formData.category ? 'YES ✅' : 'NO ❌'}</p>
+              <p><strong>Last action:</strong> {debugInfo || 'None yet'}</p>
+              
+              <div className="mt-2 space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    console.log('=== MANUAL TEST BUTTON CLICKED ===');
+                    console.log('Setting category to appliances manually');
+                    handleSelectChange('category', 'appliances');
+                  }}
+                  className="px-2 py-1 bg-yellow-200 rounded text-xs"
+                >
+                  Test: Set Category to Appliances
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    console.log('=== CLEARING CATEGORY ===');
+                    handleSelectChange('category', '');
+                    handleSelectChange('subcategory', '');
+                  }}
+                  className="px-2 py-1 bg-red-200 rounded text-xs"
+                >
+                  Clear Category
+                </button>
+              </div>
+              
+              <details className="mt-2">
+                <summary className="cursor-pointer text-yellow-700">Available Categories ({categories.length})</summary>
+                <div className="mt-1 ml-4 max-h-32 overflow-y-auto">
+                  {categories.map((cat, index) => (
+                    <div key={cat.id} className="text-xs">
+                      {index + 1}. {cat.name} (ID: {cat.id}) - {cat.subcategories?.length || 0} subcategories
+                    </div>
+                  ))}
+                </div>
+              </details>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="name">Product Name *</Label>
@@ -284,25 +412,55 @@ export default function AddProduct() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
+              <Label htmlFor="category">Main Category *</Label>
+              <p className="text-xs text-blue-600 mb-1">
+                Click dropdown to select from {categories.length} available categories
+              </p>
               <Select
                 value={formData.category}
-                onValueChange={(value) => handleSelectChange("category", value)}
+                onValueChange={(value) => {
+                  console.log('=== CATEGORY SELECTION EVENT ===');
+                  console.log('Raw value received:', value);
+                  console.log('Type of value:', typeof value);
+                  console.log('Current formData.category before:', formData.category);
+                  
+                  handleSelectChange("category", value);
+                  // Reset subcategory when main category changes
+                  handleSelectChange("subcategory", "");
+                  
+                  console.log('=== END CATEGORY SELECTION ===');
+                }}
                 required
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={`Select from ${categories.length} categories`} />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
+                  {categories.length === 0 ? (
+                    <SelectItem value="no-categories" disabled>
+                      No categories available
                     </SelectItem>
-                  ))}
+                  ) : (
+                    categories.map((category, index) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {index + 1}. {category.name} ({category.subcategories?.length || 0} subs)
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
+              {categories.length === 0 && (
+                <p className="text-xs text-red-600 mt-1">
+                  ⚠️ No categories with subcategories available. Please check your category configuration.
+                </p>
+              )}
+              {categories.length > 0 && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✅ {categories.length} categories available with subcategories
+                </p>
+              )}
             </div>
-
+            
             <div className="space-y-2">
               <Label htmlFor="origin">Country of Origin *</Label>
               <Select 
@@ -346,6 +504,83 @@ export default function AddProduct() {
               <Label htmlFor="inStock">In Stock</Label>
             </div>
           </div>
+          
+          {/* Subcategory Selection - Separate section for better visibility */}
+          {formData.category && (
+            <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-md font-semibold text-gray-700">Product Subcategory</h3>
+                <p className="text-sm text-gray-600">
+                  Select the specific subcategory that best describes your product within the "{categories.find(cat => cat.id === formData.category)?.name}" category.
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="subcategory">Subcategory *</Label>
+                <Select
+                  value={formData.subcategory}
+                  onValueChange={(value) => handleSelectChange("subcategory", value)}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a subcategory" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(() => {
+                      const selectedCategory = categories.find(cat => cat.id === formData.category);
+                      if (!selectedCategory || !selectedCategory.subcategories) {
+                        return (
+                          <SelectItem value="no-subcategories" disabled>
+                            No subcategories available
+                          </SelectItem>
+                        );
+                      }
+                      return selectedCategory.subcategories.map((subcategory) => (
+                        <SelectItem key={subcategory.id} value={subcategory.id}>
+                          {subcategory.name}
+                        </SelectItem>
+                      ));
+                    })()} 
+                  </SelectContent>
+                </Select>
+                
+                <div className="text-xs space-y-1">
+                  <p className="text-gray-500">
+                    💡 This hierarchical structure matches the shop page categories.
+                  </p>
+                  {(() => {
+                    const selectedCategory = categories.find(cat => cat.id === formData.category);
+                    if (selectedCategory?.subcategories) {
+                      return (
+                        <p className="text-green-600">
+                          ✅ {selectedCategory.subcategories.length} subcategories available for "{selectedCategory.name}"
+                        </p>
+                      );
+                    }
+                    return (
+                      <p className="text-orange-600">
+                        ⚠️ No subcategories available for this category. Please select a different category.
+                      </p>
+                    );
+                  })()} 
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {!formData.category && (
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <div className="text-blue-500">ℹ️</div>
+                <div>
+                  <p className="text-sm font-medium text-blue-700">Select a Category First</p>
+                  <p className="text-xs text-blue-600">
+                    Choose a main category above to see available subcategories for your product.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Product Images (via Cloudinary)</Label>

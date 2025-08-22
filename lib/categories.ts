@@ -12,24 +12,112 @@ export type MainCategoryId =
   | "supermarket"
   | "others";
 
+export interface SubcategoryItem {
+  id: string;
+  name: string;
+  items?: string[]; // Optional sub-items for deeper nesting
+}
+
 export interface CategoryItem {
   id: MainCategoryId;
   name: string;
+  subcategories?: SubcategoryItem[];
 }
 
-// Main categories used across the site (Shop filters, Vendor, etc.)
+// Main categories used across the site with subcategories
 export const MAIN_CATEGORIES: CategoryItem[] = [
   { id: "all", name: "All Products" },
-  { id: "appliances", name: "Appliances" },
-  { id: "phones-tablets", name: "Phones & Tablets" },
-  { id: "electronics", name: "Electronics" },
-  { id: "fashion", name: "Fashion" },
-  { id: "computing", name: "Computing" },
-  { id: "gaming", name: "Gaming" },
-  { id: "health-beauty", name: "Health & Beauty" },
-  { id: "home-office", name: "Home & Office" },
-  { id: "supermarket", name: "Supermarket" },
-  { id: "others", name: "Others" }
+  { 
+    id: "appliances", 
+    name: "Appliances",
+    subcategories: [
+      { id: "kitchen-appliances", name: "Kitchen Appliances", items: ["Blenders", "Microwaves", "Rice Cookers", "Food Processors"] },
+      { id: "home-appliances", name: "Home Appliances", items: ["Washing Machines", "Refrigerators", "Air Conditioners", "Vacuum Cleaners"] },
+      { id: "small-appliances", name: "Small Appliances", items: ["Toasters", "Coffee Makers", "Electric Kettles", "Irons"] }
+    ]
+  },
+  { 
+    id: "phones-tablets", 
+    name: "Phones & Tablets",
+    subcategories: [
+      { id: "smartphones", name: "Smartphones", items: ["Android Phones", "iPhones", "Feature Phones"] },
+      { id: "tablets", name: "Tablets", items: ["Android Tablets", "iPads", "Windows Tablets"] },
+      { id: "accessories", name: "Accessories", items: ["Cases & Covers", "Screen Protectors", "Chargers", "Power Banks"] }
+    ]
+  },
+  { 
+    id: "electronics", 
+    name: "Electronics",
+    subcategories: [
+      { id: "audio-video", name: "Audio & Video", items: ["Headphones", "Speakers", "Cameras", "TVs"] },
+      { id: "wearables", name: "Wearables", items: ["Smart Watches", "Fitness Trackers", "Smart Glasses"] },
+      { id: "car-electronics", name: "Car Electronics", items: ["Car Audio", "Dash Cams", "GPS Navigation"] }
+    ]
+  },
+  { 
+    id: "fashion", 
+    name: "Fashion",
+    subcategories: [
+      { id: "mens-fashion", name: "Men's Fashion", items: ["Shirts", "Trousers", "Shoes", "Accessories"] },
+      { id: "womens-fashion", name: "Women's Fashion", items: ["Dresses", "Tops", "Shoes", "Bags"] },
+      { id: "kids-fashion", name: "Kids' Fashion", items: ["Boys Clothing", "Girls Clothing", "Baby Clothes"] }
+    ]
+  },
+  { 
+    id: "computing", 
+    name: "Computing",
+    subcategories: [
+      { id: "laptops", name: "Laptops", items: ["Gaming Laptops", "Business Laptops", "Ultrabooks"] },
+      { id: "desktops", name: "Desktops", items: ["All-in-One PCs", "Gaming PCs", "Workstations"] },
+      { id: "computer-accessories", name: "Accessories", items: ["Keyboards", "Mice", "Monitors", "Storage"] }
+    ]
+  },
+  { 
+    id: "gaming", 
+    name: "Gaming",
+    subcategories: [
+      { id: "consoles", name: "Consoles", items: ["PlayStation", "Xbox", "Nintendo"] },
+      { id: "games", name: "Games", items: ["Digital Games", "Physical Games"] },
+      { id: "gaming-accessories", name: "Gaming Accessories", items: ["Controllers", "Headsets", "Gaming Chairs"] }
+    ]
+  },
+  { 
+    id: "health-beauty", 
+    name: "Health & Beauty",
+    subcategories: [
+      { id: "skincare", name: "Skincare", items: ["Cleansers", "Moisturizers", "Sunscreen", "Serums"] },
+      { id: "haircare", name: "Haircare", items: ["Shampoos", "Conditioners", "Hair Styling", "Hair Tools"] },
+      { id: "fragrances", name: "Fragrances", items: ["Perfumes", "Body Sprays", "Deodorants"] },
+      { id: "personal-care", name: "Personal Care", items: ["Oral Care", "Body Care", "Health Devices"] }
+    ]
+  },
+  { 
+    id: "home-office", 
+    name: "Home & Office",
+    subcategories: [
+      { id: "furniture", name: "Furniture", items: ["Chairs", "Desks", "Storage", "Decor"] },
+      { id: "lighting", name: "Lighting", items: ["LED Lights", "Lamps", "Smart Lighting"] },
+      { id: "office-supplies", name: "Office Supplies", items: ["Stationery", "Printers", "Paper", "Organization"] }
+    ]
+  },
+  { 
+    id: "supermarket", 
+    name: "Supermarket",
+    subcategories: [
+      { id: "food-beverages", name: "Food & Beverages", items: ["Drinks", "Snacks", "Canned Foods", "Spices"] },
+      { id: "fresh-produce", name: "Fresh Produce", items: ["Fruits", "Vegetables", "Meat", "Fish"] },
+      { id: "household", name: "Household", items: ["Cleaning Supplies", "Baby Products", "Pet Supplies"] },
+      { id: "grains-staples", name: "Grains & Staples", items: ["Rice", "Flour", "Oil", "Sugar"] }
+    ]
+  },
+  { 
+    id: "others", 
+    name: "Others",
+    subcategories: [
+      { id: "miscellaneous", name: "Miscellaneous", items: ["Various Items", "Unique Products"] },
+      { id: "specialty", name: "Specialty Items", items: ["Custom Products", "Handmade Items"] }
+    ]
+  }
 ];
 
 // Legacy subcategory mappings (food-focused). These map to the new structure.

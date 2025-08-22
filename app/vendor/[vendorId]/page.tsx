@@ -7,16 +7,56 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Store, MapPin, Calendar, Package, Star } from "lucide-react"
 
+interface Product {
+  id: string
+  name: string
+  price: number
+  vendorId: string
+  inStock: boolean
+  category: string
+  displayCategory?: string
+  discount?: number
+  cloudinaryImages?: Array<{ url: string }>
+  images?: string[]
+  reviews?: {
+    average: number
+    count: number
+  }
+  [key: string]: any
+}
+
 interface Props {
   params: { vendorId: string }
 }
 
 export default async function VendorStorefront({ params }: Props) {
+  console.log("🔍 Loading vendor storefront for ID:", params.vendorId)
+  
   const vendor = await getVendor(params.vendorId)
+  console.log("📊 Vendor data:", {
+    found: !!vendor,
+    shopName: vendor?.shopName,
+    approved: vendor?.approved,
+    isActive: vendor?.isActive,
+    ownerId: vendor?.ownerId
+  })
+  
   if (!vendor || !vendor.approved) {
+    console.log("❌ Vendor not found or not approved, showing 404")
     notFound()
   }
-  const products = await getVendorProducts(params.vendorId)
+  
+  const products = await getVendorProducts(params.vendorId) as Product[]
+  console.log("📦 Products data:", {
+    total: products.length,
+    vendorId: params.vendorId,
+    products: products.map(p => ({
+      id: p.id,
+      name: p.name || 'Unknown',
+      vendorId: p.vendorId || 'Missing',
+      inStock: p.inStock ?? false
+    }))
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -95,7 +135,7 @@ export default async function VendorStorefront({ params }: Props) {
           </Card>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product: any) => (
+            {products.map((product: Product) => (
               <Card key={product.id} className="group hover:shadow-lg transition-shadow">
                 <div className="aspect-square relative overflow-hidden bg-gray-100">
                   <Link href={`/products/${product.id}`}>
@@ -134,11 +174,11 @@ export default async function VendorStorefront({ params }: Props) {
                     {product.displayCategory || product.category}
                   </p>
                   
-                  {product.reviews?.average > 0 && (
+                  {product.reviews?.average && product.reviews.average > 0 && (
                     <div className="flex items-center gap-1 mb-2">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       <span className="text-sm text-gray-600">
-                        {product.reviews.average.toFixed(1)} ({product.reviews.count})
+                        {product.reviews.average.toFixed(1)} ({product.reviews.count || 0})
                       </span>
                     </div>
                   )}

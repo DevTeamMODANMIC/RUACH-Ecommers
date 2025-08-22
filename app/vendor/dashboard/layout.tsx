@@ -17,7 +17,11 @@ import {
   Settings,
   LogOut,
   Bell,
-  User
+  User,
+  Calendar,
+  Wrench,
+  Users,
+  Star
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -35,6 +39,15 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
   const router = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isServiceProvider, setIsServiceProvider] = useState(false)
+
+  // Check if user is a service provider (this would normally come from user profile/database)
+  useEffect(() => {
+    // For now, we'll check if there's a service provider indicator in localStorage
+    // In production, this should come from the user's profile data
+    const serviceProviderMode = localStorage.getItem('serviceProviderMode') === 'true'
+    setIsServiceProvider(serviceProviderMode)
+  }, [])
 
   useEffect(() => {
     // TEMPORARY BYPASS: Redirect is disabled to allow direct access for development.
@@ -46,16 +59,31 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
     */
   }, [isVendor, loading, router])
 
-  // Only show loading for authentication, not vendor data
-  if (loading && !user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="h-8 w-8 border-4 border-t-green-500 border-l-green-600 border-r-green-600 border-b-green-700 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading dashboard...</p>
+  // Only show loading for authentication, not vendor data for service providers
+  if (isServiceProvider) {
+    // For service providers, only wait for auth, not vendor data
+    if (!user) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <div className="text-center">
+            <div className="h-8 w-8 border-4 border-t-green-500 border-l-green-600 border-r-green-600 border-b-green-700 rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading dashboard...</p>
+          </div>
         </div>
-      </div>
-    )
+      )
+    }
+  } else {
+    // For regular vendors, wait for both auth and vendor data
+    if (loading && !user) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <div className="text-center">
+            <div className="h-8 w-8 border-4 border-t-green-500 border-l-green-600 border-r-green-600 border-b-green-700 rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading dashboard...</p>
+          </div>
+        </div>
+      )
+    }
   }
 
   // Also bypassing this check to prevent a blank screen during development.
@@ -70,7 +98,44 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
     return pathname?.startsWith(path)
   }
 
-  const navigationItems = [
+  const navigationItems = isServiceProvider ? [
+    {
+      href: "/vendor/dashboard",
+      label: "Dashboard",
+      icon: Home,
+      badge: null
+    },
+    {
+      href: "/vendor/dashboard/services",
+      label: "My Services",
+      icon: Wrench,
+      badge: null
+    },
+    {
+      href: "/vendor/dashboard/bookings",
+      label: "Bookings",
+      icon: Calendar,
+      badge: "2" // Mock notification badge
+    },
+    {
+      href: "/vendor/dashboard/customers",
+      label: "Customers",
+      icon: Users,
+      badge: null
+    },
+    {
+      href: "/vendor/dashboard/reviews",
+      label: "Reviews",
+      icon: Star,
+      badge: null
+    },
+    {
+      href: "/vendor/dashboard/analytics",
+      label: "Analytics",
+      icon: BarChart3,
+      badge: null
+    }
+  ] : [
     {
       href: "/vendor/dashboard",
       label: "Dashboard",
@@ -132,15 +197,20 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
                 <Store className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="font-semibold text-gray-900">Vendor Portal</h2>
+                <h2 className="font-semibold text-gray-900">
+                  {isServiceProvider ? "Service Provider Portal" : "Vendor Portal"}
+                </h2>
                 <p className="text-xs text-gray-600">
-                  {allStores.length} store{allStores.length !== 1 ? 's' : ''}
+                  {isServiceProvider 
+                    ? "Manage your services" 
+                    : `${allStores.length} store${allStores.length !== 1 ? 's' : ''}`
+                  }
                 </p>
               </div>
             </div>
             
-            {/* Store Switcher */}
-            <StoreSwitcher />
+            {/* Store Switcher - Only show for vendors with stores */}
+            {!isServiceProvider && <StoreSwitcher />}
           </div>
 
           {/* Navigation */}
@@ -187,7 +257,9 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
                 <p className="text-sm font-medium text-gray-900 truncate">
                   {user?.displayName || user?.email || "Vendor"}
                 </p>
-                <p className="text-xs text-gray-600">Vendor Account</p>
+                <p className="text-xs text-gray-600">
+                  {isServiceProvider ? "Service Provider Account" : "Vendor Account"}
+                </p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -199,6 +271,27 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
               </Button>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {/* Mode Toggle */}
+            <div className="mt-3 p-2 bg-gray-50 rounded-lg">
+              <p className="text-xs text-gray-600 mb-2">Switch Mode:</p>
+              <Button 
+                variant={isServiceProvider ? "secondary" : "default"}
+                size="sm" 
+                className="w-full text-xs"
+                onClick={() => {
+                  const newMode = !isServiceProvider
+                  setIsServiceProvider(newMode)
+                  localStorage.setItem('serviceProviderMode', newMode.toString())
+                }}
+              >
+                {isServiceProvider ? (
+                  <><Wrench className="h-3 w-3 mr-1" /> Service Provider</>
+                ) : (
+                  <><Store className="h-3 w-3 mr-1" /> Product Vendor</>
+                )}
               </Button>
             </div>
           </div>
@@ -217,9 +310,14 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
                     <Store className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <h2 className="font-semibold text-gray-900">Vendor Portal</h2>
+                    <h2 className="font-semibold text-gray-900">
+                      {isServiceProvider ? "Service Provider Portal" : "Vendor Portal"}
+                    </h2>
                     <p className="text-xs text-gray-600">
-                      {allStores.length} store{allStores.length !== 1 ? 's' : ''}
+                      {isServiceProvider 
+                        ? "Manage your services" 
+                        : `${allStores.length} store${allStores.length !== 1 ? 's' : ''}`
+                      }
                     </p>
                   </div>
                 </div>
@@ -281,7 +379,9 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
                   <p className="text-sm font-medium text-gray-900 truncate">
                     {user?.displayName || user?.email || "Vendor"}
                   </p>
-                  <p className="text-xs text-gray-600">Vendor Account</p>
+                  <p className="text-xs text-gray-600">
+                    {isServiceProvider ? "Service Provider Account" : "Vendor Account"}
+                  </p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -293,6 +393,28 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Mode Toggle */}
+              <div className="mt-3 p-2 bg-gray-50 rounded-lg">
+                <p className="text-xs text-gray-600 mb-2">Switch Mode:</p>
+                <Button 
+                  variant={isServiceProvider ? "secondary" : "default"}
+                  size="sm" 
+                  className="w-full text-xs"
+                  onClick={() => {
+                    const newMode = !isServiceProvider
+                    setIsServiceProvider(newMode)
+                    localStorage.setItem('serviceProviderMode', newMode.toString())
+                    setSidebarOpen(false)
+                  }}
+                >
+                  {isServiceProvider ? (
+                    <><Wrench className="h-3 w-3 mr-1" /> Service Provider</>
+                  ) : (
+                    <><Store className="h-3 w-3 mr-1" /> Product Vendor</>
+                  )}
                 </Button>
               </div>
             </div>

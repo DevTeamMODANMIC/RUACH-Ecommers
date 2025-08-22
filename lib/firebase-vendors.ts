@@ -153,7 +153,7 @@ export const getAllVendors = async (): Promise<Vendor[]> => {
 export const getVendorProducts = async (storeId: string) => {
   const q = query(collection(db, "products"), where("vendorId", "==", storeId))
   const sn = await getDocs(q)
-  return sn.docs.map((d) => ({ id: d.id, ...d.data() }))
+  return sn.docs.map((d) => ({ id: d.id, ...d.data() } as any))
 }
 
 // Update vendor store information

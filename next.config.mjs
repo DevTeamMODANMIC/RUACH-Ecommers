@@ -7,6 +7,14 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   
+  // Allow cross-origin requests from network IP addresses during development
+  allowedDevOrigins: [
+    '10.66.22.140',
+    'localhost',
+    '127.0.0.1',
+    '0.0.0.0'
+  ],
+  
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

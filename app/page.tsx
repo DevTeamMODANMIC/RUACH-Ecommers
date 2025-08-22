@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react"
 import Hero from "@/components/hero"
 import Newsletter from "@/components/newsletter"
 import { BulkOrderCTA } from "@/components/bulk-order-cta"
+import ServicesShowcase from "@/components/services-showcase"
 
 // Lazy load components that are below the fold
 const FeaturedProducts = lazy(() => import("@/components/featured-products"))
@@ -18,6 +19,7 @@ export default function HomePage() {
       <div className="relative">
         <Hero />
       </div>
+      <ServicesShowcase />
       <div className="container mx-auto px-4">
         <Suspense fallback={<div className="py-16 text-center text-gray-600">Loading featured products...</div>}>
           <FeaturedProducts />

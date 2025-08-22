@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getAllVendors, Vendor } from "@/lib/firebase-vendors"
+import { getAllVendors, Vendor, getVendorProducts } from "@/lib/firebase-vendors"
 import Image from "next/image"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
@@ -34,8 +34,27 @@ export default function StoresPage() {
         // Only show approved vendors
         const approvedVendors = vendorsList.filter(vendor => vendor.approved)
         
-        setVendors(approvedVendors as ExtendedVendor[])
-        setFilteredVendors(approvedVendors as ExtendedVendor[])
+        // Fetch product counts for each vendor
+        const vendorsWithCounts = await Promise.all(
+          approvedVendors.map(async (vendor) => {
+            try {
+              const products = await getVendorProducts(vendor.id)
+              return {
+                ...vendor,
+                productCount: products.length
+              } as ExtendedVendor
+            } catch (error) {
+              console.error(`Error fetching products for vendor ${vendor.id}:`, error)
+              return {
+                ...vendor,
+                productCount: 0
+              } as ExtendedVendor
+            }
+          })
+        )
+        
+        setVendors(vendorsWithCounts)
+        setFilteredVendors(vendorsWithCounts)
       } catch (error) {
         console.error("Error loading vendors:", error)
         setVendors([])

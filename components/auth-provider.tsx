@@ -26,22 +26,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log("AuthProvider: onAuthStateChanged - user:", user ? user.uid : "null", "email:", user ? user.email : "null");
-      setUser(user)
-
-      if (user) {
-        // Fetch user profile from Firestore
-        const userProfile = await getUserProfile(user.uid)
-        setProfile(userProfile)
-      } else {
-        setProfile(null)
-      }
-
+    // Set a maximum loading timeout as a safety net
+    const maxLoadingTimeout = setTimeout(() => {
+      console.warn("AuthProvider: Maximum loading timeout reached, forcing loading to false")
       setIsLoading(false)
+    }, 15000) // 15 seconds max
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      try {
+        console.log("AuthProvider: onAuthStateChanged - user:", user ? user.uid : "null", "email:", user ? user.email : "null");
+        setUser(user)
+
+        if (user) {
+          try {
+            // Fetch user profile from Firestore with timeout
+            const profilePromise = getUserProfile(user.uid)
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
+            )
+            
+            const userProfile = await Promise.race([profilePromise, timeoutPromise])
+            setProfile(userProfile as any)
+          } catch (profileError) {
+            console.error("AuthProvider: Error fetching user profile:", profileError)
+            // Don't fail auth if profile fetch fails
+            setProfile(null)
+          }
+        } else {
+          setProfile(null)
+        }
+      } catch (error) {
+        console.error("AuthProvider: Error in auth state change:", error)
+      } finally {
+        clearTimeout(maxLoadingTimeout)
+        setIsLoading(false)
+      }
     })
 
-    return () => unsubscribe()
+    return () => {
+      unsubscribe()
+      clearTimeout(maxLoadingTimeout)
+    }
   }, [])
 
   const adminEmail = ""
@@ -57,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(profile)
   }
 
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = async (): Promise<void> => {
     const { signInWithGoogle } = await import("@/lib/firebase-auth")
     const getUserInfo = await signInWithGoogle()
 
@@ -84,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let data = await response.json();
     console.log("getUserInfo", getUserInfo)
     
-    return getUserInfo
+    return
   }
 
   const logout = async () => {

@@ -34,9 +34,9 @@ interface ProductFormData {
   discount?: number
 }
 
-// Use centralized categories (exclude 'all')
+// Use centralized categories to match shop page filtering
 import { MAIN_CATEGORIES } from "@/lib/categories"
-const categories = MAIN_CATEGORIES.filter(c => c.id !== 'all').map(c => c.id)
+const categories = MAIN_CATEGORIES.filter(c => c.id !== 'all').map(c => ({ id: c.id, name: c.name }))
 
 const origins = [
   "nigeria",
@@ -103,14 +103,14 @@ export default function EditProductPage() {
         price: productData.price || 0,
         originalPrice: productData.originalPrice,
         category: productData.category || "",
-        displayCategory: productData.displayCategory || "",
+        displayCategory: (productData as any).displayCategory || "",
         inStock: productData.inStock !== false,
         images: productData.images || [],
         cloudinaryImages: productData.cloudinaryImages || [],
         tags: productData.tags || [],
         origin: productData.origin || "nigeria",
-        weight: productData.weight,
-        dimensions: productData.dimensions,
+        weight: typeof productData.weight === 'string' ? productData.weight : (productData.weight ? String(productData.weight) : undefined),
+        dimensions: typeof productData.dimensions === 'string' ? productData.dimensions : (productData.dimensions ? JSON.stringify(productData.dimensions) : undefined),
         discount: productData.discount
       })
     } catch (error) {
@@ -131,12 +131,26 @@ export default function EditProductPage() {
 
     setIsSaving(true)
     try {
-      await updateProduct(productId, {
-        ...product,
+      const updateData = {
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        originalPrice: product.originalPrice,
+        category: product.category,
+        displayCategory: product.displayCategory,
+        inStock: product.inStock,
+        images: product.images,
+        cloudinaryImages: product.cloudinaryImages,
+        tags: product.tags,
+        origin: product.origin,
+        weight: product.weight ? parseFloat(product.weight) : undefined,
+        dimensions: product.dimensions ? JSON.parse(product.dimensions) : undefined,
+        discount: product.discount,
         vendorId: vendor.id,
-        vendorName: vendor.shopName,
         updatedAt: new Date()
-      })
+      }
+      
+      await updateProduct(productId, updateData)
 
       toast({
         title: "Product updated",
@@ -244,29 +258,44 @@ export default function EditProductPage() {
                     <Label htmlFor="category">Category *</Label>
                     <Select
                       value={product.category}
-                      onValueChange={(value) => setProduct({ ...product, category: value })}
+                      onValueChange={(value) => {
+                        const selectedCategory = categories.find(cat => cat.id === value)
+                        setProduct({ 
+                          ...product, 
+                          category: value,
+                          displayCategory: selectedCategory ? selectedCategory.name : value
+                        })
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      💡 Categories match the shop page filters for better discoverability.
+                    </p>
                   </div>
 
                   <div>
-                    <Label htmlFor="displayCategory">Display Category</Label>
+                    <Label htmlFor="displayCategory">Display Category (Auto-filled)</Label>
                     <Input
                       id="displayCategory"
                       value={product.displayCategory}
                       onChange={(e) => setProduct({ ...product, displayCategory: e.target.value })}
-                      placeholder="Custom category name"
+                      placeholder="Display name for category"
+                      disabled
+                      className="bg-gray-50"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      This is automatically set based on your category selection.
+                    </p>
                   </div>
                 </div>
 

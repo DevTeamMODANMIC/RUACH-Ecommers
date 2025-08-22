@@ -16,7 +16,10 @@ import {
   Plus,
   ArrowUpRight,
   Sparkles,
-  CheckCircle
+  CheckCircle,
+  Wrench,
+  Calendar,
+  BarChart3
 } from "lucide-react"
 import Link from "next/link"
 
@@ -50,9 +53,27 @@ export default function VendorDashboardHome() {
     lowStockProducts: 0
   })
   const [loading, setLoading] = useState(true)
+  const [isServiceProvider, setIsServiceProvider] = useState(false)
+
+  // Check if user is in service provider mode
+  useEffect(() => {
+    const serviceProviderMode = localStorage.getItem('serviceProviderMode') === 'true'
+    setIsServiceProvider(serviceProviderMode)
+    
+    // If service provider mode, set loading to false immediately
+    if (serviceProviderMode) {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      // Skip vendor data fetching for service providers
+      if (isServiceProvider) {
+        setLoading(false)
+        return
+      }
+      
       if (!activeStore) return
       
       try {
@@ -79,9 +100,9 @@ export default function VendorDashboardHome() {
     }
     
     fetchDashboardData()
-  }, [activeStore])
+  }, [activeStore, isServiceProvider])
 
-  if (!activeStore || loading) {
+  if (loading || (!isServiceProvider && !activeStore)) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -92,8 +113,144 @@ export default function VendorDashboardHome() {
     )
   }
 
-  // Check if this is a new vendor (no products yet)
-  const isNewVendor = stats.totalProducts === 0
+  // Check if this is a new vendor (no products yet) or service provider mode
+  const isNewVendor = !isServiceProvider && stats.totalProducts === 0
+  
+  // Service Provider Dashboard
+  if (isServiceProvider) {
+    return (
+      <div className="space-y-8">
+        {/* Service Provider Welcome Header */}
+        <div className="text-center py-8">
+          <div className="flex justify-center mb-4">
+            <div className="p-4 bg-blue-100 rounded-full">
+              <Sparkles className="h-8 w-8 text-blue-600" />
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            {getTimeBasedGreeting()}, Service Provider!
+          </h1>
+          <p className="text-lg text-gray-500 mb-2">Welcome to your service provider dashboard</p>
+          <p className="text-xl text-gray-600 mb-8">
+            Manage your services, bookings, and grow your business.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+              <Link href="/vendor/dashboard/services">
+                <Wrench className="h-5 w-5 mr-2" />
+                Manage Services
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/vendor/dashboard/bookings">
+                <Calendar className="h-5 w-5 mr-2" />
+                View Bookings
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Service Provider Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="rounded-full w-12 h-12 bg-blue-100 flex items-center justify-center">
+                  <Wrench className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-sm text-gray-600">Active Services</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="rounded-full w-12 h-12 bg-green-100 flex items-center justify-center">
+                  <Calendar className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-sm text-gray-600">Total Bookings</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="rounded-full w-12 h-12 bg-yellow-100 flex items-center justify-center">
+                  <Star className="h-6 w-6 text-yellow-600" />
+                </div>
+                <div className="ml-4">
+                  <div className="text-2xl font-bold">0.0</div>
+                  <div className="text-sm text-gray-600">Average Rating</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="rounded-full w-12 h-12 bg-purple-100 flex items-center justify-center">
+                  <DollarSign className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <div className="text-2xl font-bold">₦0</div>
+                  <div className="text-sm text-gray-600">Total Earnings</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button asChild variant="outline" className="h-auto p-4">
+                <Link href="/vendor/dashboard/services/add">
+                  <div className="text-center">
+                    <Plus className="h-8 w-8 mx-auto mb-2" />
+                    <div className="font-medium">Add New Service</div>
+                    <div className="text-sm text-gray-500">Create a new service offering</div>
+                  </div>
+                </Link>
+              </Button>
+              
+              <Button asChild variant="outline" className="h-auto p-4">
+                <Link href="/vendor/dashboard/bookings">
+                  <div className="text-center">
+                    <Calendar className="h-8 w-8 mx-auto mb-2" />
+                    <div className="font-medium">Manage Bookings</div>
+                    <div className="text-sm text-gray-500">View and manage appointments</div>
+                  </div>
+                </Link>
+              </Button>
+              
+              <Button asChild variant="outline" className="h-auto p-4">
+                <Link href="/vendor/dashboard/analytics">
+                  <div className="text-center">
+                    <BarChart3 className="h-8 w-8 mx-auto mb-2" />
+                    <div className="font-medium">View Analytics</div>
+                    <div className="text-sm text-gray-500">Track your performance</div>
+                  </div>
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   const statCards = [
     {
@@ -141,7 +298,7 @@ export default function VendorDashboardHome() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            {getTimeBasedGreeting()}, {activeStore.shopName}!
+            {getTimeBasedGreeting()}, {activeStore?.shopName || 'Vendor'}!
           </h1>
           <p className="text-lg text-gray-500 mb-2">Welcome to your vendor dashboard</p>
           <p className="text-xl text-gray-600 mb-8">
@@ -257,7 +414,7 @@ export default function VendorDashboardHome() {
               </Button>
               
               <Button asChild variant="outline" className="h-auto p-6 justify-start">
-                <Link href={`/vendor/${activeStore.id}`}>
+                <Link href={activeStore ? `/vendor/${activeStore.id}` : '/vendor/dashboard'}>
                   <div className="text-left">
                     <Eye className="h-5 w-5 mb-2 text-blue-600" />
                     <div className="font-medium">Preview Store</div>
@@ -335,7 +492,7 @@ export default function VendorDashboardHome() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            {getTimeBasedGreeting()}, {activeStore.shopName}!
+            {getTimeBasedGreeting()}, {activeStore?.shopName || 'Vendor'}!
           </h1>
           <p className="text-gray-600 mt-1">
             Here&apos;s what&apos;s happening with your store today.
@@ -412,7 +569,7 @@ export default function VendorDashboardHome() {
               </Link>
             </Button>
             <Button asChild variant="outline" className="h-auto p-4 justify-start">
-              <Link href={`/vendor/${activeStore.id}`}>
+              <Link href={activeStore ? `/vendor/${activeStore.id}` : '/vendor/dashboard'}>
                 <div className="text-left">
                   <div className="font-medium">View Storefront</div>
                   <div className="text-sm text-gray-500">See your public store</div>
