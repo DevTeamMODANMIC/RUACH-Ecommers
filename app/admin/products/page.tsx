@@ -30,12 +30,12 @@ import { listenToProducts, deleteProduct, type Product } from "@/lib/firebase-pr
 import { auth } from "@/lib/firebase"
 import { onAuthStateChanged } from "firebase/auth"
 import { useToast } from "@/hooks/use-toast"
-import { useCurrency } from "@/hooks/use-currency"
+import { formatCurrency } from "@/lib/utils"
 
 export default function AdminProducts() {
   const router = useRouter()
   const { toast } = useToast()
-  const { formatPrice } = useCurrency()
+  // Using formatCurrency from utils for consistent NGN display
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -266,7 +266,7 @@ export default function AdminProducts() {
                       </TableCell>
                       <TableCell className="font-medium">{product.name}</TableCell>
                       <TableCell>{product.category}</TableCell>
-                      <TableCell>{formatPrice(product.price)}</TableCell>
+                      <TableCell>{formatCurrency(product.price)}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs ${
                           product.inStock && product.stockQuantity > 10
@@ -290,8 +290,8 @@ export default function AdminProducts() {
                               {(() => {
                                 try {
                                   // If it's a Firestore timestamp
-                                  if (product.updatedAt.toDate) {
-                                    return product.updatedAt.toDate().toLocaleDateString();
+                                  if (product.updatedAt && typeof product.updatedAt === 'object' && 'toDate' in product.updatedAt) {
+                                    return (product.updatedAt as any).toDate().toLocaleDateString();
                                   }
                                   // If it's a regular date or timestamp
                                   return new Date(product.updatedAt).toLocaleDateString();

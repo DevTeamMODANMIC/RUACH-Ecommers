@@ -375,7 +375,7 @@ export default function ProductShowcase({
           {products.map((product) => (
             <Card key={product.id} className="overflow-hidden transition-all hover:shadow-lg border border-gray-200 hover:border-green-200 group">
               <Link href={`/products/${encodeURIComponent(product.id)}`}>
-                <div className="relative h-48 bg-gray-50 flex items-center justify-center p-4 overflow-hidden">
+                <div className="relative aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   
                   {(product.isBestSeller || (product as any).isNew || (product as any).isBulk) && (
@@ -396,7 +396,7 @@ export default function ProductShowcase({
                     src={product.image}
                     alt={product.name}
                     fill
-                    className="object-cover transform group-hover:scale-110 transition-transform duration-300"
+                    className="object-contain p-1 transform group-hover:scale-110 transition-transform duration-300"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                     onError={handleImageError}
                     priority

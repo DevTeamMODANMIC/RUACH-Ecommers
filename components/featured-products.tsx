@@ -6,9 +6,8 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ShoppingCart, Star, Award, TrendingUp, ChevronRight, Heart, Sparkles, Eye, X, Store } from "lucide-react"
+import { ShoppingCart, Star, Award, TrendingUp, ChevronRight, Heart, Sparkles, Eye, X } from "lucide-react"
 import { getProducts, type Product } from "@/lib/firebase-products"
-import { getVendor, type Vendor } from "@/lib/firebase-vendors"
 import { useCart } from "@/components/cart-provider"
 import { formatCurrency } from "@/lib/utils"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog"
@@ -19,7 +18,6 @@ export default function FeaturedProducts() {
   const [loading, setLoading] = useState(true)
   const [hoveredProductId, setHoveredProductId] = useState<string | null>(null);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const [vendors, setVendors] = useState<Record<string, Vendor>>({});
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
@@ -45,37 +43,6 @@ export default function FeaturedProducts() {
 
     loadFeaturedProducts()
   }, [])
-
-  // Fetch vendor information for products
-  useEffect(() => {
-    const fetchVendors = async () => {
-      const vendorIds = [...new Set(products.filter(p => p.vendorId).map(p => p.vendorId!))]
-      const vendorPromises = vendorIds.map(async (vendorId) => {
-        try {
-          const vendor = await getVendor(vendorId)
-          return { vendorId, vendor }
-        } catch (error) {
-          console.error(`Error fetching vendor ${vendorId}:`, error)
-          return { vendorId, vendor: null }
-        }
-      })
-
-      const vendorResults = await Promise.all(vendorPromises)
-      const vendorMap: Record<string, Vendor> = {}
-
-      vendorResults.forEach(({ vendorId, vendor }) => {
-        if (vendor) {
-          vendorMap[vendorId] = vendor
-        }
-      })
-
-      setVendors(vendorMap)
-    }
-
-    if (products.length > 0) {
-      fetchVendors()
-    }
-  }, [products])
 
   const handleAddToCart = (product: Product, e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -177,7 +144,7 @@ export default function FeaturedProducts() {
                 </div>
 
                 <Link href={`/products/${encodeURIComponent(product.id)}`} className="block">
-                  <div className="relative h-60 bg-white overflow-hidden">
+                  <div className="relative aspect-square bg-white overflow-hidden">
                     {product.category && (
                       <div className="absolute top-3 left-3 z-10">
                         <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200">
@@ -230,7 +197,7 @@ export default function FeaturedProducts() {
                       src={product.images?.[0] || "/placeholder.jpg"}
                       alt={product.name}
                       fill
-                      className="object-cover transition-all duration-500 group-hover:scale-110"
+                      className="object-contain p-1 transition-all duration-500 group-hover:scale-105"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                       onError={(e) => {
                         console.error(`Failed to load image: ${product.images?.[0]}`);
@@ -269,35 +236,6 @@ export default function FeaturedProducts() {
                   <p className="text-gray-600 text-sm mt-1 line-clamp-2 h-10">
                     {product.description}
                   </p>
-
-                  {/* Vendor Information */}
-                  {product.vendorId && vendors[product.vendorId] && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="flex items-center gap-1.5">
-                        {vendors[product.vendorId].logoUrl ? (
-                          <Image
-                            src={vendors[product.vendorId].logoUrl}
-                            alt={vendors[product.vendorId].shopName}
-                            width={16}
-                            height={16}
-                            className="rounded-full object-cover"
-                          />
-                        ) : (
-                          <Store className="h-4 w-4 text-gray-400" />
-                        )}
-                        <Link
-                          href={`/vendor/${product.vendorId}`}
-                          className="text-xs text-gray-600 hover:text-green-600 transition-colors font-medium"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {vendors[product.vendorId].shopName}
-                        </Link>
-                      </div>
-                      <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                        Vendor
-                      </Badge>
-                    </div>
-                  )}
 
                   {/* Rating */}
                   {product.rating && (
@@ -377,7 +315,7 @@ export default function FeaturedProducts() {
                   src={quickViewProduct.images?.[0] || "/placeholder.jpg"}
                   alt={quickViewProduct.name}
                   fill
-                  className="object-cover"
+                  className="object-contain p-1"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = "/placeholder.jpg";

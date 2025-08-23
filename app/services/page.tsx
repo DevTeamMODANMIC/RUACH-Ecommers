@@ -28,139 +28,8 @@ import {
   MessageCircle
 } from "lucide-react"
 
-const serviceCategories = [
-  {
-    id: "plumbing",
-    name: "Plumbing Services",
-    description: "Professional plumbing repairs, installations, and maintenance",
-    icon: Wrench,
-    color: "blue",
-    providers: 45,
-    avgPrice: "₦15,000 - ₦50,000",
-    rating: 4.8,
-    features: ["Emergency repairs", "Pipe installation", "Water heater service", "Drain cleaning"]
-  },
-  {
-    id: "electrical",
-    name: "Electrical Services", 
-    description: "Licensed electricians for all your electrical needs",
-    icon: Zap,
-    color: "yellow",
-    providers: 32,
-    avgPrice: "₦10,000 - ₦40,000",
-    rating: 4.7,
-    features: ["Wiring installation", "Outlet repair", "Lighting setup", "Panel upgrades"]
-  },
-  {
-    id: "cleaning",
-    name: "Cleaning Services",
-    description: "Professional cleaning for homes and offices",
-    icon: Sparkles,
-    color: "green",
-    providers: 67,
-    avgPrice: "₦8,000 - ₦25,000",
-    rating: 4.6,
-    features: ["Deep cleaning", "Regular maintenance", "Move-in/out cleaning", "Office cleaning"]
-  },
-  {
-    id: "event-planning",
-    name: "Event Planning",
-    description: "Complete event planning and coordination services",
-    icon: Calendar,
-    color: "purple",
-    providers: 28,
-    avgPrice: "₦50,000 - ₦500,000",
-    rating: 4.9,
-    features: ["Wedding planning", "Corporate events", "Birthday parties", "Anniversary celebrations"]
-  },
-  {
-    id: "catering",
-    name: "Catering Services",
-    description: "Professional catering for all occasions",
-    icon: UtensilsCrossed,
-    color: "orange",
-    providers: 41,
-    avgPrice: "₦5,000 - ₦20,000 per person",
-    rating: 4.5,
-    features: ["Wedding catering", "Corporate meals", "Party catering", "Special diets"]
-  },
-  {
-    id: "beauty",
-    name: "Beauty & Wellness",
-    description: "Beauty treatments and wellness services",
-    icon: Heart,
-    color: "pink",
-    providers: 53,
-    avgPrice: "₦5,000 - ₦30,000",
-    rating: 4.7,
-    features: ["Hair styling", "Makeup services", "Spa treatments", "Nail care"]
-  },
-  {
-    id: "fitness",
-    name: "Fitness & Training",
-    description: "Personal training and fitness coaching",
-    icon: Dumbbell,
-    color: "red",
-    providers: 19,
-    avgPrice: "₦8,000 - ₦25,000 per session",
-    rating: 4.8,
-    features: ["Personal training", "Group fitness", "Nutrition coaching", "Home workouts"]
-  },
-  {
-    id: "tutoring",
-    name: "Education & Tutoring",
-    description: "Academic support and skill development",
-    icon: GraduationCap,
-    color: "indigo",
-    providers: 36,
-    avgPrice: "₦3,000 - ₦15,000 per hour",
-    rating: 4.6,
-    features: ["Academic tutoring", "Language lessons", "Music lessons", "Skill training"]
-  },
-  {
-    id: "photography",
-    name: "Photography",
-    description: "Professional photography services",
-    icon: Camera,
-    color: "gray",
-    providers: 24,
-    avgPrice: "₦20,000 - ₦100,000",
-    rating: 4.8,
-    features: ["Event photography", "Portrait sessions", "Product photography", "Video services"]
-  },
-  {
-    id: "repairs",
-    name: "Home Repairs",
-    description: "General repairs and maintenance",
-    icon: Hammer,
-    color: "amber",
-    providers: 38,
-    avgPrice: "₦5,000 - ₦30,000",
-    rating: 4.5,
-    features: ["Furniture repair", "Appliance fixes", "General maintenance", "Emergency repairs"]
-  },
-  {
-    id: "landscaping",
-    name: "Landscaping",
-    description: "Garden design and maintenance services",
-    icon: TreePine,
-    color: "emerald",
-    providers: 15,
-    avgPrice: "₦15,000 - ₦75,000",
-    rating: 4.7,
-    features: ["Garden design", "Lawn maintenance", "Tree services", "Irrigation systems"]
-  },
-  {
-    id: "other",
-    name: "Other Services",
-    description: "Specialized and miscellaneous services",
-    icon: Settings,
-    color: "slate",
-    providers: 22,
-    avgPrice: "Custom pricing",
-    rating: 4.6,
-    features: ["Custom solutions", "Specialized skills", "Consultation services", "Unique offerings"]
-  }
+const serviceCategories: any[] = [
+  // Service categories will be loaded from the database
 ]
 
 const getColorClasses = (color: string) => {
@@ -181,11 +50,8 @@ const getColorClasses = (color: string) => {
   return colorMap[color as keyof typeof colorMap] || colorMap.blue
 }
 
-const stats = [
-  { label: "Service Providers", value: "400+", icon: Users },
-  { label: "Services Completed", value: "10,000+", icon: CheckCircle },
-  { label: "Average Rating", value: "4.7★", icon: Star },
-  { label: "Cities Covered", value: "36", icon: MapPin }
+const stats: any[] = [
+  // Stats will be loaded from the database
 ]
 
 export default function ServicesPage() {
@@ -223,15 +89,21 @@ export default function ServicesPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="flex justify-center mb-2">
-                  <stat.icon className="h-6 w-6 text-white/80" />
+            {stats.length > 0 ? (
+              stats.map((stat, index) => (
+                <div key={index} className="text-center">
+                  <div className="flex justify-center mb-2">
+                    <stat.icon className="h-6 w-6 text-white/80" />
+                  </div>
+                  <div className="text-2xl font-bold text-white">{stat.value}</div>
+                  <div className="text-white/80 text-sm">{stat.label}</div>
                 </div>
-                <div className="text-2xl font-bold text-white">{stat.value}</div>
-                <div className="text-white/80 text-sm">{stat.label}</div>
+              ))
+            ) : (
+              <div className="col-span-4 text-center">
+                <div className="text-white/80">Platform statistics will be displayed here</div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
@@ -249,63 +121,73 @@ export default function ServicesPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {serviceCategories.map((category) => {
-              const IconComponent = category.icon
-              const colorClasses = getColorClasses(category.color)
-              
-              return (
-                <Card key={category.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                  <CardContent className="p-6">
-                    <div className="text-center mb-4">
-                      <div className={`rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 ${colorClasses.split(' ')[2]} ${colorClasses.split(' ')[3]}`}>
-                        <IconComponent className={`h-8 w-8 ${colorClasses.split(' ')[1]}`} />
+            {serviceCategories.length > 0 ? (
+              serviceCategories.map((category) => {
+                const IconComponent = category.icon
+                const colorClasses = getColorClasses(category.color)
+                
+                return (
+                  <Card key={category.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                    <CardContent className="p-6">
+                      <div className="text-center mb-4">
+                        <div className={`rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 ${colorClasses.split(' ')[2]} ${colorClasses.split(' ')[3]}`}>
+                          <IconComponent className={`h-8 w-8 ${colorClasses.split(' ')[1]}`} />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{category.name}</h3>
+                        <p className="text-gray-600 text-sm mb-3">{category.description}</p>
+                        
+                        {/* Category Stats */}
+                        <div className="space-y-2 text-xs text-gray-500">
+                          <div className="flex justify-between">
+                            <span>Providers:</span>
+                            <span className="font-medium">{category.providers}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Price Range:</span>
+                            <span className="font-medium">{category.avgPrice}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Rating:</span>
+                            <span className="font-medium">{category.rating}★</span>
+                          </div>
+                        </div>
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{category.name}</h3>
-                      <p className="text-gray-600 text-sm mb-3">{category.description}</p>
-                      
-                      {/* Category Stats */}
-                      <div className="space-y-2 text-xs text-gray-500">
-                        <div className="flex justify-between">
-                          <span>Providers:</span>
-                          <span className="font-medium">{category.providers}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Price Range:</span>
-                          <span className="font-medium">{category.avgPrice}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Rating:</span>
-                          <span className="font-medium">{category.rating}★</span>
-                        </div>
+
+                      {/* Features */}
+                      <div className="space-y-2 mb-4">
+                        {category.features.slice(0, 3).map((feature: string, index: number) => (
+                          <div key={index} className="flex items-center text-sm text-gray-600">
+                            <CheckCircle className="h-3 w-3 text-green-500 mr-2 flex-shrink-0" />
+                            {feature}
+                          </div>
+                        ))}
+                        {category.features.length > 3 && (
+                          <div className="text-xs text-gray-500">
+                            +{category.features.length - 3} more services
+                          </div>
+                        )}
                       </div>
-                    </div>
 
-                    {/* Features */}
-                    <div className="space-y-2 mb-4">
-                      {category.features.slice(0, 3).map((feature, index) => (
-                        <div key={index} className="flex items-center text-sm text-gray-600">
-                          <CheckCircle className="h-3 w-3 text-green-500 mr-2 flex-shrink-0" />
-                          {feature}
-                        </div>
-                      ))}
-                      {category.features.length > 3 && (
-                        <div className="text-xs text-gray-500">
-                          +{category.features.length - 3} more services
-                        </div>
-                      )}
-                    </div>
-
-                    {/* CTA Button */}
-                    <Link href={`/services/marketplace?category=${category.id}`}>
-                      <Button className={`w-full bg-gradient-to-r ${colorClasses.split(' ')[0]} text-white`} size="sm">
-                        Find Providers
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              )
-            })}
+                      {/* CTA Button */}
+                      <Link href={`/services/marketplace?category=${category.id}`}>
+                        <Button className={`w-full bg-gradient-to-r ${colorClasses.split(' ')[0]} text-white`} size="sm">
+                          Find Providers
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                )
+              })
+            ) : (
+              <div className="col-span-4 text-center py-12">
+                <div className="text-gray-500 mb-4">
+                  <Settings className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Service Categories Available</h3>
+                  <p className="text-gray-600">Service categories will be displayed here once they are added to the platform.</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Browse All Button */}

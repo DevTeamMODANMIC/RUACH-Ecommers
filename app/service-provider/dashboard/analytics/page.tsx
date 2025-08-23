@@ -14,6 +14,34 @@ import {
   Target
 } from "lucide-react"
 
+// Define types for analytics data
+type TopService = {
+  name: string
+  bookings: number
+  revenue: number
+}
+
+type AnalyticsData = {
+  overview: {
+    totalRevenue: number
+    totalBookings: number
+    averageRating: number
+    completionRate: number
+  }
+  monthlyRevenue: Array<{
+    month: string
+    revenue: number
+  }>
+  topServices: TopService[]
+  customerSatisfaction: {
+    fiveStars: number
+    fourStars: number
+    threeStars: number
+    twoStars: number
+    oneStar: number
+  }
+}
+
 export default function ServiceProviderAnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true)
 
@@ -22,8 +50,8 @@ export default function ServiceProviderAnalyticsPage() {
     setTimeout(() => setIsLoading(false), 1000)
   }, [])
 
-  // Mock analytics data
-  const analytics = {
+  // Analytics data will be loaded from the database
+  const analytics: AnalyticsData = {
     overview: {
       totalRevenue: 450000,
       totalBookings: 156,
@@ -38,11 +66,7 @@ export default function ServiceProviderAnalyticsPage() {
       { month: "Nov", revenue: 450000 },
       { month: "Dec", revenue: 490000 }
     ],
-    topServices: [
-      { name: "Emergency Plumbing Repair", bookings: 45, revenue: 675000 },
-      { name: "Home Plumbing Installation", bookings: 12, revenue: 1020000 },
-      { name: "Pipe Maintenance Service", bookings: 23, revenue: 184000 }
-    ],
+    topServices: [] as TopService[],
     customerSatisfaction: {
       fiveStars: 78,
       fourStars: 15,
@@ -223,23 +247,31 @@ export default function ServiceProviderAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {analytics.topServices.map((service, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                      <span className="text-sm font-bold text-blue-600">{index + 1}</span>
+              {analytics.topServices.length > 0 ? (
+                analytics.topServices.map((service, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <span className="text-sm font-bold text-blue-600">{index + 1}</span>
+                      </div>
+                      <div>
+                        <div className="font-medium">{service.name}</div>
+                        <div className="text-sm text-gray-600">{service.bookings} bookings</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium">{service.name}</div>
-                      <div className="text-sm text-gray-600">{service.bookings} bookings</div>
+                    <div className="text-right">
+                      <div className="font-medium">₦{(service.revenue / 1000).toFixed(0)}K</div>
+                      <div className="text-sm text-gray-600">revenue</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-medium">₦{(service.revenue / 1000).toFixed(0)}K</div>
-                    <div className="text-sm text-gray-600">revenue</div>
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <BarChart3 className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                  <p>No service performance data yet</p>
+                  <p className="text-sm">Service analytics will appear here once you start receiving bookings</p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>

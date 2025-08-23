@@ -90,7 +90,7 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
                   src={product.images?.[selectedImage] || "/product_images/unknown-product.jpg"}
                   alt={product.name}
                   fill
-                  className="object-cover"
+                  className="object-contain p-1"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = "/product_images/unknown-product.jpg";

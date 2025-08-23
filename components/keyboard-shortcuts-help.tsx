@@ -137,6 +137,21 @@ export default function KeyboardShortcutsHelp() {
                   </div>
                 </div>
               ))}
+              
+              {/* Special note for Ctrl+Shift+G */}
+              <div className="flex items-center justify-between pt-3 border-t">
+                <div className="flex-1">
+                  <div className="text-sm font-medium">Service Provider Dashboard</div>
+                  <div className="text-xs text-gray-500">Only works on Service Provider pages</div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Badge variant="outline" className="text-xs px-2 py-1">Ctrl</Badge>
+                  <span className="mx-1 text-gray-400">+</span>
+                  <Badge variant="outline" className="text-xs px-2 py-1">Shift</Badge>
+                  <span className="mx-1 text-gray-400">+</span>
+                  <Badge variant="outline" className="text-xs px-2 py-1">G</Badge>
+                </div>
+              </div>
             </div>
             
             <div className="pt-4 border-t text-xs text-gray-500">

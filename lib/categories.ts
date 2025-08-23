@@ -12,6 +12,44 @@ export type MainCategoryId =
   | "supermarket"
   | "others";
 
+// Service Categories for service providers
+export type ServiceCategoryId = 
+  | "plumbing" 
+  | "electrical" 
+  | "cleaning" 
+  | "event-planning" 
+  | "catering" 
+  | "beauty" 
+  | "fitness" 
+  | "tutoring" 
+  | "photography" 
+  | "repairs" 
+  | "landscaping" 
+  | "other";
+
+export interface ServiceCategoryItem {
+  value: ServiceCategoryId;
+  label: string;
+  description?: string;
+  icon?: string;
+}
+
+// Service categories for the service provider functionality
+export const serviceCategories: ServiceCategoryItem[] = [
+  { value: "plumbing", label: "Plumbing", description: "Pipe repair, installation, and maintenance" },
+  { value: "electrical", label: "Electrical", description: "Wiring, repairs, and electrical installations" },
+  { value: "cleaning", label: "Cleaning", description: "Home and office cleaning services" },
+  { value: "event-planning", label: "Event Planning", description: "Wedding, party, and corporate event planning" },
+  { value: "catering", label: "Catering", description: "Food catering for events and occasions" },
+  { value: "beauty", label: "Beauty & Wellness", description: "Hair, makeup, skincare, and spa services" },
+  { value: "fitness", label: "Fitness & Training", description: "Personal training and fitness coaching" },
+  { value: "tutoring", label: "Tutoring & Education", description: "Academic tutoring and skill training" },
+  { value: "photography", label: "Photography & Video", description: "Event photography and videography" },
+  { value: "repairs", label: "Repairs & Maintenance", description: "General repairs and home maintenance" },
+  { value: "landscaping", label: "Landscaping & Gardening", description: "Garden design and maintenance" },
+  { value: "other", label: "Other Services", description: "Miscellaneous professional services" }
+];
+
 export interface SubcategoryItem {
   id: string;
   name: string;

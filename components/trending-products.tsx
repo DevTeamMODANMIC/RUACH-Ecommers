@@ -1,100 +1,69 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import Image from "next/image"
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { TrendingUp, Star, ShoppingCart, Eye, Flame, Store, CheckCircle } from "lucide-react"
-
-import { getProducts } from "@/lib/firebase-products"
-import { getVendor, type Vendor } from "@/lib/firebase-vendors"
-
-// Get trending products from Firebase - only show real products
-const getTrendingProducts = async () => {
-  try {
-    // Fetch real products from Firebase
-    const { products: firebaseProducts } = await getProducts({})
-    
-    // If no real products exist, don't show trending section
-    if (firebaseProducts.length === 0) {
-      return []
-    }
-    
-    // Filter for products with good ratings and sort by popularity
-    return firebaseProducts
-      .filter(product => product.rating && product.rating >= 4.0)
-      .sort((a, b) => {
-        // Sort by rating first, then by review count if available
-        const aRating = a.rating || 0
-        const bRating = b.rating || 0
-        if (bRating !== aRating) return bRating - aRating
-        
-        // If ratings are equal, sort by review count or random for demo
-        return Math.random() - 0.5
-      })
-      .slice(0, 8) // Show top 8 trending products
-  } catch (error) {
-    console.error("Error fetching trending products:", error)
-    return []
-  }
-}
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Star, TrendingUp, ShoppingCart, Heart, Flame, Store, Eye } from "lucide-react"
+import { getProducts, type Product } from "@/lib/firebase-products"
+import { useCart } from "@/components/cart-provider"
+import { formatCurrency } from "@/lib/utils"
+import { useWishlist, type WishlistItem } from "@/hooks/use-wishlist"
 
 export default function TrendingProducts() {
-  const [trendingProducts, setTrendingProducts] = useState<any[]>([])
-  const [vendors, setVendors] = useState<Record<string, Vendor>>({})
-  const [isLoading, setIsLoading] = useState(true)
+  const [trendingProducts, setTrendingProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadTrendingProducts = async () => {
-      setIsLoading(true)
+      setLoading(true)
       try {
-        const trending = await getTrendingProducts()
-        setTrendingProducts(trending)
+        // Get trending products - just get recent products for now
+        const { products: allProducts } = await getProducts({}, 12)
+        setTrendingProducts(allProducts.slice(0, 8))
       } catch (error) {
         console.error("Error loading trending products:", error)
         setTrendingProducts([])
       } finally {
-        setIsLoading(false)
+        setLoading(false)
       }
     }
 
     loadTrendingProducts()
   }, [])
 
-  // Fetch vendor information for products
-  useEffect(() => {
-    const fetchVendors = async () => {
-      const vendorIds = [...new Set(trendingProducts.filter(p => p.vendorId).map(p => p.vendorId!))]
-      const vendorPromises = vendorIds.map(async (vendorId) => {
-        try {
-          const vendor = await getVendor(vendorId)
-          return { vendorId, vendor }
-        } catch (error) {
-          console.error(`Error fetching vendor ${vendorId}:`, error)
-          return { vendorId, vendor: null }
-        }
-      })
-      
-      const vendorResults = await Promise.all(vendorPromises)
-      const vendorMap: Record<string, Vendor> = {}
-      
-      vendorResults.forEach(({ vendorId, vendor }) => {
-        if (vendor) {
-          vendorMap[vendorId] = vendor
-        }
-      })
-      
-      setVendors(vendorMap)
-    }
+  const { addToCart } = useCart()
+  const { toggleWishlist, isInWishlist } = useWishlist()
 
-    if (trendingProducts.length > 0) {
-      fetchVendors()
-    }
-  }, [trendingProducts])
+  const handleAddToCart = (product: Product, e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.discount ? product.price * (1 - product.discount / 100) : product.price,
+      image: product.images?.[0] || "/placeholder.jpg",
+      quantity: 1,
+      options: {}
+    });
+  }
 
-  if (isLoading) {
+  const handleToggleWishlist = (product: Product, e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    const wishlistItem: WishlistItem = {
+      id: product.id,
+      name: product.name,
+      price: product.discount ? product.price * (1 - product.discount / 100) : product.price,
+      originalPrice: product.discount ? product.price : undefined,
+      image: product.images?.[0] || "/placeholder.jpg",
+      category: product.category,
+      inStock: product.inStock
+    };
+    toggleWishlist(wishlistItem);
+  }
+
+  if (loading) {
     return (
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -184,7 +153,7 @@ export default function TrendingProducts() {
                     src={product.images?.[0] || "/placeholder.jpg"} 
                     alt={product.name} 
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform"
+                    className="object-contain p-1 group-hover:scale-105 transition-transform"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                   />
                 </Link>
@@ -200,10 +169,20 @@ export default function TrendingProducts() {
                 {/* Quick Actions */}
                 <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="flex gap-2">
-                    <button className="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-green-50 transition-colors">
-                      <Eye className="h-4 w-4 text-gray-600" />
+                    <button 
+                      onClick={(e) => handleToggleWishlist(product, e)}
+                      className={`w-8 h-8 rounded-full shadow-md flex items-center justify-center transition-colors ${
+                        isInWishlist(product.id) 
+                          ? 'bg-rose-100 text-rose-500' 
+                          : 'bg-white hover:bg-gray-50 text-gray-600'
+                      }`}
+                    >
+                      <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                     </button>
-                    <button className="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-green-50 transition-colors">
+                    <button 
+                      onClick={(e) => handleAddToCart(product, e)}
+                      className="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-green-50 transition-colors"
+                    >
                       <ShoppingCart className="h-4 w-4 text-gray-600" />
                     </button>
                   </div>
@@ -221,29 +200,6 @@ export default function TrendingProducts() {
                   {product.category}
                 </p>
 
-                {/* Vendor Info */}
-                {product.vendorId && vendors[product.vendorId] && (
-                  <div className="mb-2">
-                    <Link 
-                      href={`/vendor/${product.vendorId}`}
-                      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                      {vendors[product.vendorId].logoUrl ? (
-                        <Image
-                          src={vendors[product.vendorId].logoUrl}
-                          alt={vendors[product.vendorId].shopName}
-                          width={12}
-                          height={12}
-                          className="rounded-full object-cover"
-                        />
-                      ) : (
-                        <Store className="h-3 w-3" />
-                      )}
-                      <span>{vendors[product.vendorId].shopName}</span>
-                      <CheckCircle className="h-3 w-3 text-green-500" />
-                    </Link>
-                  </div>
-                )}
                 
                 {/* Rating */}
                 {product.rating && (
@@ -285,50 +241,6 @@ export default function TrendingProducts() {
             </Card>
           ))}
         </div>
-
-        {/* Trending Vendors Section - Only show if we have vendor data */}
-        {Object.keys(vendors).length > 0 && (
-          <div className="bg-white rounded-lg p-6 mb-8 shadow-sm">
-            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Store className="h-5 w-5 text-orange-500" />
-              Top Trending Vendors
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.entries(vendors)
-                .slice(0, 4)
-                .map(([vendorId, vendor], index) => (
-                  <Link 
-                    key={vendorId}
-                    href={`/vendor/${vendorId}`}
-                    className="flex items-center gap-2 p-3 rounded-lg border hover:border-orange-200 hover:bg-orange-50 transition-colors group"
-                  >
-                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center overflow-hidden">
-                      {vendor.logoUrl ? (
-                        <Image
-                          src={vendor.logoUrl}
-                          alt={vendor.shopName}
-                          width={32}
-                          height={32}
-                          className="object-cover"
-                        />
-                      ) : (
-                        <Store className="h-4 w-4 text-orange-600" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate group-hover:text-orange-600">
-                        {vendor.shopName}
-                      </p>
-                      <div className="flex items-center gap-1">
-                        <CheckCircle className="h-3 w-3 text-green-500" />
-                        <span className="text-xs text-gray-500">Verified</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-            </div>
-          </div>
-        )}
 
         {/* View All Buttons */}
         <div className="text-center space-x-4">

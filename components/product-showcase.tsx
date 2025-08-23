@@ -1,61 +1,38 @@
 "use client"
+"use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, ShoppingCart, ChevronRight, Eye, Heart, Store } from "lucide-react"
+import { Star, ShoppingCart, Eye, Heart, ChevronRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog"
+import { getProducts, type Product } from "@/lib/firebase-products"
 import { useCart } from "@/components/cart-provider"
-import { formatCurrency } from "@/lib/utils"
-import { Dialog } from "@/components/ui/dialog"
 import { useWishlist, type WishlistItem } from "@/hooks/use-wishlist"
-import { getVendor, type Vendor } from "@/lib/firebase-vendors"
+import { formatCurrency } from "@/lib/utils"
 
 interface ProductShowcaseProps {
-  category?: string;
-  title?: string;
-  subtitle?: string;
+  category: string
+  title?: string
+  limit?: number
 }
 
-export default function ProductShowcase({ 
-  category = "Beverages", 
-  title = "Popular Products", 
-  subtitle = "Authentic products from around the world" 
-}: ProductShowcaseProps) {
-  const [hoveredProductId, setHoveredProductId] = useState<string | null>(null);
-  const [quickViewProduct, setQuickViewProduct] = useState<any | null>(null);
-  const [vendors, setVendors] = useState<Record<string, Vendor>>({});
-  const { addToCart } = useCart();
-  const { toggleWishlist, isInWishlist } = useWishlist();
-
-  const [products, setProducts] = useState<any[]>([])
+export default function ProductShowcase({ category, title, limit = 8 }: ProductShowcaseProps) {
+  const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [hoveredProductId, setHoveredProductId] = useState<string | null>(null)
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null)
+  const { addToCart } = useCart()
+  const { toggleWishlist, isInWishlist } = useWishlist()
 
-  // Load products for the category
   useEffect(() => {
     const loadCategoryProducts = async () => {
       try {
         setLoading(true)
-        // Import the getProducts function
-        const { getProducts } = await import("@/lib/firebase-products")
-        
-        // Map showcase categories to database categories
-        const categoryMap: Record<string, string> = {
-          "Beverages": "drinks",
-          "Food": "food", 
-          "Spices": "spices",
-          "Flour": "flour",
-          "Vegetables & Fruits": "vegetables",
-          "Meat & Fish": "meat"
-        }
-        
-        const dbCategory = categoryMap[category] || category.toLowerCase()
-        
-        // Get products from Firebase
-        const { products: allProducts } = await getProducts({ category: dbCategory }, 8)
-        
+        const { products: allProducts } = await getProducts({ category }, limit)
         setProducts(allProducts.filter(p => p.inStock))
         console.log(`${category} products loaded:`, allProducts.length)
       } catch (error) {
@@ -69,36 +46,35 @@ export default function ProductShowcase({
     loadCategoryProducts()
   }, [category])
 
-  // Fetch vendor information for products
-  useEffect(() => {
-    const fetchVendors = async () => {
-      const vendorIds = [...new Set(products.filter(p => p.vendorId).map(p => p.vendorId!))]
-      const vendorPromises = vendorIds.map(async (vendorId) => {
-        try {
-          const vendor = await getVendor(vendorId)
-          return { vendorId, vendor }
-        } catch (error) {
-          console.error(`Error fetching vendor ${vendorId}:`, error)
-          return { vendorId, vendor: null }
-        }
-      })
-      
-      const vendorResults = await Promise.all(vendorPromises)
-      const vendorMap: Record<string, Vendor> = {}
-      
-      vendorResults.forEach(({ vendorId, vendor }) => {
-        if (vendor) {
-          vendorMap[vendorId] = vendor
-        }
-      })
-      
-      setVendors(vendorMap)
-    }
+  const handleAddToCart = (product: Product, e?: React.MouseEvent) => {
+    if (e) e.preventDefault()
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images?.[0] || "/placeholder.jpg",
+      quantity: 1,
+      options: {}
+    })
+  }
 
-    if (products.length > 0) {
-      fetchVendors()
+  const handleQuickView = (product: Product, e?: React.MouseEvent) => {
+    if (e) e.preventDefault()
+    setQuickViewProduct(product)
+  }
+
+  const handleToggleWishlist = (product: Product, e?: React.MouseEvent) => {
+    if (e) e.preventDefault()
+    const wishlistItem: WishlistItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images?.[0] || "/placeholder.jpg",
+      category: product.category,
+      inStock: product.inStock
     }
-  }, [products])
+    toggleWishlist(wishlistItem)
+  }
 
   // Get a URL-friendly category name for the "View All" link
   const mapCategoryToShopCategory = (showcaseCategory: string): string => {
@@ -110,51 +86,19 @@ export default function ProductShowcase({
       "Vegetables & Fruits": "vegetables",
       "Meat & Fish": "meat"
     };
-    return categoryMap[showcaseCategory] || "all";
-  };
-
-  const handleAddToCart = (product: any, e?: React.MouseEvent) => {
-    if (e) e.preventDefault();
-    addToCart({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      quantity: 1,
-      options: {}
-    });
-  };
-
-  const handleQuickView = (product: any, e?: React.MouseEvent) => {
-    if (e) e.preventDefault();
-    setQuickViewProduct(product);
-  };
-
-  const handleToggleWishlist = (product: any, e?: React.MouseEvent) => {
-    if (e) e.preventDefault();
-    
-    const wishlistItem: WishlistItem = {
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      category: product.subtitle || category
-    };
-    
-    toggleWishlist(wishlistItem);
-  };
+    return categoryMap[showcaseCategory] || showcaseCategory.toLowerCase()
+  }
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    const target = e.target as HTMLImageElement;
-    target.src = "/product_images/unknown-product.jpg";
-  };
+    const target = e.target as HTMLImageElement
+    target.src = "/product_images/unknown-product.jpg"
+  }
 
   return (
     <section className="my-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900">{title}</h2>
-          <p className="mt-1 text-gray-600">{subtitle}</p>
         </div>
         <Link 
           href={`/shop?category=${mapCategoryToShopCategory(category)}`} 
@@ -192,7 +136,7 @@ export default function ProductShowcase({
                     src={product.images?.[0] || "/placeholder.jpg"}
                     alt={product.name}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform"
+                    className="object-contain p-1 group-hover:scale-105 transition-transform"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                     onError={handleImageError}
                   />
@@ -247,35 +191,6 @@ export default function ProductShowcase({
                   {product.category}
                 </p>
                 
-                {/* Vendor Information */}
-                {product.vendorId && vendors[product.vendorId] && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <div className="flex items-center gap-1.5">
-                      {vendors[product.vendorId].logoUrl ? (
-                        <Image
-                          src={vendors[product.vendorId].logoUrl}
-                          alt={vendors[product.vendorId].shopName}
-                          width={16}
-                          height={16}
-                          className="rounded-full object-cover"
-                        />
-                      ) : (
-                        <Store className="h-4 w-4 text-gray-400" />
-                      )}
-                      <Link 
-                        href={`/vendor/${product.vendorId}`}
-                        className="text-xs text-gray-600 hover:text-green-600 transition-colors font-medium"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {vendors[product.vendorId].shopName}
-                      </Link>
-                    </div>
-                    <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                      Vendor
-                    </Badge>
-                  </div>
-                )}
-                
                 {product.rating && (
                   <div className="flex items-center mt-2">
                     <div className="flex">
@@ -283,7 +198,7 @@ export default function ProductShowcase({
                         <Star 
                           key={i} 
                           className={`h-3 w-3 ${
-                            i < Math.floor(product.rating) 
+                            product.rating && i < Math.floor(product.rating) 
                               ? "text-amber-400 fill-amber-400" 
                               : "text-gray-300"
                           }`}
@@ -323,8 +238,38 @@ export default function ProductShowcase({
       )}
 
       {/* Quick View Modal */}
-      <Dialog open={quickViewProduct !== null} onOpenChange={(isOpen) => !isOpen && setQuickViewProduct(null)}>
-        {/* Modal content */}
+      <Dialog open={quickViewProduct !== null} onOpenChange={(isOpen: boolean) => !isOpen && setQuickViewProduct(null)}>
+        <DialogContent className="sm:max-w-[600px]">
+          {quickViewProduct && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{quickViewProduct.name}</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
+                  <Image
+                    src={quickViewProduct.images?.[0] || "/placeholder.jpg"}
+                    alt={quickViewProduct.name}
+                    fill
+                    className="object-contain p-2"
+                  />
+                </div>
+                <div className="space-y-4">
+                  <p className="text-gray-600">{quickViewProduct.category}</p>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(quickViewProduct.price)}
+                  </div>
+                  <Button 
+                    onClick={() => handleAddToCart(quickViewProduct)}
+                    className="w-full"
+                  >
+                    Add to Cart
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
       </Dialog>
     </section>
   )

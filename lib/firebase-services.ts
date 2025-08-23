@@ -25,49 +25,97 @@ export const getServicesByProviderId = async (providerId: string): Promise<Servi
     
     // Add timeout to prevent hanging
     const queryPromise = (async () => {
-      const q = query(
-        collection(db, "services"),
-        where("providerId", "==", providerId),
-        orderBy("createdAt", "desc")
-      )
-      
-      const snapshot = await getDocs(q)
-      console.log("📊 Firebase: Services query executed, found:", snapshot.docs.length, "services")
-      
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Service))
+      try {
+        const q = query(
+          collection(db, "services"),
+          where("providerId", "==", providerId),
+          orderBy("createdAt", "desc")
+        )
+        
+        console.log("🔍 Firebase: Executing query...")
+        const snapshot = await getDocs(q)
+        console.log("📊 Firebase: Services query executed, found:", snapshot.docs.length, "services")
+        
+        return snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Service))
+      } catch (queryError: any) {
+        console.error("💥 Firebase: Error in query execution:", {
+          queryError: queryError,
+          queryErrorString: JSON.stringify(queryError, Object.getOwnPropertyNames(queryError)),
+          queryErrorMessage: queryError?.message || 'No message',
+          queryErrorCode: queryError?.code || 'no_code',
+          queryErrorName: queryError?.name || 'no_name',
+          providerId,
+          queryErrorStack: queryError?.stack || 'No stack trace'
+        })
+        throw queryError
+      }
     })()
     
-    const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Services query timeout after 5 seconds')), 5000)
-    )
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      console.log("⏰ Firebase: Setting up timeout for 5 seconds")
+      setTimeout(() => {
+        console.error("⏰ Firebase: Query timeout after 5 seconds")
+        reject(new Error('Services query timeout after 5 seconds'))
+      }, 5000)
+    })
     
-    return await Promise.race([queryPromise, timeoutPromise])
+    console.log("🏁 Firebase: Starting Promise.race between query and timeout")
+    const result = await Promise.race([queryPromise, timeoutPromise])
+    console.log("✅ Firebase: Promise.race completed successfully")
+    return result
     
   } catch (error: any) {
-    console.error("💥 Firebase: Error fetching services:", {
-      error,
-      code: error.code,
-      message: error.message,
-      providerId
+    // Enhanced error logging to capture more details
+    console.error("💥 Firebase: Error fetching services (catch block):", {
+      error: error,
+      errorString: JSON.stringify(error, Object.getOwnPropertyNames(error)),
+      errorType: typeof error,
+      errorMessage: error?.message || 'No message',
+      errorCode: error?.code || 'no_code',
+      errorName: error?.name || 'no_name',
+      providerId,
+      stack: error?.stack || 'No stack trace',
+      // Additional error properties that might exist in Firebase errors
+      errorConstructor: error?.constructor?.name,
+      errorKeys: error ? Object.keys(error) : 'No keys',
+      errorHasMessage: 'message' in error,
+      errorHasCode: 'code' in error,
+      errorToString: error?.toString(),
+      // Try to get Firebase-specific error details
+      firebaseErrorDetails: error?.details || error?.customData || error?.serverResponse || 'No Firebase details',
+      // Check if this is a timeout error
+      isTimeoutError: error?.message?.includes('timeout'),
+      // Check if this is a Firebase error
+      isFirebaseError: error?.code !== undefined,
+      // Try to stringify the error in different ways
+      errorJSON: JSON.stringify(error),
+      errorStringifyAll: JSON.stringify(error, Object.getOwnPropertyNames(error)),
+      // Check if error has a message property
+      hasMessageProperty: Object.prototype.hasOwnProperty.call(error, 'message'),
+      // Try to access error properties directly
+      directMessage: error.message,
+      directCode: error.code,
+      directName: error.name,
+      directStack: error.stack
     })
     
     // Handle specific Firebase errors
-    if (error.code === 'failed-precondition') {
+    if (error?.code === 'failed-precondition') {
       console.warn("Firebase index required for services query, returning empty array")
       return []
-    } else if (error.code === 'permission-denied') {
+    } else if (error?.code === 'permission-denied') {
       console.warn("Permission denied for services query, returning empty array")
       return []
-    } else if (error.message?.includes('timeout')) {
+    } else if (error?.message?.includes('timeout')) {
       console.warn("Services query timeout, returning empty array")
       return []
     }
     
     // For services, don't throw - just return empty array
-    console.warn("Services query failed, returning empty array:", error.message)
+    console.warn("Services query failed, returning empty array:", error?.message || 'Unknown error')
     return []
   }
 }

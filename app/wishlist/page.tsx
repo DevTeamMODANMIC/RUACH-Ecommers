@@ -116,12 +116,12 @@ export default function WishlistPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {wishlistItems.map((product) => (
             <Card key={product.id} className="overflow-hidden">
-              <div className="relative h-64 w-full bg-muted">
+              <div className="relative aspect-square w-full bg-muted">
                 <Image
                   src={product.image}
                   alt={product.name}
                   fill
-                  className="object-cover"
+                  className="object-contain p-1"
                 />
               </div>
               <CardContent className="p-6">

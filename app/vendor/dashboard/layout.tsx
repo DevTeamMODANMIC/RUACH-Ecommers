@@ -39,15 +39,6 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
   const router = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [isServiceProvider, setIsServiceProvider] = useState(false)
-
-  // Check if user is a service provider (this would normally come from user profile/database)
-  useEffect(() => {
-    // For now, we'll check if there's a service provider indicator in localStorage
-    // In production, this should come from the user's profile data
-    const serviceProviderMode = localStorage.getItem('serviceProviderMode') === 'true'
-    setIsServiceProvider(serviceProviderMode)
-  }, [])
 
   useEffect(() => {
     // TEMPORARY BYPASS: Redirect is disabled to allow direct access for development.
@@ -59,31 +50,16 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
     */
   }, [isVendor, loading, router])
 
-  // Only show loading for authentication, not vendor data for service providers
-  if (isServiceProvider) {
-    // For service providers, only wait for auth, not vendor data
-    if (!user) {
-      return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-50">
-          <div className="text-center">
-            <div className="h-8 w-8 border-4 border-t-green-500 border-l-green-600 border-r-green-600 border-b-green-700 rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading dashboard...</p>
-          </div>
+  // Only show loading for authentication
+  if (loading && !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="h-8 w-8 border-4 border-t-green-500 border-l-green-600 border-r-green-600 border-b-green-700 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading dashboard...</p>
         </div>
-      )
-    }
-  } else {
-    // For regular vendors, wait for both auth and vendor data
-    if (loading && !user) {
-      return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-50">
-          <div className="text-center">
-            <div className="h-8 w-8 border-4 border-t-green-500 border-l-green-600 border-r-green-600 border-b-green-700 rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading dashboard...</p>
-          </div>
-        </div>
-      )
-    }
+      </div>
+    )
   }
 
   // Also bypassing this check to prevent a blank screen during development.
@@ -98,44 +74,7 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
     return pathname?.startsWith(path)
   }
 
-  const navigationItems = isServiceProvider ? [
-    {
-      href: "/vendor/dashboard",
-      label: "Dashboard",
-      icon: Home,
-      badge: null
-    },
-    {
-      href: "/vendor/dashboard/services",
-      label: "My Services",
-      icon: Wrench,
-      badge: null
-    },
-    {
-      href: "/vendor/dashboard/bookings",
-      label: "Bookings",
-      icon: Calendar,
-      badge: "2" // Mock notification badge
-    },
-    {
-      href: "/vendor/dashboard/customers",
-      label: "Customers",
-      icon: Users,
-      badge: null
-    },
-    {
-      href: "/vendor/dashboard/reviews",
-      label: "Reviews",
-      icon: Star,
-      badge: null
-    },
-    {
-      href: "/vendor/dashboard/analytics",
-      label: "Analytics",
-      icon: BarChart3,
-      badge: null
-    }
-  ] : [
+  const navigationItems = [
     {
       href: "/vendor/dashboard",
       label: "Dashboard",
@@ -198,19 +137,16 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
               </div>
               <div>
                 <h2 className="font-semibold text-gray-900">
-                  {isServiceProvider ? "Service Provider Portal" : "Vendor Portal"}
+                  Vendor Portal
                 </h2>
                 <p className="text-xs text-gray-600">
-                  {isServiceProvider 
-                    ? "Manage your services" 
-                    : `${allStores.length} store${allStores.length !== 1 ? 's' : ''}`
-                  }
+                  {allStores.length} store{allStores.length !== 1 ? 's' : ''}
                 </p>
               </div>
             </div>
             
             {/* Store Switcher - Only show for vendors with stores */}
-            {!isServiceProvider && <StoreSwitcher />}
+            <StoreSwitcher />
           </div>
 
           {/* Navigation */}
@@ -258,7 +194,7 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
                   {user?.displayName || user?.email || "Vendor"}
                 </p>
                 <p className="text-xs text-gray-600">
-                  {isServiceProvider ? "Service Provider Account" : "Vendor Account"}
+                  Vendor Account
                 </p>
               </div>
             </div>
@@ -274,7 +210,8 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
               </Button>
             </div>
             
-            {/* Mode Toggle */}
+            {/* Mode Toggle - REMOVED as per user request to remove Service Provider Portal */}
+            {/* 
             <div className="mt-3 p-2 bg-gray-50 rounded-lg">
               <p className="text-xs text-gray-600 mb-2">Switch Mode:</p>
               <Button 
@@ -294,6 +231,7 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
                 )}
               </Button>
             </div>
+            */}
           </div>
         </div>
       </aside>
@@ -311,13 +249,10 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
                   </div>
                   <div>
                     <h2 className="font-semibold text-gray-900">
-                      {isServiceProvider ? "Service Provider Portal" : "Vendor Portal"}
+                      Vendor Portal
                     </h2>
                     <p className="text-xs text-gray-600">
-                      {isServiceProvider 
-                        ? "Manage your services" 
-                        : `${allStores.length} store${allStores.length !== 1 ? 's' : ''}`
-                      }
+                      {allStores.length} store{allStores.length !== 1 ? 's' : ''}
                     </p>
                   </div>
                 </div>
@@ -380,7 +315,7 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
                     {user?.displayName || user?.email || "Vendor"}
                   </p>
                   <p className="text-xs text-gray-600">
-                    {isServiceProvider ? "Service Provider Account" : "Vendor Account"}
+                    Vendor Account
                   </p>
                 </div>
               </div>
@@ -396,7 +331,8 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
                 </Button>
               </div>
               
-              {/* Mode Toggle */}
+              {/* Mode Toggle - REMOVED as per user request to remove Service Provider Portal */}
+              {/* 
               <div className="mt-3 p-2 bg-gray-50 rounded-lg">
                 <p className="text-xs text-gray-600 mb-2">Switch Mode:</p>
                 <Button 
@@ -417,6 +353,7 @@ export default function VendorDashboardLayout({ children }: { children: React.Re
                   )}
                 </Button>
               </div>
+              */}
             </div>
           </div>
         </aside>

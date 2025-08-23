@@ -121,7 +121,7 @@ export default function StoresPage() {
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Browse All Stores</h1>
             <p className="text-lg text-gray-800 max-w-2xl mx-auto">
-              Discover authentic African products from verified vendors across Nigeria and beyond
+              Discover authentic products from verified vendors across Nigeria and beyond
             </p>
           </div>
 

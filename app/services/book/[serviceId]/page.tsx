@@ -22,66 +22,18 @@ import {
 } from "lucide-react"
 import { Service, ServiceProvider, ServiceBooking, UserAddress } from "@/types"
 
-// Mock data - in real app, this would come from API
-const mockService: Service = {
-  id: "srv_001",
-  providerId: "sp_001",
-  name: "Professional Home Plumbing Services",
-  description: "Complete plumbing services including repairs, installations, and maintenance",
-  category: "plumbing",
-  subcategory: "residential",
-  pricingType: "fixed",
-  basePrice: 15000,
-  duration: 120,
-  images: [
-    { publicId: "plumbing1", url: "/api/placeholder/400/300", alt: "Plumbing service" }
-  ],
-  features: ["Emergency repairs", "Installation services", "Maintenance", "Free consultation"],
-  requirements: ["Access to plumbing area", "Water shut-off location"],
-  serviceAreas: ["Lagos", "Abuja", "Port Harcourt"],
-  bookingRequiresApproval: true,
-  depositRequired: true,
-  depositAmount: 5000,
-  isActive: true,
-  availableSlots: [
-    {
-      date: "2024-01-20",
-      timeSlots: ["09:00", "11:00", "14:00", "16:00"]
-    },
-    {
-      date: "2024-01-21", 
-      timeSlots: ["09:00", "13:00", "15:00"]
-    }
-  ],
-  createdAt: Date.now(),
-  updatedAt: Date.now()
-}
+// Service data will be loaded from the database based on serviceId
+const mockService: Service | null = null
 
-const mockProvider: ServiceProvider = {
-  id: "sp_001",
-  ownerId: "user_001", 
-  name: "Lagos Professional Plumbers",
-  description: "Certified plumbing experts serving Lagos for over 10 years",
-  category: "plumbing",
-  contactEmail: "info@lagosplumbers.com",
-  contactPhone: "+234 801 234 5678",
-  serviceAreas: ["Lagos", "Ogun"],
-  rating: 4.8,
-  reviewCount: 127,
-  totalBookings: 234,
-  isActive: true,
-  isApproved: true,
-  createdAt: Date.now(),
-  updatedAt: Date.now()
-}
+const mockProvider: ServiceProvider | null = null
 
 export default function ServiceBookingPage() {
   const params = useParams()
   const router = useRouter()
   const serviceId = params.serviceId as string
 
-  const [service] = useState<Service>(mockService)
-  const [provider] = useState<ServiceProvider>(mockProvider)
+  const [service] = useState<Service | null>(mockService)
+  const [provider] = useState<ServiceProvider | null>(mockProvider)
   const [selectedDate, setSelectedDate] = useState("")
   const [selectedTime, setSelectedTime] = useState("")
   const [bookingStep, setBookingStep] = useState(1) // 1: Service Info, 2: Schedule, 3: Details, 4: Payment
@@ -102,14 +54,14 @@ export default function ServiceBookingPage() {
       phone: ""
     } as UserAddress,
     specialRequirements: "",
-    agreedPrice: service?.basePrice || 0
+    agreedPrice: 0
   })
 
-  const [availableSlots, setAvailableSlots] = useState(service?.availableSlots || [])
+  const [availableSlots, setAvailableSlots] = useState<any[]>([])
 
   useEffect(() => {
     if (service?.basePrice) {
-      setBookingForm(prev => ({ ...prev, agreedPrice: service.basePrice! }))
+      setBookingForm(prev => ({ ...prev, agreedPrice: service.basePrice || 0 }))
     }
   }, [service])
 
@@ -122,6 +74,11 @@ export default function ServiceBookingPage() {
     setIsSubmitting(true)
     
     try {
+      if (!service || !provider) {
+        alert("Service or provider information is not available")
+        return
+      }
+
       const booking: Partial<ServiceBooking> = {
         serviceId: service.id,
         providerId: service.providerId,
@@ -176,16 +133,16 @@ export default function ServiceBookingPage() {
               <div className="space-y-4">
                 <div className="flex items-start space-x-4">
                   <img
-                    src={service.images[0]?.url}
-                    alt={service.name}
+                    src={service?.images?.[0]?.url || '/placeholder.jpg'}
+                    alt={service?.name || 'Service'}
                     className="w-20 h-20 rounded-lg object-cover"
                   />
                   <div className="flex-1">
-                    <h4 className="font-semibold">{service.name}</h4>
-                    <p className="text-gray-600 text-sm mb-2">{service.description}</p>
+                    <h4 className="font-semibold">{service?.name || 'Service Name'}</h4>
+                    <p className="text-gray-600 text-sm mb-2">{service?.description || 'Service description'}</p>
                     <div className="flex items-center text-sm text-gray-500">
                       <Clock className="h-4 w-4 mr-1" />
-                      {service.duration} minutes
+                      {service?.duration || 0} minutes
                     </div>
                   </div>
                 </div>
@@ -193,13 +150,13 @@ export default function ServiceBookingPage() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h5 className="font-medium mb-2">What's included:</h5>
                   <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                    {service.features.map((feature, index) => (
+                    {service?.features?.map((feature, index) => (
                       <li key={index}>{feature}</li>
-                    ))}
+                    )) || <li>No features listed</li>}
                   </ul>
                 </div>
 
-                {service.requirements && service.requirements.length > 0 && (
+                {service?.requirements && service.requirements.length > 0 && (
                   <div className="bg-yellow-50 p-4 rounded-lg">
                     <h5 className="font-medium mb-2 text-yellow-800">Please ensure:</h5>
                     <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
@@ -219,15 +176,15 @@ export default function ServiceBookingPage() {
                   <User className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold">{provider.name}</h4>
-                  <p className="text-gray-600 text-sm">{provider.description}</p>
+                  <h4 className="font-semibold">{provider?.name || 'Provider Name'}</h4>
+                  <p className="text-gray-600 text-sm">{provider?.description || 'Provider description'}</p>
                   <div className="flex items-center mt-1">
                     <div className="flex items-center">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
                           className={`h-4 w-4 ${
-                            i < Math.floor(provider.rating)
+                            i < Math.floor(provider?.rating || 0)
                               ? "text-yellow-400 fill-current"
                               : "text-gray-300"
                           }`}
@@ -235,7 +192,7 @@ export default function ServiceBookingPage() {
                       ))}
                     </div>
                     <span className="text-sm text-gray-600 ml-2">
-                      {provider.rating} ({provider.reviewCount} reviews)
+                      {provider?.rating || 0} ({provider?.reviewCount || 0} reviews)
                     </span>
                   </div>
                 </div>
@@ -284,7 +241,7 @@ export default function ServiceBookingPage() {
                   Available Times
                 </label>
                 <div className="grid grid-cols-4 gap-3">
-                  {getAvailableTimesForDate(selectedDate).map((time) => (
+                  {getAvailableTimesForDate(selectedDate).map((time: string) => (
                     <button
                       key={time}
                       type="button"
@@ -464,11 +421,11 @@ export default function ServiceBookingPage() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Service:</span>
-                  <span className="font-medium">{service.name}</span>
+                  <span className="font-medium">{service?.name || 'Service Name'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Provider:</span>
-                  <span className="font-medium">{provider.name}</span>
+                  <span className="font-medium">{provider?.name || 'Provider Name'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Date & Time:</span>
@@ -478,7 +435,7 @@ export default function ServiceBookingPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Duration:</span>
-                  <span className="font-medium">{service.duration} minutes</span>
+                  <span className="font-medium">{service?.duration || 0} minutes</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Customer:</span>
@@ -502,7 +459,7 @@ export default function ServiceBookingPage() {
                   <span>Service Fee:</span>
                   <span>₦{bookingForm.agreedPrice.toLocaleString()}</span>
                 </div>
-                {service.depositRequired && (
+                {service?.depositRequired && (
                   <div className="flex justify-between text-blue-600">
                     <span>Deposit Required:</span>
                     <span>₦{service.depositAmount?.toLocaleString()}</span>
@@ -541,7 +498,7 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
-            {service.bookingRequiresApproval && (
+            {service?.bookingRequiresApproval && (
               <div className="bg-yellow-50 p-4 rounded-lg">
                 <div className="flex items-start space-x-3">
                   <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
@@ -561,6 +518,24 @@ export default function ServiceBookingPage() {
       default:
         return null
     }
+  }
+
+  // Show loading or error state if service/provider data is not available
+  if (!service || !provider) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-500 mb-4">
+            <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Service Not Found</h3>
+            <p className="text-gray-600">The requested service could not be found or is no longer available.</p>
+          </div>
+          <Button onClick={() => router.push('/services')} variant="outline">
+            Back to Services
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (

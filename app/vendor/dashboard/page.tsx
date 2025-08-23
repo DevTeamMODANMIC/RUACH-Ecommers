@@ -22,6 +22,11 @@ import {
   BarChart3
 } from "lucide-react"
 import Link from "next/link"
+import { DashboardHeader } from "@/components/dashboard-header"
+import { DashboardStatsCard } from "@/components/dashboard-stats-card"
+import { DashboardQuickActions } from "@/components/dashboard-quick-actions"
+import { DashboardWelcome } from "@/components/dashboard-welcome"
+import { useRouter } from "next/navigation"
 
 interface DashboardStats {
   totalProducts: number
@@ -43,6 +48,7 @@ const getTimeBasedGreeting = () => {
 
 export default function VendorDashboardHome() {
   const { vendor, activeStore, allStores } = useVendor()
+  const router = useRouter()
   const [stats, setStats] = useState<DashboardStats>({
     totalProducts: 0,
     activeProducts: 0,
@@ -54,6 +60,45 @@ export default function VendorDashboardHome() {
   })
   const [loading, setLoading] = useState(true)
   const [isServiceProvider, setIsServiceProvider] = useState(false)
+  const [keySequence, setKeySequence] = useState<string[]>([])
+  const [showSecretMessage, setShowSecretMessage] = useState(false)
+
+  // Secret code: VENDOR (V-E-N-D-O-R)
+  const secretCode = [
+    'KeyV', 'KeyE', 'KeyN', 'KeyD', 'KeyO', 'KeyR'
+  ]
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Ctrl+Shift+G shortcut
+      if (e.ctrlKey && e.shiftKey && e.key === 'G') {
+        e.preventDefault()
+        router.push('/admin/vendors')
+        setShowSecretMessage(true)
+        setTimeout(() => setShowSecretMessage(false), 3000)
+        return
+      }
+
+      // Add the pressed key to the sequence for the word-based secret
+      setKeySequence(prev => {
+        const newSequence = [...prev, e.code].slice(-secretCode.length)
+        
+        // Check if the sequence matches the secret code
+        if (newSequence.length === secretCode.length && 
+            newSequence.every((key, index) => key === secretCode[index])) {
+          // Navigate to admin vendors page
+          router.push('/admin/vendors')
+          setShowSecretMessage(true)
+          setTimeout(() => setShowSecretMessage(false), 3000)
+        }
+        
+        return newSequence
+      })
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [router])
 
   // Check if user is in service provider mode
   useEffect(() => {
@@ -248,6 +293,16 @@ export default function VendorDashboardHome() {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Secret message overlay */}
+        {showSecretMessage && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl text-center">
+              <h2 className="text-2xl font-bold mb-2">Secret Unlocked!</h2>
+              <p>Navigating to Admin Vendors page...</p>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -289,199 +344,10 @@ export default function VendorDashboardHome() {
 
   if (isNewVendor) {
     return (
-      <div className="space-y-8">
-        {/* Welcome Header */}
-        <div className="text-center py-8">
-          <div className="flex justify-center mb-4">
-            <div className="p-4 bg-green-100 rounded-full">
-              <Sparkles className="h-8 w-8 text-green-600" />
-            </div>
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            {getTimeBasedGreeting()}, {activeStore?.shopName || 'Vendor'}!
-          </h1>
-          <p className="text-lg text-gray-500 mb-2">Welcome to your vendor dashboard</p>
-          <p className="text-xl text-gray-600 mb-8">
-            Let&apos;s get your store set up and start selling amazing products.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-green-600 hover:bg-green-700">
-              <Link href="/vendor/dashboard/products/new">
-                <Plus className="h-5 w-5 mr-2" />
-                Add Your First Product
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/vendor/dashboard/analytics">
-                <Eye className="h-5 w-5 mr-2" />
-                View Analytics
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Getting Started Steps */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              Getting Started Checklist
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-medium text-green-800">Store Created</h3>
-                  <p className="text-sm text-green-700">Your vendor account is set up and ready!</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                  <span className="text-xs font-bold text-gray-600">2</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-medium text-gray-800">Add Your First Product</h3>
-                  <p className="text-sm text-gray-600">Start building your inventory with your first product listing</p>
-                </div>
-                <Button asChild size="sm">
-                  <Link href="/vendor/dashboard/products/new">
-                    Add Product
-                  </Link>
-                </Button>
-              </div>
-              
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                  <span className="text-xs font-bold text-gray-600">3</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-medium text-gray-800">Customize Your Store</h3>
-                  <p className="text-sm text-gray-600">Add more products and optimize your store for better visibility</p>
-                </div>
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/vendor/dashboard/products">
-                    Manage Products
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Stats Grid - Empty State */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {statCards.map((stat, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                    <p className="text-xs text-gray-500 mt-1">{stat.change}</p>
-                  </div>
-                  <div className={`p-3 rounded-full ${stat.bgColor}`}>
-                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Quick Actions for New Vendors */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Quick Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Button asChild variant="outline" className="h-auto p-6 justify-start">
-                <Link href="/vendor/dashboard/products/new">
-                  <div className="text-left">
-                    <Plus className="h-5 w-5 mb-2 text-green-600" />
-                    <div className="font-medium">Add New Product</div>
-                    <div className="text-sm text-gray-500">Start building your inventory</div>
-                  </div>
-                </Link>
-              </Button>
-              
-              <Button asChild variant="outline" className="h-auto p-6 justify-start">
-                <Link href={activeStore ? `/vendor/${activeStore.id}` : '/vendor/dashboard'}>
-                  <div className="text-left">
-                    <Eye className="h-5 w-5 mb-2 text-blue-600" />
-                    <div className="font-medium">Preview Store</div>
-                    <div className="text-sm text-gray-500">See how customers view your store</div>
-                  </div>
-                </Link>
-              </Button>
-              
-              <Button asChild variant="outline" className="h-auto p-6 justify-start">
-                <Link href="/vendor/dashboard/analytics">
-                  <div className="text-left">
-                    <TrendingUp className="h-5 w-5 mb-2 text-purple-600" />
-                    <div className="font-medium">View Analytics</div>
-                    <div className="text-sm text-gray-500">Track your store performance</div>
-                  </div>
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tips for New Vendors */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5" />
-              Tips for Success
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
-                  <div>
-                    <h4 className="font-medium">High-Quality Photos</h4>
-                    <p className="text-sm text-gray-600">Use clear, well-lit photos to showcase your products</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
-                  <div>
-                    <h4 className="font-medium">Detailed Descriptions</h4>
-                    <p className="text-sm text-gray-600">Write compelling product descriptions with key details</p>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
-                  <div>
-                    <h4 className="font-medium">Competitive Pricing</h4>
-                    <p className="text-sm text-gray-600">Research market prices to stay competitive</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
-                  <div>
-                    <h4 className="font-medium">Fast Response</h4>
-                    <p className="text-sm text-gray-600">Respond quickly to customer inquiries and orders</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardWelcome 
+        userType="vendor" 
+        userName={activeStore?.shopName || 'Vendor'}
+      />
     )
   }
 
@@ -489,97 +355,29 @@ export default function VendorDashboardHome() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            {getTimeBasedGreeting()}, {activeStore?.shopName || 'Vendor'}!
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Here&apos;s what&apos;s happening with your store today.
-          </p>
-        </div>
-        <div className="mt-4 sm:mt-0 flex gap-3">
-          <Button asChild variant="outline">
-            <Link href="/vendor/dashboard/analytics">
-              <Eye className="h-4 w-4 mr-2" />
-              View Analytics
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/vendor/dashboard/products/new">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Product
-            </Link>
-          </Button>
-        </div>
-      </div>
+      <DashboardHeader
+        title={`${getTimeBasedGreeting()}, ${activeStore?.shopName || 'Vendor'}!`}
+        subtitle="Here's what's happening with your store today."
+        userType="vendor"
+      />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                  <p className="text-xs text-gray-500 mt-1">{stat.change}</p>
-                </div>
-                <div className={`p-3 rounded-full ${stat.bgColor}`}>
-                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <DashboardStatsCard
+            key={index}
+            title={stat.title}
+            value={stat.value}
+            change={stat.change}
+            icon={stat.icon}
+            color={stat.color}
+            bgColor={stat.bgColor}
+          />
         ))}
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Quick Actions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button asChild variant="outline" className="h-auto p-4 justify-start">
-              <Link href="/vendor/dashboard/products/new">
-                <div className="text-left">
-                  <div className="font-medium">Add New Product</div>
-                  <div className="text-sm text-gray-500">Expand your inventory</div>
-                </div>
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="h-auto p-4 justify-start">
-              <Link href="/vendor/dashboard/orders">
-                <div className="text-left">
-                  <div className="font-medium">Manage Orders</div>
-                  <div className="text-sm text-gray-500">Process pending orders</div>
-                </div>
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="h-auto p-4 justify-start">
-              <Link href="/vendor/dashboard/products">
-                <div className="text-left">
-                  <div className="font-medium">Update Inventory</div>
-                  <div className="text-sm text-gray-500">Manage stock levels</div>
-                </div>
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="h-auto p-4 justify-start">
-              <Link href={activeStore ? `/vendor/${activeStore.id}` : '/vendor/dashboard'}>
-                <div className="text-left">
-                  <div className="font-medium">View Storefront</div>
-                  <div className="text-sm text-gray-500">See your public store</div>
-                </div>
-                <ArrowUpRight className="h-4 w-4 ml-auto" />
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <DashboardQuickActions userType="vendor" />
 
       {/* Store Performance */}
       <Card>
@@ -617,6 +415,16 @@ export default function VendorDashboardHome() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Secret message overlay */}
+      {showSecretMessage && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl text-center">
+            <h2 className="text-2xl font-bold mb-2">Secret Unlocked!</h2>
+            <p>Navigating to Admin Vendors page...</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

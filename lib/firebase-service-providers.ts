@@ -226,61 +226,108 @@ export const getServiceProviderByOwnerId = async (ownerId: string): Promise<Serv
     
     // Add timeout to prevent hanging
     const queryPromise = (async () => {
-      const q = query(collection(db, "serviceProviders"), where("ownerId", "==", ownerId))
-      console.log("🔍 Firebase: Query created, executing...")
-      
-      const snapshot = await getDocs(q)
-      console.log("📊 Firebase: Query executed, results:", {
-        empty: snapshot.empty,
-        size: snapshot.size,
-        docs: snapshot.docs.length
-      })
-      
-      if (snapshot.empty) {
-        console.log("❌ Firebase: No service provider found for ownerId:", ownerId)
-        return null
+      try {
+        const q = query(collection(db, "serviceProviders"), where("ownerId", "==", ownerId))
+        console.log("🔍 Firebase: Query created, executing...")
+        
+        const snapshot = await getDocs(q)
+        console.log("📊 Firebase: Query executed, results:", {
+          empty: snapshot.empty,
+          size: snapshot.size,
+          docs: snapshot.docs.length
+        })
+        
+        if (snapshot.empty) {
+          console.log("❌ Firebase: No service provider found for ownerId:", ownerId)
+          return null
+        }
+        
+        const doc = snapshot.docs[0]
+        const data = doc.data()
+        console.log("✅ Firebase: Service provider found:", {
+          id: doc.id,
+          name: data.name,
+          ownerId: data.ownerId
+        })
+        
+        return {
+          id: doc.id,
+          ...data
+        } as ServiceProvider
+      } catch (queryError: any) {
+        console.error("💥 Firebase: Error in query execution for service provider:", {
+          queryError: queryError,
+          queryErrorString: JSON.stringify(queryError, Object.getOwnPropertyNames(queryError)),
+          queryErrorMessage: queryError?.message || 'No message',
+          queryErrorCode: queryError?.code || 'no_code',
+          queryErrorName: queryError?.name || 'no_name',
+          ownerId,
+          queryErrorStack: queryError?.stack || 'No stack trace'
+        })
+        throw queryError
       }
-      
-      const doc = snapshot.docs[0]
-      const data = doc.data()
-      console.log("✅ Firebase: Service provider found:", {
-        id: doc.id,
-        name: data.name,
-        ownerId: data.ownerId
-      })
-      
-      return {
-        id: doc.id,
-        ...data
-      } as ServiceProvider
     })()
     
-    const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Database query timeout after 8 seconds')), 8000)
-    )
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      console.log("⏰ Firebase: Setting up timeout for 8 seconds")
+      setTimeout(() => {
+        console.error("⏰ Firebase: Query timeout after 8 seconds")
+        reject(new Error('Database query timeout after 8 seconds'))
+      }, 8000)
+    })
     
-    return await Promise.race([queryPromise, timeoutPromise])
+    console.log("🏁 Firebase: Starting Promise.race between query and timeout")
+    const result = await Promise.race([queryPromise, timeoutPromise])
+    console.log("✅ Firebase: Promise.race completed successfully")
+    return result
     
   } catch (error: any) {
+    // Enhanced error logging to capture more details
     console.error("💥 Firebase: Error fetching service provider by owner ID:", {
-      error,
-      code: error.code,
-      message: error.message,
-      ownerId
+      error: error,
+      errorString: JSON.stringify(error, Object.getOwnPropertyNames(error)),
+      errorType: typeof error,
+      errorMessage: error?.message || 'No message',
+      errorCode: error?.code || 'no_code',
+      errorName: error?.name || 'no_name',
+      ownerId,
+      stack: error?.stack || 'No stack trace',
+      // Additional error properties that might exist in Firebase errors
+      errorConstructor: error?.constructor?.name,
+      errorKeys: error ? Object.keys(error) : 'No keys',
+      errorHasMessage: 'message' in error,
+      errorHasCode: 'code' in error,
+      errorToString: error?.toString(),
+      // Try to get Firebase-specific error details
+      firebaseErrorDetails: error?.details || error?.customData || error?.serverResponse || 'No Firebase details',
+      // Check if this is a timeout error
+      isTimeoutError: error?.message?.includes('timeout'),
+      // Check if this is a Firebase error
+      isFirebaseError: error?.code !== undefined,
+      // Try to stringify the error in different ways
+      errorJSON: JSON.stringify(error),
+      errorStringifyAll: JSON.stringify(error, Object.getOwnPropertyNames(error)),
+      // Check if error has a message property
+      hasMessageProperty: Object.prototype.hasOwnProperty.call(error, 'message'),
+      // Try to access error properties directly
+      directMessage: error.message,
+      directCode: error.code,
+      directName: error.name,
+      directStack: error.stack
     })
     
     // Handle specific Firebase errors
-    if (error.code === 'failed-precondition') {
+    if (error?.code === 'failed-precondition') {
       throw new Error("Database index required - please contact support")
-    } else if (error.code === 'permission-denied') {
+    } else if (error?.code === 'permission-denied') {
       throw new Error("Permission denied - please check your login status")
-    } else if (error.code === 'unavailable') {
+    } else if (error?.code === 'unavailable') {
       throw new Error("Database temporarily unavailable - please try again")
-    } else if (error.message?.includes('timeout')) {
+    } else if (error?.message?.includes('timeout')) {
       throw new Error("Database query timeout - please try again")
     }
     
-    throw new Error(`Failed to fetch service provider: ${error.message || 'Unknown error'}`)
+    throw new Error(`Failed to fetch service provider: ${error?.message || 'Unknown error'}`)
   }
 }
 

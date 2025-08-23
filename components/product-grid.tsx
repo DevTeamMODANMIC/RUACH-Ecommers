@@ -6,12 +6,11 @@ import Link from "next/link"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Star, Eye, ShoppingCart, Heart, X, Store, User } from "lucide-react"
+import { Star, Eye, ShoppingCart, Heart, X, User } from "lucide-react"
 import { useCart } from "@/components/cart-provider"
 import { formatCurrency } from "@/lib/utils"
 import { useWishlist, type WishlistItem } from "@/hooks/use-wishlist"
 import ProductDetailModal from "@/components/product-detail-modal"
-import { getVendor, type Vendor } from "@/lib/firebase-vendors"
 import { Product } from "@/types"
 
 interface ProductGridProps {
@@ -23,40 +22,8 @@ export default function ProductGrid({ products, isLoading = false }: ProductGrid
   const [hoveredProductId, setHoveredProductId] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [vendors, setVendors] = useState<Record<string, Vendor>>({});
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-
-  // Fetch vendor information for products
-  useEffect(() => {
-    const fetchVendors = async () => {
-      const vendorIds = [...new Set(products.filter(p => (p as any).vendorId).map(p => (p as any).vendorId!))]
-      const vendorPromises = vendorIds.map(async (vendorId) => {
-        try {
-          const vendor = await getVendor(vendorId)
-          return { vendorId, vendor }
-        } catch (error) {
-          console.error(`Error fetching vendor ${vendorId}:`, error)
-          return { vendorId, vendor: null }
-        }
-      })
-      
-      const vendorResults = await Promise.all(vendorPromises)
-      const vendorMap: Record<string, Vendor> = {}
-      
-      vendorResults.forEach(({ vendorId, vendor }) => {
-        if (vendor) {
-          vendorMap[vendorId] = vendor
-        }
-      })
-      
-      setVendors(vendorMap)
-    }
-
-    if (products.length > 0) {
-      fetchVendors()
-    }
-  }, [products])
 
   const handleAddToCart = (product: Product, e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -172,7 +139,7 @@ export default function ProductGrid({ products, isLoading = false }: ProductGrid
                 src={product.images?.[0] || "/placeholder.jpg"}
                 alt={product.name}
                 fill
-                className="object-cover transition-all duration-500 group-hover:scale-110"
+                className="object-contain p-1 transition-all duration-500 group-hover:scale-110"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
@@ -225,35 +192,6 @@ export default function ProductGrid({ products, isLoading = false }: ProductGrid
                 </h3>
               </div>
               <p className="text-sm text-gray-500 mt-1">{product.displayCategory || product.category}</p>
-              
-              {/* Vendor Information */}
-              {(product as any).vendorId && vendors[(product as any).vendorId] && (
-                <div className="mt-2 flex items-center gap-2">
-                  <div className="flex items-center gap-1.5">
-                    {vendors[(product as any).vendorId].logoUrl ? (
-                      <Image
-                        src={vendors[(product as any).vendorId].logoUrl}
-                        alt={vendors[(product as any).vendorId].shopName}
-                        width={16}
-                        height={16}
-                        className="rounded-full object-cover"
-                      />
-                    ) : (
-                      <Store className="h-4 w-4 text-gray-400" />
-                    )}
-                    <Link 
-                      href={`/vendor/${(product as any).vendorId}`}
-                      className="text-xs text-gray-600 hover:text-green-600 transition-colors font-medium"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {vendors[(product as any).vendorId].shopName}
-                    </Link>
-                  </div>
-                  <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                    Vendor
-                  </Badge>
-                </div>
-              )}
               
               {product.rating && (
                 <div className="flex items-center mt-2">

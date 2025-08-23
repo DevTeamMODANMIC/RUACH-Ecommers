@@ -20,96 +20,11 @@ import {
 } from "lucide-react"
 import { Service, ServiceProvider, ServiceCategory } from "@/types"
 
-// Mock data - in real app, this would come from API
-const mockServices: (Service & { provider: ServiceProvider })[] = [
-  {
-    id: "srv_001",
-    providerId: "sp_001",
-    name: "Professional Home Plumbing",
-    description: "Complete plumbing services for residential properties including repairs, installations, and maintenance",
-    category: "plumbing",
-    subcategory: "residential",
-    pricingType: "fixed",
-    basePrice: 15000,
-    duration: 120,
-    images: [{ publicId: "plumbing1", url: "/api/placeholder/300/200", alt: "Plumbing service" }],
-    features: ["Emergency repairs", "Installation services", "Maintenance", "Free consultation"],
-    serviceAreas: ["Lagos", "Abuja"],
-    bookingRequiresApproval: true,
-    depositRequired: true,
-    depositAmount: 5000,
-    isActive: true,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    provider: {
-      id: "sp_001",
-      ownerId: "user_001",
-      name: "Lagos Professional Plumbers",
-      description: "Certified plumbing experts",
-      category: "plumbing",
-      contactEmail: "info@lagosplumbers.com", 
-      contactPhone: "+234 801 234 5678",
-      serviceAreas: ["Lagos", "Ogun"],
-      rating: 4.8,
-      reviewCount: 127,
-      totalBookings: 234,
-      isActive: true,
-      isApproved: true,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    }
-  },
-  {
-    id: "srv_002", 
-    providerId: "sp_002",
-    name: "Wedding Event Planning",
-    description: "Full-service wedding planning from concept to execution",
-    category: "event-planning",
-    subcategory: "weddings",
-    pricingType: "custom",
-    duration: 480,
-    images: [{ publicId: "wedding1", url: "/api/placeholder/300/200", alt: "Wedding planning" }],
-    features: ["Venue selection", "Vendor coordination", "Timeline management", "Day-of coordination"],
-    serviceAreas: ["Lagos", "Abuja", "Port Harcourt"],
-    bookingRequiresApproval: true,
-    depositRequired: true,
-    depositAmount: 50000,
-    isActive: true,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    provider: {
-      id: "sp_002",
-      ownerId: "user_002", 
-      name: "Elegant Events Nigeria",
-      description: "Premium event planning services",
-      category: "event-planning",
-      contactEmail: "hello@elegantevents.ng",
-      contactPhone: "+234 802 345 6789",
-      serviceAreas: ["Lagos", "Abuja", "Port Harcourt"],
-      rating: 4.9,
-      reviewCount: 89,
-      totalBookings: 156,
-      isActive: true,
-      isApproved: true,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    }
-  }
-]
+// Services data will be loaded from the database
+const mockServices: (Service & { provider: ServiceProvider })[] = []
 
 const categories: { value: ServiceCategory; label: string; count: number }[] = [
-  { value: "plumbing", label: "Plumbing", count: 45 },
-  { value: "electrical", label: "Electrical", count: 32 },
-  { value: "cleaning", label: "Cleaning", count: 67 },
-  { value: "event-planning", label: "Event Planning", count: 28 },
-  { value: "catering", label: "Catering", count: 41 },
-  { value: "beauty", label: "Beauty & Wellness", count: 53 },
-  { value: "fitness", label: "Fitness & Training", count: 19 },
-  { value: "tutoring", label: "Tutoring & Education", count: 36 },
-  { value: "photography", label: "Photography", count: 24 },
-  { value: "repairs", label: "Home Repairs", count: 38 },
-  { value: "landscaping", label: "Landscaping", count: 15 },
-  { value: "other", label: "Other Services", count: 22 }
+  // Categories will be loaded from the database
 ]
 
 const priceRanges = [

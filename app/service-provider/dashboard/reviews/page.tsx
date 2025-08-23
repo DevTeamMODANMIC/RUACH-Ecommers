@@ -17,54 +17,8 @@ import {
   Download
 } from "lucide-react"
 
-// Mock reviews data
-const mockReviews = [
-  {
-    id: "review_001",
-    customerName: "John Doe",
-    serviceName: "Emergency Plumbing Repair",
-    rating: 5,
-    title: "Excellent emergency service!",
-    comment: "The plumber arrived quickly and fixed my leaking pipe within an hour. Very professional and fair pricing. Highly recommended!",
-    createdAt: Date.now() - 86400000 * 3,
-    providerResponse: null,
-    helpfulVotes: 12,
-    wouldRecommend: true,
-    isVerified: true
-  },
-  {
-    id: "review_002", 
-    customerName: "Sarah Johnson",
-    serviceName: "Home Plumbing Installation",
-    rating: 4,
-    title: "Good work, minor delays",
-    comment: "The installation was done well and the team was knowledgeable. However, they arrived 30 minutes late which caused some inconvenience.",
-    createdAt: Date.now() - 86400000 * 7,
-    providerResponse: {
-      message: "Thank you for your feedback, Sarah. We apologize for the delay and have improved our scheduling process. We appreciate your patience and are glad you're satisfied with the quality of work.",
-      createdAt: Date.now() - 86400000 * 6
-    },
-    helpfulVotes: 8,
-    wouldRecommend: true,
-    isVerified: true
-  },
-  {
-    id: "review_003",
-    customerName: "Michael Chen",
-    serviceName: "Emergency Plumbing Repair",
-    rating: 5,
-    title: "Saved my day!",
-    comment: "Had a major blockage on Sunday evening. They responded immediately and cleared it efficiently. Great customer service!",
-    createdAt: Date.now() - 86400000 * 14,
-    providerResponse: {
-      message: "Thank you Michael! We're always here for emergencies. Your satisfaction is our priority.",
-      createdAt: Date.now() - 86400000 * 13
-    },
-    helpfulVotes: 15,
-    wouldRecommend: true,
-    isVerified: true
-  }
-]
+// Reviews data will be loaded from the database
+const mockReviews: any[] = []
 
 export default function ServiceProviderReviewsPage() {
   const [reviews, setReviews] = useState(mockReviews)
@@ -127,9 +81,9 @@ export default function ServiceProviderReviewsPage() {
 
   const stats = {
     totalReviews: reviews.length,
-    averageRating: (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1),
+    averageRating: reviews.length > 0 ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) : '0.0',
     pendingResponses: reviews.filter(r => !r.providerResponse).length,
-    responseRate: Math.round((reviews.filter(r => r.providerResponse).length / reviews.length) * 100)
+    responseRate: reviews.length > 0 ? Math.round((reviews.filter(r => r.providerResponse).length / reviews.length) * 100) : 0
   }
 
   if (isLoading) {

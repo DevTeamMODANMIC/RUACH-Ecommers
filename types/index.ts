@@ -192,6 +192,10 @@ export type Service = {
   depositRequired: boolean
   depositAmount?: number
   isActive: boolean
+  // Statistics and ratings
+  bookingCount: number
+  rating: number
+  reviewCount: number
   createdAt: string | number | null
   updatedAt: string | number | null
 }
