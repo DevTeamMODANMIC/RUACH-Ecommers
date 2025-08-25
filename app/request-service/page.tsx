@@ -40,7 +40,7 @@ const contactMethods = [
     icon: Phone,
     title: "Phone Support",
     description: "Speak directly with our team",
-    contact: "+234 816 066 2997",
+    contact: "+2347054915173",
     availability: "Mon-Sat: 8AM - 8PM"
   },
   {
@@ -466,15 +466,15 @@ export default function ServiceRequestPage() {
                 <Button 
                   variant="outline" 
                   className="w-full justify-start"
-                  onClick={() => window.location.href = 'tel:+2348160662997'}
+                  onClick={() => window.location.href = 'tel:+2347054915173'}
                 >
                   <Phone className="mr-2 h-4 w-4" />
-                  Call Now: +234 816 066 2997
+                  Call Now: +2347054915173
                 </Button>
                 <Button 
                   variant="outline" 
                   className="w-full justify-start"
-                  onClick={() => window.location.href = 'https://wa.me/2348160662997'}
+                  onClick={() => window.location.href = 'https://wa.me/2347054915173'}
                 >
                   <MessageCircle className="mr-2 h-4 w-4" />
                   WhatsApp Chat

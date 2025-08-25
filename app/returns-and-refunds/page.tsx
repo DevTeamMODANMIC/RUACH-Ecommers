@@ -165,7 +165,7 @@ export default function ReturnsAndRefundsPage() {
                 <p>For returns, refunds, or exchanges, please reach out to our Customer Support Team:</p>
                 <ul className="list-none space-y-2">
                   <li>Email: support@ruachestore.com.ng</li>
-                  <li>Phone/WhatsApp: <a href="https://wa.me/2348160662997" className="text-green-600 hover:text-green-700">+234 816 066 2997</a></li>
+                  <li>Phone/WhatsApp: <a href="https://wa.me/2347054915173" className="text-green-600 hover:text-green-700">+2347054915173</a></li>
                 </ul>
                 <p>We’ll be glad to assist you.</p>
               </div>

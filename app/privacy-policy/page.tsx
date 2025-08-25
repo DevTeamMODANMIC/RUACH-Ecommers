@@ -151,7 +151,7 @@ export default function PrivacyPolicyPage() {
                 <p>If you have any questions about our Privacy Policy, please contact us:</p>
                 <ul className="list-none space-y-2">
                   <li>Email: support@ruachestore.com.ng</li>
-                  <li>Phone/WhatsApp: <a href="https://wa.me/2348160662997" className="text-green-600 hover:text-green-700">+234 816 066 2997</a></li>
+                  <li>Phone/WhatsApp: <a href="https://wa.me/2347054915173" className="text-green-600 hover:text-green-700">+2347054915173</a></li>
                 </ul>
               </div>
             </section>

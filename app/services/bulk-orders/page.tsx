@@ -205,7 +205,7 @@ export default function BulkOrdersServicePage() {
                   Get Custom Quote
                 </Button>
                 <Button size="lg" variant="outline" asChild className="border-green-600 text-green-600 hover:bg-green-50 px-8 py-6 text-lg rounded-full">
-                  <a href="https://wa.me/2348160662997" target="_blank" rel="noopener noreferrer">
+                  <a href="https://wa.me/2347054915173" target="_blank" rel="noopener noreferrer">
                     <Phone className="mr-2 h-5 w-5" />
                     Speak with Expert
                   </a>
@@ -519,7 +519,7 @@ export default function BulkOrdersServicePage() {
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild className="border-white text-white hover:bg-white hover:text-green-600 px-8 py-6 text-lg rounded-full">
-              <a href="https://wa.me/2348160662997" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/2347054915173" target="_blank" rel="noopener noreferrer">
                 <Phone className="mr-2 h-5 w-5" />
                 Call Sales Team
               </a>

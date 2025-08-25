@@ -30,7 +30,7 @@ const supportChannels = [
     title: "Phone Support",
     description: "Talk directly to our support team",
     availability: "Mon-Sat: 8AM - 8PM",
-    contact: "+2348160662997",
+    contact: "+2347054915173",
     responseTime: "Immediate"
   },
   {
@@ -435,10 +435,10 @@ export default function CustomerSupportService() {
             <Button 
               size="lg" 
               className="bg-white text-purple-600 hover:bg-gray-100"
-              onClick={() => window.location.href = 'tel:+2348160662997'}
+              onClick={() => window.location.href = 'tel:+2347054915173'}
             >
               <Phone className="mr-2 h-5 w-5" />
-              Call Now: +234 816 066 2997
+              Call Now: +2347054915173
             </Button>
             <Button 
               size="lg" 

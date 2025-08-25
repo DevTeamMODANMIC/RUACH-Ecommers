@@ -4,7 +4,7 @@ import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { onAuthStateChanged, type User } from "firebase/auth"
 import { auth } from "@/lib/firebase"
-import { getUserProfile, type UserProfile } from "@/lib/firebase-auth"
+import { getUserProfile, type UserProfile, diagnoseProfileFetchIssue } from "@/lib/firebase-auth"
 
 interface AuthContextType {
   user: User | null
@@ -30,7 +30,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const maxLoadingTimeout = setTimeout(() => {
       console.warn("AuthProvider: Maximum loading timeout reached, forcing loading to false")
       setIsLoading(false)
-    }, 15000) // 15 seconds max
+    }, 20000) // 20 seconds max
+
+    const fetchUserProfileWithRetry = async (uid: string, maxRetries = 3): Promise<any> => {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`AuthProvider: Attempting to fetch profile for user ${uid} (attempt ${attempt}/${maxRetries})`)
+          
+          const profilePromise = getUserProfile(uid)
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error(`Profile fetch timeout on attempt ${attempt}`)), 8000)
+          )
+          
+          const userProfile = await Promise.race([profilePromise, timeoutPromise])
+          console.log(`AuthProvider: Successfully fetched profile for user ${uid} on attempt ${attempt}`)
+          return userProfile
+        } catch (error) {
+          console.warn(`AuthProvider: Profile fetch attempt ${attempt} failed:`, error)
+          
+          if (attempt === maxRetries) {
+            console.error(`AuthProvider: All ${maxRetries} profile fetch attempts failed for user ${uid}`)
+            throw error
+          }
+          
+          // Wait before retrying (exponential backoff)
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000)
+          console.log(`AuthProvider: Waiting ${delay}ms before retry...`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+    }
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
@@ -39,18 +68,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (user) {
           try {
-            // Fetch user profile from Firestore with timeout
-            const profilePromise = getUserProfile(user.uid)
-            const timeoutPromise = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
-            )
-            
-            const userProfile = await Promise.race([profilePromise, timeoutPromise])
-            setProfile(userProfile as any)
+            const userProfile = await fetchUserProfileWithRetry(user.uid)
+            setProfile(userProfile)
           } catch (profileError) {
-            console.error("AuthProvider: Error fetching user profile:", profileError)
-            // Don't fail auth if profile fetch fails
-            setProfile(null)
+            console.error("AuthProvider: All profile fetch attempts failed:", profileError)
+            
+            // Run diagnostics to help identify the issue
+            try {
+              const diagnosis = await diagnoseProfileFetchIssue(user.uid)
+              console.error("AuthProvider: Profile fetch diagnosis:", diagnosis)
+              
+              // You could also show this to the user in a toast or modal
+              if (typeof window !== 'undefined' && window.localStorage) {
+                localStorage.setItem('lastProfileFetchError', JSON.stringify({
+                  timestamp: new Date().toISOString(),
+                  uid: user.uid,
+                  error: profileError,
+                  diagnosis
+                }))
+              }
+            } catch (diagError) {
+              console.error("AuthProvider: Failed to run diagnostics:", diagError)
+            }
+            
+            // Create a minimal profile fallback to prevent auth issues
+            const fallbackProfile = {
+              uid: user.uid,
+              email: user.email || '',
+              name: user.displayName || user.email?.split('@')[0] || 'User',
+              role: 'user' as const,
+              preferences: {
+                currency: 'GBP',
+                language: 'en',
+                notifications: true
+              },
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+            
+            console.log("AuthProvider: Using fallback profile for user", user.uid)
+            setProfile(fallbackProfile)
           }
         } else {
           setProfile(null)

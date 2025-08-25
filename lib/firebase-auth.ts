@@ -10,7 +10,7 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
 } from "firebase/auth"
-import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore"
+import { doc, setDoc, getDoc, updateDoc, connectFirestoreEmulator } from "firebase/firestore"
 import { auth, db } from "./firebase"
 // Don't import firebase-admin in this client-side file
 
@@ -148,14 +148,35 @@ export const changePassword = async (currentPassword: string, newPassword: strin
 // User profile functions
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
   try {
+    console.log(`firebase-auth: Starting profile fetch for user ${uid}`)
+    const startTime = Date.now()
+    
     const userDoc = await getDoc(doc(db, "users", uid))
+    const fetchTime = Date.now() - startTime
+    
+    console.log(`firebase-auth: Profile fetch completed in ${fetchTime}ms for user ${uid}`)
+    
     if (userDoc.exists()) {
-      return userDoc.data() as UserProfile
+      const data = userDoc.data() as UserProfile
+      console.log(`firebase-auth: Profile found for user ${uid}, role: ${data.role || 'undefined'}`)
+      return data
+    } else {
+      console.warn(`firebase-auth: No profile document found for user ${uid}`)
+      return null
     }
-    return null
   } catch (error: any) {
-    console.error("Error getting user profile:", error)
-    return null
+    const errorMessage = error?.message || 'Unknown error'
+    const errorCode = error?.code || 'unknown'
+    
+    console.error(`firebase-auth: Error getting user profile for ${uid}:`, {
+      message: errorMessage,
+      code: errorCode,
+      name: error?.name,
+      stack: error?.stack?.split('\n').slice(0, 3).join('\n') // First 3 lines of stack
+    })
+    
+    // Re-throw with more context
+    throw new Error(`Failed to fetch user profile: ${errorMessage} (${errorCode})`)
   }
 }
 
@@ -167,5 +188,96 @@ export const updateUserProfile = async (uid: string, updates: Partial<UserProfil
     })
   } catch (error: any) {
     throw new Error(error.message)
+  }
+}
+
+// Firebase connectivity and health check functions
+export const checkFirebaseConnectivity = async (): Promise<{ connected: boolean; latency?: number; error?: string }> => {
+  try {
+    console.log('firebase-auth: Testing Firebase connectivity...')
+    const startTime = Date.now()
+    
+    // Try to read a small test document
+    const testDoc = await getDoc(doc(db, '_health', 'test'))
+    const latency = Date.now() - startTime
+    
+    console.log(`firebase-auth: Firebase connectivity test completed in ${latency}ms`)
+    return { connected: true, latency }
+  } catch (error: any) {
+    console.error('firebase-auth: Firebase connectivity test failed:', error)
+    return { 
+      connected: false, 
+      error: `${error.code || 'unknown'}: ${error.message || 'Unknown error'}` 
+    }
+  }
+}
+
+export const diagnoseProfileFetchIssue = async (uid: string) => {
+  console.log(`firebase-auth: Diagnosing profile fetch issue for user ${uid}`)
+  
+  // Check Firebase connectivity
+  const connectivity = await checkFirebaseConnectivity()
+  console.log('firebase-auth: Connectivity test result:', connectivity)
+  
+  if (!connectivity.connected) {
+    return {
+      issue: 'Firebase connectivity problem',
+      details: connectivity.error,
+      recommendations: [
+        'Check internet connection',
+        'Verify Firebase configuration',
+        'Check Firebase console for service status'
+      ]
+    }
+  }
+  
+  if (connectivity.latency && connectivity.latency > 5000) {
+    return {
+      issue: 'High network latency',
+      details: `Firebase responded in ${connectivity.latency}ms`,
+      recommendations: [
+        'Check internet connection speed',
+        'Consider using a different network',
+        'Try again later if this is temporary'
+      ]
+    }
+  }
+  
+  // Try to check if user document exists
+  try {
+    const userRef = doc(db, 'users', uid)
+    const userDoc = await getDoc(userRef)
+    
+    if (!userDoc.exists()) {
+      return {
+        issue: 'User profile does not exist',
+        details: `No document found at users/${uid}`,
+        recommendations: [
+          'Check if user registration completed successfully',
+          'Verify user UID is correct',
+          'Consider creating a new profile'
+        ]
+      }
+    }
+    
+    return {
+      issue: 'Unknown',
+      details: 'User document exists and Firebase is responsive',
+      recommendations: [
+        'This might be a temporary issue',
+        'Try refreshing the page',
+        'Check browser console for additional errors'
+      ]
+    }
+  } catch (error: any) {
+    return {
+      issue: 'Firestore access error',
+      details: `${error.code}: ${error.message}`,
+      recommendations: [
+        'Check Firestore security rules',
+        'Verify user authentication',
+        'Check Firebase project permissions'
+      ]
+    }
   }
 }

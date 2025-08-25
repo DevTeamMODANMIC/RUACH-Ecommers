@@ -12,16 +12,9 @@ const officeLocations = [
   {
     name: "Lagos Headquarters",
     address: "Plot 123, Victoria Island, Lagos, Nigeria",
-    phone: "+234 816 066 2997",
+    phone: "+2347054915173",
     email: "lagos@ruachestore.com.ng",
     hours: "Mon-Fri: 8AM-8PM, Sat: 9AM-6PM"
-  },
-  {
-    name: "Abuja Office", 
-    address: "Suite 45, Central Business District, Abuja, Nigeria",
-    phone: "+234 816 066 2997",
-    email: "abuja@ruachestore.com.ng",
-    hours: "Mon-Fri: 8AM-6PM, Sat: 10AM-4PM"
   }
 ]
 
@@ -81,13 +74,15 @@ export default function ContactPage() {
 
       {/* Main Contact Integration */}
       <div className="container mx-auto px-4 py-16">
-        <ContactIntegration 
-          title="Contact Our Team"
-          description="Choose the best way to reach us based on your needs"
-          showQuickContact={true}
-          showContactForm={true}
-          formType="general"
-        />
+        <div className="max-w-6xl mx-auto">
+          <ContactIntegration 
+            title="Contact Our Team"
+            description="Choose the best way to reach us based on your needs"
+            showQuickContact={true}
+            showContactForm={true}
+            formType="general"
+          />
+        </div>
       </div>
 
       {/* Support Types */}
@@ -100,7 +95,7 @@ export default function ContactPage() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {supportTypes.map((support, index) => (
               <div key={index} className="text-center p-6 bg-gray-50 rounded-lg hover:shadow-md transition-shadow">
                 <div className="rounded-full w-16 h-16 bg-blue-100 flex items-center justify-center mx-auto mb-4">
@@ -126,37 +121,39 @@ export default function ContactPage() {
             <p className="text-lg text-gray-600">Visit us at our offices across Nigeria</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {officeLocations.map((location, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-sm">
-                <h3 className="text-xl font-semibold mb-4 flex items-center">
-                  <MapPin className="h-5 w-5 mr-2 text-blue-600" />
-                  {location.name}
-                </h3>
-                
-                <div className="space-y-3 text-gray-600">
-                  <div className="flex items-start space-x-3">
-                    <MapPin className="h-4 w-4 mt-0.5 text-gray-400" />
-                    <span className="text-sm">{location.address}</span>
-                  </div>
+          <div className="flex justify-center">
+            <div className="grid grid-cols-1 gap-8 max-w-2xl w-full">
+              {officeLocations.map((location, index) => (
+                <div key={index} className="bg-white p-8 rounded-lg shadow-sm mx-auto w-full max-w-lg">
+                  <h3 className="text-xl font-semibold mb-4 flex items-center justify-center">
+                    <MapPin className="h-5 w-5 mr-2 text-blue-600" />
+                    {location.name}
+                  </h3>
                   
-                  <div className="flex items-center space-x-3">
-                    <Phone className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm">{location.phone}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <Mail className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm">{location.email}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <Clock className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm">{location.hours}</span>
+                  <div className="space-y-3 text-gray-600">
+                    <div className="flex items-start space-x-3">
+                      <MapPin className="h-4 w-4 mt-0.5 text-gray-400" />
+                      <span className="text-sm">{location.address}</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <Phone className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm">{location.phone}</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <Mail className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm">{location.email}</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <Clock className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm">{location.hours}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -164,15 +161,15 @@ export default function ContactPage() {
       {/* FAQ Section */}
       <div className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-              <p className="text-lg text-gray-600">
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                 Quick answers to common questions before you contact us
               </p>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-3xl mx-auto">
               <details className="bg-gray-50 rounded-lg p-4">
                 <summary className="font-semibold cursor-pointer">What are your response times?</summary>
                 <div className="mt-3 text-gray-600">

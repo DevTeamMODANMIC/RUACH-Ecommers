@@ -433,7 +433,7 @@ export default function VendorOnboardingService() {
               size="lg" 
               variant="outline" 
               className="border-white text-white hover:bg-white hover:text-green-600"
-              onClick={() => window.location.href = 'tel:+2348160662997'}
+              onClick={() => window.location.href = 'tel:+2347054915173'}
             >
               <Phone className="mr-2 h-5 w-5" />
               Speak to Our Team

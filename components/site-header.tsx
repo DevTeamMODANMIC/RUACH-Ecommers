@@ -89,7 +89,7 @@ export default function HeaderImproved() {
         <div className="flex items-center gap-6">
           <span className="flex items-center gap-1">
             <Phone className="h-3 w-3" />
-            +2348160662997
+            +2347054915173
           </span>
         </div>
         {/*<Link href="/vendor/register" className="text-green-700 hover:underline">
@@ -193,7 +193,7 @@ export default function HeaderImproved() {
 
           {/* WhatsApp Floating Icon */}
           <a
-            href="https://wa.me/2348160662997"
+            href="https://wa.me/2347054915173"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden lg:inline-flex items-center justify-center bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-medium"

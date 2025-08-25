@@ -74,7 +74,7 @@ export default function FeaturedStores() {
                         Featured Stores
                     </h2>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                        Discover authentic African products from our verified vendors
+                        Discover authentic Products from our verified vendors
                     </p>
                 </div>
 

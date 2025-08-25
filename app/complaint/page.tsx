@@ -366,7 +366,7 @@ export default function ComplaintPage() {
                   <Phone className="h-5 w-5 text-green-600" />
                   <div>
                     <p className="font-medium text-gray-900">Phone Support</p>
-                    <p className="text-sm text-gray-600">+234 816 066 2997</p>
+                    <p className="text-sm text-gray-600">+2347054915173</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -374,7 +374,7 @@ export default function ComplaintPage() {
                   <div>
                     <p className="font-medium text-gray-900">WhatsApp</p>
                     <Button asChild variant="ghost" className="p-0 h-auto text-sm text-blue-600">
-                      <a href="https://wa.me/2348160662997" target="_blank" rel="noopener noreferrer">
+                      <a href="https://wa.me/2347054915173" target="_blank" rel="noopener noreferrer">
                         Chat with us
                         <ChevronRight className="ml-1 h-3 w-3" />
                       </a>

@@ -164,7 +164,7 @@ export default function Footer() {
               <div className="mt-6 space-y-2">
                 <div className="flex items-center justify-center sm:justify-start space-x-2 text-sm">
                   <Phone className="h-4 w-4 text-green-400" />
-                  <span>+234 816 066 2997</span>
+                  <span>+2347054915173</span>
                 </div>
                 <div className="flex items-center justify-center sm:justify-start space-x-2 text-sm">
                   <Mail className="h-4 w-4 text-green-400" />
@@ -206,7 +206,7 @@ export default function Footer() {
               <img src="/mastercard.svg" alt="Mastercard" className="h-6 w-auto" />
               <img src="/paypal.svg" alt="Paypal" className="h-6 w-auto" />
               <a
-                href="https://wa.me/2348160662997"
+                href="https://wa.me/2347054915173"
                 target="_blank"
                 rel="noopener noreferrer"
                 suppressHydrationWarning
